@@ -7,8 +7,9 @@ public class Turret : MonoBehaviour, IDamageable
 {
     float firerate = 3;
     float damage = 10;
-    float health = 100;
+    float health = 20;
     [SerializeField] float range = 100;
+    public Vector2Int location = Vector2Int.zero;
     // Start is called before the first frame update
     void Start()
     {
@@ -25,16 +26,26 @@ public class Turret : MonoBehaviour, IDamageable
         
     }
 
-    public void takeDamage(float damage)
+    public float takeDamage(float damage)
     {
-
+        health -= damage;
+        TileManager.Instance.PlayerBuildingHealths.Remove(location);
+        if (health <= 0)
+        {
+            Destroy(gameObject);
+            GameManager.Instance.playerBuildings.Remove(location);
+        }
+        else
+        {
+            TileManager.Instance.PlayerBuildingHealths.Add(location, health);
+        }
+        return health;
     }
 
     IEnumerator fireLoop()
     {
         while (true)
         {
-            Debug.Log("fire attempt");
 
             Enemy target = findTargets();
             if (target != null)
@@ -61,7 +72,6 @@ public class Turret : MonoBehaviour, IDamageable
         {
             return targets.Dequeue();
         }
-        Debug.Log("no enemies found");
         
         return null;
 
