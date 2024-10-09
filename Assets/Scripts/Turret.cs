@@ -47,6 +47,7 @@ public class Turret : MonoBehaviour, IDamageable
     {
         if(killed)
         {
+            StopAllCoroutines();
             Destroy(gameObject);
         }
     }

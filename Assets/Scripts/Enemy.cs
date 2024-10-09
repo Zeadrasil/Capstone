@@ -17,6 +17,7 @@ public class Enemy : MonoBehaviour, IDamageable
     private bool pitbullMode = false;
     private bool ranged = false;
     private bool blocked = false;
+    private float firerate = 10;
     public EnemyCheckpoint currentGuide;
     private IDamageable target;
     private int attackCooldown = 0;
@@ -30,6 +31,42 @@ public class Enemy : MonoBehaviour, IDamageable
 
     void Update()
     {
+        if (!attackMode || (ranged && !blocked))
+        {
+            if (!pitbullMode)
+            {
+                transform.position += (Vector3)(currentGuide.transform.right * movementSpeed * Time.deltaTime);
+            }
+            else
+            {
+                transform.position += (Singleton<GameManager>.Instance.PlayerBase.transform.position - transform.position).normalized * movementSpeed * Time.deltaTime;
+            }
+        }
+    }
+
+    IEnumerator fireLoop()
+    {
+        while (true)
+        {
+
+            if (target == null)
+            {
+                attackMode = false;
+                blocked = false;
+            }
+            else if (target.takeDamage(damage) <= 0)
+            {
+                attackMode = false;
+                blocked = false;
+                StopAllCoroutines();
+                if (ranged)
+                {
+                    targeter.FindTarget();
+                }
+            }
+            yield return new WaitForSeconds(10 / firerate);
+        }
+
     }
 
     public EnemyCheckpoint GeneratePath()
@@ -96,6 +133,7 @@ public class Enemy : MonoBehaviour, IDamageable
                         else
                         {
                             prevEnemyCheckpoint.next = checkpoint;
+                            prevEnemyCheckpoint.next.previous = prevEnemyCheckpoint;
                             prevEnemyCheckpoint = prevEnemyCheckpoint.next;
                         }
                     }
@@ -118,54 +156,14 @@ public class Enemy : MonoBehaviour, IDamageable
         currentGuide = checkpoint;
     }
 
-    private void FixedUpdate()
-    {
-        if (active && currentGuide != null)
-        {
-            if (!attackMode || (ranged && !blocked))
-            {
-                if (!pitbullMode)
-                {
-                    transform.position += (Vector3)(currentGuide.transform.right * movementSpeed / 50);
-                }
-                else
-                {
-                    transform.position += (Singleton<GameManager>.Instance.PlayerBase.transform.position - transform.position).normalized * movementSpeed / 50;
-                }
-            }
-            if (attackMode)
-            {
-                if(target == null)
-                {
-                    attackMode = false;
-                    blocked = false;
-                }
-                else if (attackCooldown <= 0)
-                {
-                    if (target.takeDamage(damage) <= 0)
-                    {
-                        attackMode = false;
-                        blocked = false;
-                        if (ranged)
-                        {
-                            targeter.FindTarget();
-                        }
-                    }
-                    attackCooldown = 50;
-                }
-            }
-            attackCooldown--;
-        }
-    }
-
     private void OnCollisionEnter2D(Collision2D collision)
     {
-        Debug.Log("collision");
         if(collision.gameObject.TryGetComponent(out MultiTag collidedTags) && collidedTags.Tags.Contains("PlayerBuilding"))
         {
             blocked = true;
             attackMode = true;
             target = collision.gameObject.GetComponent<IDamageable>();
+            StartCoroutine(fireLoop());
         }
     }
 

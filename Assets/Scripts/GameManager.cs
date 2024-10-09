@@ -75,6 +75,7 @@ public class GameManager : Singleton<GameManager>
         if(Input.GetKeyDown(KeyCode.N))
         {
             wave++;
+            EnemyCheckpoint.positions.Clear();
             if(currentEnemies.Count == 0)
             {
                 foreach(GameObject checkpoint in checkpoints)
