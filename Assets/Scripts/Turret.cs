@@ -8,6 +8,7 @@ public class Turret : MonoBehaviour, IDamageable
     float firerate = 3;
     float damage = 10;
     float health = 20;
+    bool killed = false;
     [SerializeField] float range = 100;
     public Vector2Int location = Vector2Int.zero;
     // Start is called before the first frame update
@@ -32,7 +33,7 @@ public class Turret : MonoBehaviour, IDamageable
         TileManager.Instance.PlayerBuildingHealths.Remove(location);
         if (health <= 0)
         {
-            Destroy(gameObject);
+            killed = true;
             GameManager.Instance.playerBuildings.Remove(location);
         }
         else
@@ -40,6 +41,14 @@ public class Turret : MonoBehaviour, IDamageable
             TileManager.Instance.PlayerBuildingHealths.Add(location, health);
         }
         return health;
+    }
+
+    public void LateUpdate()
+    {
+        if(killed)
+        {
+            Destroy(gameObject);
+        }
     }
 
     IEnumerator fireLoop()
