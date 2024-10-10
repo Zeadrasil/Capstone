@@ -41,22 +41,29 @@ public class TileManager : Singleton<TileManager>
     public Tilemap Tilemap;
     [SerializeField] TileBase blockerTile;
     [SerializeField] TileBase traversableTile;
-    int mapScaling = 150000000;
+    int mapScaling = 300000000;
     public Dictionary<Vector2Int, NavNode> Adjacencies = new Dictionary<Vector2Int, NavNode>();
     public List<Vector2Int> BlockerTiles = new List<Vector2Int>();
     public Dictionary<Vector2Int, float> PlayerBuildingHealths = new Dictionary<Vector2Int, float>();
     private List<Vector2Int> nextExpansion = new List<Vector2Int> { new Vector2Int(0, 0) };
     private List<Vector2Int> subbedTiles = new List<Vector2Int>();
     public List<Vector2Int> potentialSpawnpoints = new List<Vector2Int>();
-
+    private uint seedA;
+    private uint seedB;
+    private uint seedC;
     // Start is called before the first frame update
     void Start()
     {
-        for(int i = 0; i < 10; i++)
+        seedA = ((uint)UnityEngine.Random.Range(int.MinValue, int.MaxValue)) + int.MaxValue;
+        seedB = ((uint)UnityEngine.Random.Range(int.MinValue, int.MaxValue)) + int.MaxValue;
+        seedC = ((uint)UnityEngine.Random.Range(int.MinValue, int.MaxValue)) + int.MaxValue;
+        for (int i = 0; i < 15; i++)
         {
             Next();
         }
-        Debug.Log("Finished Generating");
+        Debug.Log("Seed A: " + seedA);
+        Debug.Log("Seed B: " + seedB);
+        Debug.Log("Seed C: " + seedC);
     }
 
     // Update is called once per frame
@@ -263,6 +270,7 @@ public class TileManager : Singleton<TileManager>
     {
         float actualx = (x + xOffset) / (float)int.MaxValue * mapScaling;
         float actualy = (y + yOffset) / (float)int.MaxValue * mapScaling;
-        return Mathf.PerlinNoise(actualx, actualy);
+        //return Mathf.PerlinNoise(actualx, actualy);
+        return PerlinGenerator.Noise(actualx, actualy, seedA, seedB, seedC);
     }
 }

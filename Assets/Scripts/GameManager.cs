@@ -91,10 +91,16 @@ public class GameManager : Singleton<GameManager>
                 }
                 for (int i = 0; i < 5 * Mathf.Pow(wave, 1.25f); i++)
                 {
-                    enemySpawns[i % enemySpawns.Count].Add(Instantiate(baseEnemy, TileManager.Instance.Tilemap.CellToWorld(new Vector3Int(TileManager.Instance.potentialSpawnpoints[i % enemySpawns.Count].x, TileManager.Instance.potentialSpawnpoints[i % enemySpawns.Count].y)) + new Vector3(UnityEngine.Random.Range(-0.1f, 0.1f), UnityEngine.Random.Range(-0.1f, 0.1f)), Quaternion.identity).GetComponent<Enemy>());
+                    enemySpawns[i % enemySpawns.Count].Add(Instantiate(baseEnemy, TileManager.Instance.Tilemap.CellToWorld(new Vector3Int(TileManager.Instance.potentialSpawnpoints[i % enemySpawns.Count].x, TileManager.Instance.potentialSpawnpoints[i % enemySpawns.Count].y)) + new Vector3(UnityEngine.Random.Range(-0.2f, 0.2f), UnityEngine.Random.Range(-0.2f, 0.2f)), Quaternion.identity).GetComponent<Enemy>());
                 }
                 for(int i = 0; i < enemySpawns.Count; i++)
                 {
+                    if(enemySpawns[i].Count == 0)
+                    {
+                        enemySpawns.RemoveAt(i);
+                        i--;
+                        continue;
+                    }
                     EnemyCheckpoint checkpoint = enemySpawns[i][0].GeneratePath();
                     if (checkpoint != null)
                     {
@@ -109,9 +115,14 @@ public class GameManager : Singleton<GameManager>
                         List<Enemy> enemies = enemySpawns[i];
                         enemySpawns.RemoveAt(i);
                         i--;
-                        for (int j = 0; j < enemies.Count; j++)
+                        for (int j = 0, k = 0; j < enemies.Count; j++, k--)
                         {
-                            if (enemySpawns[j % enemySpawns.Count][0].currentGuide != null)
+                            k = Mathf.Max(k, 0);
+                            while (enemySpawns[(j + k) % enemySpawns.Count].Count == 0)
+                            {
+                                k++;
+                            }
+                            if (enemySpawns[(j + k) % enemySpawns.Count][0].currentGuide != null)
                             {
                                 enemies[j].activatePath(enemySpawns[j % enemySpawns.Count][0].currentGuide);
                                 currentEnemies.Add(enemies[j]);
@@ -121,6 +132,7 @@ public class GameManager : Singleton<GameManager>
                         }
                     }
                 }
+                TileManager.Instance.Next();
                 TileManager.Instance.Next();
             }
         }
