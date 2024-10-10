@@ -12,9 +12,8 @@ GameObject:
   - component: {fileID: 4017476800707671829}
   - component: {fileID: 4300718538430920214}
   - component: {fileID: 5360108815081917911}
-  - component: {fileID: 4201111414271571403}
   - component: {fileID: 8661989521789349943}
-  m_Layer: 0
+  m_Layer: 3
   m_Name: Tier1Turret
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -133,20 +132,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Tags:
   - PlayerBuilding
---- !u!114 &4201111414271571403
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6420610339889466709}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: abd9cdf591592a744acf3e5634601be8, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  Tags:
-  - PlayerBuilding
 --- !u!114 &8661989521789349943
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -160,3 +145,4 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   range: 10
+  location: {x: 0, y: 0}

@@ -23,19 +23,27 @@ public class Enemy : MonoBehaviour, IDamageable
     private int attackCooldown = 0;
     private RangedEnemyTargeter targeter;
     private bool active = false;
+    [SerializeField] private float radius;
 
     // Start is called before the first frame update
     void Start()
     {
+        transform.rotation = currentGuide.transform.rotation;
     }
 
     void Update()
     {
+        if(target == null && attackMode)
+        {
+            StopAllCoroutines();
+            attackMode = false;
+            blocked = false;
+        }
         if (!attackMode || (ranged && !blocked))
         {
             if (!pitbullMode)
             {
-                transform.position += (Vector3)(currentGuide.transform.right * movementSpeed * Time.deltaTime);
+                transform.position += (Vector3)(transform.right * movementSpeed * Time.deltaTime);
             }
             else
             {
@@ -48,13 +56,7 @@ public class Enemy : MonoBehaviour, IDamageable
     {
         while (true)
         {
-
-            if (target == null)
-            {
-                attackMode = false;
-                blocked = false;
-            }
-            else if (target.takeDamage(damage) <= 0)
+            if (target.takeDamage(damage) <= 0)
             {
                 attackMode = false;
                 blocked = false;
@@ -156,33 +158,43 @@ public class Enemy : MonoBehaviour, IDamageable
         currentGuide = checkpoint;
     }
 
-    private void OnCollisionEnter2D(Collision2D collision)
+    
+    private void FixedUpdate()
     {
-        if(collision.gameObject.TryGetComponent(out MultiTag collidedTags) && collidedTags.Tags.Contains("PlayerBuilding"))
+        if (!blocked)
         {
-            blocked = true;
-            attackMode = true;
-            target = collision.gameObject.GetComponent<IDamageable>();
-            StartCoroutine(fireLoop());
-        }
-    }
-
-    private void OnTriggerEnter2D(Collider2D collision)
-    {
-        Debug.Log("trigger");
-        if (collision.gameObject.TryGetComponent(out EnemyCheckpoint checkpoint))
-        {
-            if (currentGuide != null && checkpoint.id == currentGuide.id)
+            RaycastHit2D[] hits = Physics2D.CircleCastAll(transform.position, radius, transform.right, radius, LayerMask.GetMask(new string[] { "EnemyBlockers" }));
+            foreach (RaycastHit2D hit in hits)
             {
-                if (currentGuide.next != null)
+                if (hit.collider != null)
                 {
-                    currentGuide = currentGuide.next;
-                }
-                else
-                {
-                    pitbullMode = true;
-                }
+                    if (hit.collider.gameObject.TryGetComponent(out MultiTag tags))
+                    {
+                        if (tags.Tags.Contains("PlayerBuilding"))
+                        {
+                            blocked = true;
+                            attackMode = true;
+                            target = hit.collider.gameObject.GetComponent<IDamageable>();
+                            StartCoroutine(fireLoop());
+                        }
+                    }
+                    else if (hit.collider.gameObject.TryGetComponent(out EnemyCheckpoint checkpoint))
+                    {
+                        if (currentGuide != null && checkpoint.id == currentGuide.id)
+                        {
+                            if (currentGuide.next != null)
+                            {
+                                currentGuide = currentGuide.next;
+                                transform.rotation = currentGuide.transform.rotation;
+                            }
+                            else
+                            {
+                                pitbullMode = true;
+                            }
 
+                        }
+                    }
+                }
             }
         }
     }

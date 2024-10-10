@@ -365,7 +365,7 @@ GameObject:
   - component: {fileID: 816100087}
   - component: {fileID: 816100088}
   - component: {fileID: 816100089}
-  m_Layer: 0
+  m_Layer: 3
   m_Name: Hexagon Pointed-Top
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -509,7 +509,7 @@ GameObject:
   - component: {fileID: 1316658658}
   - component: {fileID: 1316658657}
   - component: {fileID: 1316658660}
-  m_Layer: 0
+  m_Layer: 3
   m_Name: Tilemap
   m_TagString: Untagged
   m_Icon: {fileID: 0}
