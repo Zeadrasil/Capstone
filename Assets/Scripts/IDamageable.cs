@@ -5,4 +5,5 @@ using UnityEngine;
 public interface IDamageable
 {
     public float takeDamage(float damage);
+    public float getHealth();
 }

@@ -30,15 +30,10 @@ public class Turret : MonoBehaviour, IDamageable
     public float takeDamage(float damage)
     {
         health -= damage;
-        TileManager.Instance.PlayerBuildingHealths.Remove(location);
         if (health <= 0)
         {
             killed = true;
             GameManager.Instance.playerBuildings.Remove(location);
-        }
-        else
-        {
-            TileManager.Instance.PlayerBuildingHealths.Add(location, health);
         }
         return health;
     }
@@ -85,5 +80,10 @@ public class Turret : MonoBehaviour, IDamageable
         
         return null;
 
+    }
+
+    public float getHealth()
+    {
+        return health;
     }
 }

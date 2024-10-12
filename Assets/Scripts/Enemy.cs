@@ -1,12 +1,8 @@
 using System.Collections;
 using System.Collections.Generic;
-using Unity.Jobs.LowLevel.Unsafe;
-using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 using UnityEngine.Tilemaps;
-using Utils;
 using Priority_Queue;
-using Unity.VisualScripting;
 public class Enemy : MonoBehaviour, IDamageable
 {
     private float health = 10;
@@ -20,7 +16,6 @@ public class Enemy : MonoBehaviour, IDamageable
     private float firerate = 10;
     public EnemyCheckpoint currentGuide;
     private IDamageable target;
-    private int attackCooldown = 0;
     private RangedEnemyTargeter targeter;
     private bool active = false;
     [SerializeField] private float radius;
@@ -43,7 +38,7 @@ public class Enemy : MonoBehaviour, IDamageable
         {
             if (!pitbullMode)
             {
-                transform.position += (Vector3)(transform.right * movementSpeed * Time.deltaTime);
+                transform.position += movementSpeed * Time.deltaTime * transform.right.normalized;
             }
             else
             {
@@ -73,15 +68,14 @@ public class Enemy : MonoBehaviour, IDamageable
 
     public EnemyCheckpoint GeneratePath()
     {
-        Tilemap tilemap = Singleton<TileManager>.Instance.Tilemap;
-        Dictionary<Vector2Int, NavNode> tileAdjacencies = Singleton<TileManager>.Instance.Adjacencies;
+        Tilemap tilemap = TileManager.Instance.Tilemap;
+        Dictionary<Vector2Int, NavNode> tileAdjacencies = TileManager.Instance.Adjacencies;
         foreach(NavNode nodeToClear in tileAdjacencies.Values )
         {
             nodeToClear.parent = null;
             nodeToClear.cost = float.MaxValue;
         }
-        Dictionary<Vector2Int, float> playerBuildingHealths = Singleton<TileManager>.Instance.PlayerBuildingHealths;
-        float avoidanceModifier = 0.9f * movementSpeed / damage;
+        float avoidanceModifier = 0.9f * movementSpeed / (damage * firerate * 0.1f);
         tileAdjacencies.TryGetValue(new Vector2Int(), out NavNode start);
         start.cost = 0;
         Vector2Int goal = (Vector2Int)tilemap.WorldToCell(transform.position);
@@ -99,7 +93,10 @@ public class Enemy : MonoBehaviour, IDamageable
             foreach (NavNode adjacentNode in node.neighbors)
             {
                 float health = 0;
-                playerBuildingHealths.TryGetValue(adjacentNode.location, out health);
+                if(GameManager.Instance.playerBuildings.TryGetValue(adjacentNode.location, out GameObject holder))
+                {
+                    health = holder.GetComponent<IDamageable>().getHealth();
+                }
                 float cost = node.cost + Vector3.Distance(tilemap.CellToWorld(new Vector3Int(adjacentNode.location.x, adjacentNode.location.y)), tilemap.CellToWorld(new Vector3Int(node.location.x, node.location.y))) + health * avoidanceModifier;
                 if(cost < adjacentNode.cost)
                 {
@@ -214,9 +211,14 @@ public class Enemy : MonoBehaviour, IDamageable
         {
             GameManager.Instance.budget += baseHealth;
             GameManager.Instance.currentEnemies.Remove(this);
+            GameManager.Instance.betweenWaves = GameManager.Instance.currentEnemies.Count == 0;
             Destroy(gameObject);
         }
         return health;
     }
 
+    public float getHealth()
+    {
+        return health;
+    }
 }
