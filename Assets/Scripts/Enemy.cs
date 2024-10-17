@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Tilemaps;
 using Priority_Queue;
+using Unity.VisualScripting;
 public class Enemy : MonoBehaviour, IDamageable
 {
     private float health = 10;
@@ -17,13 +18,19 @@ public class Enemy : MonoBehaviour, IDamageable
     public EnemyCheckpoint currentGuide;
     private IDamageable target;
     private RangedEnemyTargeter targeter;
-    private bool active = false;
     [SerializeField] private float radius;
+    private Vector3 offset = Vector3.zero;
+    private float offsetDistance = 0;
 
     // Start is called before the first frame update
     void Start()
     {
         transform.rotation = currentGuide.transform.rotation;
+        baseHealth *= GameManager.Instance.enemyDifficulty;
+        health = baseHealth;
+        damage *= GameManager.Instance.enemyDifficulty;
+        movementSpeed *= GameManager.Instance.enemyDifficulty;
+        firerate *= GameManager.Instance.enemyDifficulty;
     }
 
     void Update()
@@ -38,7 +45,15 @@ public class Enemy : MonoBehaviour, IDamageable
         {
             if (!pitbullMode)
             {
-                transform.position += movementSpeed * Time.deltaTime * transform.right.normalized;
+                if (offsetDistance > 0)
+                {
+                    transform.position += movementSpeed * Time.deltaTime * offset;
+                    offsetDistance -= movementSpeed * Time.deltaTime;
+                }
+                else
+                {
+                    transform.position += movementSpeed * Time.deltaTime * transform.right.normalized;
+                }
             }
             else
             {
@@ -68,7 +83,7 @@ public class Enemy : MonoBehaviour, IDamageable
 
     public EnemyCheckpoint GeneratePath()
     {
-        Tilemap tilemap = TileManager.Instance.Tilemap;
+        Tilemap tilemap = TileManager.Instance.TraversableTilemap;
         Dictionary<Vector2Int, NavNode> tileAdjacencies = TileManager.Instance.Adjacencies;
         foreach(NavNode nodeToClear in tileAdjacencies.Values )
         {
@@ -143,7 +158,6 @@ public class Enemy : MonoBehaviour, IDamageable
             {
                 return null;
             }
-            active = true;
             return enemyCheckpoint;
         }
         return null;
@@ -151,7 +165,6 @@ public class Enemy : MonoBehaviour, IDamageable
 
     public void activatePath(EnemyCheckpoint checkpoint)
     {
-        active = true;
         currentGuide = checkpoint;
     }
 
@@ -160,7 +173,7 @@ public class Enemy : MonoBehaviour, IDamageable
     {
         if (!blocked)
         {
-            RaycastHit2D[] hits = Physics2D.CircleCastAll(transform.position, radius, transform.right, radius, LayerMask.GetMask(new string[] { "EnemyBlockers" }));
+            RaycastHit2D[] hits = Physics2D.CircleCastAll(transform.position, radius, transform.right, movementSpeed * 0.06f, LayerMask.GetMask(new string[] { "EnemyBlockers" }));
             foreach (RaycastHit2D hit in hits)
             {
                 if (hit.collider != null)
@@ -173,6 +186,59 @@ public class Enemy : MonoBehaviour, IDamageable
                             attackMode = true;
                             target = hit.collider.gameObject.GetComponent<IDamageable>();
                             StartCoroutine(fireLoop());
+                        }
+                        else if(tags.Tags.Contains("Ground"))
+                        {
+                            //offsetDistance = 1;
+                            //if(Vector2.Distance(transform.position + Quaternion.AngleAxis(30, new Vector3(0, 0, 1)) * transform.right.normalized, currentGuide.transform.position) > Vector2.Distance(transform.position + Quaternion.AngleAxis(-30, new Vector3(0, 0, 1)) * transform.right.normalized, currentGuide.transform.position))
+                            //{
+                            //    offset = Quaternion.AngleAxis(-30, new Vector3(0, 0, 1)) * transform.right.normalized;
+                            //}
+                            //else
+                            //{
+                            //    offset = Quaternion.AngleAxis(30, new Vector3(0, 0, 1)) * transform.right.normalized;
+                            //}
+                            //RaycastHit2D[] sideHits = Physics2D.CircleCastAll(transform.position, radius, Quaternion.AngleAxis(-30, new Vector3(0, 0, 1)) * transform.right, radius, LayerMask.GetMask(new string[] { "EnemyBlockers" }));
+                            //bool wallBlocking = false;
+                            //foreach (RaycastHit2D sideHit in sideHits)
+                            //{
+                            //    wallBlocking = hit.collider != null && hit.collider.TryGetComponent(out MultiTag sideTags) && sideTags.Tags.Contains("Ground");
+                            //    if(wallBlocking)
+                            //    {
+                            //        break;
+                            //    }
+                            //}
+                            //if (wallBlocking)
+                            //{
+                            //    if (!(Vector2.Distance(transform.position + Quaternion.AngleAxis(30, new Vector3(0, 0, 1)) * transform.right.normalized, currentGuide.transform.position) > Vector2.Distance(transform.position + Quaternion.AngleAxis(-30, new Vector3(0, 0, 1)) * transform.right.normalized, currentGuide.transform.position)))
+                            //    {
+                            //        offset = Quaternion.AngleAxis(-30, new Vector3(0, 0, 1)) * transform.right.normalized;
+                            //    }
+                            //    else
+                            //    {
+                            //        offset = Quaternion.AngleAxis(30, new Vector3(0, 0, 1)) * transform.right.normalized;
+                            //    }
+                            //    sideHits = Physics2D.CircleCastAll(transform.position, radius, Quaternion.AngleAxis(-30, new Vector3(0, 0, 1)) * transform.right, radius, LayerMask.GetMask(new string[] { "EnemyBlockers" }));
+                            //    wallBlocking = false;
+                            //    foreach (RaycastHit2D sideHit in sideHits)
+                            //    {
+                            //        wallBlocking = hit.collider != null && hit.collider.TryGetComponent(out MultiTag sideTags) && sideTags.Tags.Contains("Ground");
+                            //        if (wallBlocking)
+                            //        {
+                            //            break;
+                            //        }
+                            //    }
+                            //    if (wallBlocking)
+                            //    {
+                            //        offsetDistance = 0;
+                            //        currentGuide = GeneratePath();
+                            //    }
+                            //}
+                            //if(Vector3.Distance(hit.collider.transform.position, transform.position) < radius * 1.5f)
+                            //{
+                                currentGuide = GeneratePath();
+                                transform.rotation = currentGuide.transform.rotation;
+                            //}
                         }
                     }
                     else if (hit.collider.gameObject.TryGetComponent(out EnemyCheckpoint checkpoint))
@@ -209,7 +275,7 @@ public class Enemy : MonoBehaviour, IDamageable
         health -= damage;
         if(health <= 0)
         {
-            GameManager.Instance.budget += baseHealth;
+            GameManager.Instance.budget += baseHealth * GameManager.Instance.playerIncome;
             GameManager.Instance.currentEnemies.Remove(this);
             GameManager.Instance.betweenWaves = GameManager.Instance.currentEnemies.Count == 0;
             Destroy(gameObject);

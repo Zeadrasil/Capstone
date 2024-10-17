@@ -99,7 +99,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   currentGuide: {fileID: 0}
-  radius: 0.25
+  radius: 0.1
 --- !u!58 &4756387668570662335
 CircleCollider2D:
   m_ObjectHideFlags: 0

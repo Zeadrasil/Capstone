@@ -21,6 +21,11 @@ public class EnemyCheckpoint : MonoBehaviour
                 previous.next = newNext;
                 Destroy(gameObject);
             }
+            else
+            {
+                id = runningCount;
+                runningCount++;
+            }
         }
         else
         {

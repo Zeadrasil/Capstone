@@ -14,6 +14,9 @@ public class Turret : MonoBehaviour, IDamageable
     // Start is called before the first frame update
     void Start()
     {
+        firerate *= GameManager.Instance.playerPower;
+        health *= GameManager.Instance.playerPower;
+        damage *= GameManager.Instance.playerPower;
         StartCoroutine(fireLoop());
     }
     private void OnDrawGizmos()

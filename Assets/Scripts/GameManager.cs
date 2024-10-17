@@ -1,4 +1,3 @@
-using System;
 using System.Collections;
 using System.Collections.Generic;
 using TMPro;
@@ -13,29 +12,12 @@ public class GameManager : Singleton<GameManager>
     public Camera Camera;
 
     
-    [SerializeField] GameObject turretTierOne;
-    [SerializeField] GameObject extractorTierOne;
-    [SerializeField] GameObject baseEnemy;
-
-    [SerializeField] Image nextWaveBackground;
-    [SerializeField] Image tierOneTurretBackground;
-    [SerializeField] Image tierOneTurretFrame;
-    [SerializeField] Image tierOneExtractorBackground;
-    [SerializeField] Image tierOneExtractorFrame;
-
-    [SerializeField] TMP_Text budgetText;
-    [SerializeField] TMP_Text incomeText;
-
-    [SerializeField] Color unselectedColor;
-    [SerializeField] Color selectedColor;
-    [SerializeField] Vector3 unavailableColor;
-    [SerializeField] Vector3 availableColor;
 
     private GameObject selectedBuilding;
 
     private int selectedBuildingIndex;
 
-    [SerializeField] float[] budgetCosts = new float[] {-1, 10, -1, -1, -1, -1, -1, -1, 10, -1 };
+    public float[] budgetCosts = new float[] {-1, 10, -1, -1, -1, -1, -1, -1, 10, -1 };
 
     public Dictionary<Vector2Int, GameObject> playerBuildings = new Dictionary<Vector2Int, GameObject>();
     public float budget = 100;
@@ -48,9 +30,66 @@ public class GameManager : Singleton<GameManager>
     public bool betweenWaves = true;
     private TileManager tileManager;
     int maxEnemiesThisWave = 1;
+
+    public KeyCode forwardKey = KeyCode.W;
+    public KeyCode backKey = KeyCode.S;
+    public KeyCode leftKey = KeyCode.A;
+    public KeyCode rightKey = KeyCode.D;
+
+    public KeyCode tierOneTurretKey = KeyCode.Alpha1;
+    public KeyCode tierOneExtractorKey = KeyCode.Alpha8;
+
+    public KeyCode nextWaveKey = KeyCode.N;
+    public KeyCode cancelConstructionKey = KeyCode.Escape;
+
+    public TMP_Text nextWaveLabel;
+    public GameObject turretTierOne;
+    public GameObject extractorTierOne;
+    public GameObject baseEnemy;
+
+    public Image nextWaveBackground;
+    public Image tierOneTurretBackground;
+    public Image tierOneTurretFrame;
+    public Image tierOneExtractorBackground;
+    public Image tierOneExtractorFrame;
+
+    public TMP_Text budgetText;
+    public TMP_Text incomeText;
+
+    public Color unselectedColor;
+    public Color selectedColor;
+    public Vector3 unavailableColor;
+    public Vector3 availableColor;
+
+    public TMP_Text tierOneTurretLabel;
+    public TMP_Text tierOneExtractorLabel;
+
+    public int simplifiedSeed;
+    public float enemyDifficulty = 1;
+    public float playerPower = 1;
+    public float playerIncome = 1;
+    public float playerCosts = 1;
+
+    private bool active = false;
+    public int queueInitialize = -1;
+
     void Start()
     {
         tileManager = TileManager.Instance;
+    }
+
+    public void Initialize()
+    {
+        Random.InitState(simplifiedSeed);
+        budget *= playerIncome;
+        for(int i = 0; i < budgetCosts.Length; i++)
+        {
+            budgetCosts[i] *= playerCosts;
+        }
+        active = true;
+        tierOneTurretLabel.text = tierOneTurretKey.ToString().Contains("Alpha") ? tierOneTurretKey.ToString().Remove(0, 5) : tierOneTurretKey.ToString();
+        tierOneExtractorLabel.text = tierOneExtractorKey.ToString().Contains("Alpha") ? tierOneExtractorKey.ToString().Remove(0, 5) : tierOneExtractorKey.ToString();
+        TileManager.Instance.Initialize();
     }
 
     public void clickTest()
@@ -76,9 +115,9 @@ public class GameManager : Singleton<GameManager>
             {
                 enemySpawns.Add(new List<Enemy>());
             }
-            for (int i = 0; i < 5 * Mathf.Pow(wave, 1.25f); i++)
+            for (int i = 0; i < 5 * Mathf.Pow(wave, 1 + (0.25f * enemyDifficulty)) * enemyDifficulty; i++)
             {
-                enemySpawns[i % enemySpawns.Count].Add(Instantiate(baseEnemy, TileManager.Instance.Tilemap.CellToWorld(new Vector3Int(TileManager.Instance.potentialSpawnpoints[i % enemySpawns.Count].x, TileManager.Instance.potentialSpawnpoints[i % enemySpawns.Count].y)) + new Vector3(UnityEngine.Random.Range(-0.2f, 0.2f), UnityEngine.Random.Range(-0.2f, 0.2f)), Quaternion.identity).GetComponent<Enemy>());
+                enemySpawns[i % enemySpawns.Count].Add(Instantiate(baseEnemy, TileManager.Instance.TraversableTilemap.CellToWorld(new Vector3Int(TileManager.Instance.potentialSpawnpoints[i % enemySpawns.Count].x, TileManager.Instance.potentialSpawnpoints[i % enemySpawns.Count].y)) + new Vector3(UnityEngine.Random.Range(-0.2f, 0.2f), UnityEngine.Random.Range(-0.2f, 0.2f)), Quaternion.identity).GetComponent<Enemy>());
             }
             for (int i = 0; i < enemySpawns.Count; i++)
             {
@@ -119,9 +158,9 @@ public class GameManager : Singleton<GameManager>
                     }
                 }
             maxEnemiesThisWave = currentEnemies.Count;
-            TileManager.Instance.Next();
-            TileManager.Instance.Next();
             }
+            TileManager.Instance.Next();
+            TileManager.Instance.Next();
         }
     }
 
@@ -172,14 +211,14 @@ public class GameManager : Singleton<GameManager>
         {
             case 1:
                 {
-                    GameObject turret = Instantiate(turretTierOne, tileManager.Tilemap.CellToWorld(new Vector3Int(hoveredTile.x, hoveredTile.y)), Quaternion.identity);
+                    GameObject turret = Instantiate(turretTierOne, tileManager.TraversableTilemap.CellToWorld(new Vector3Int(hoveredTile.x, hoveredTile.y)), Quaternion.identity);
                     turret.GetComponent<Turret>().location = hoveredTile;
                     playerBuildings.Add(hoveredTile, turret);
                     return;
                 }
             case 8:
                 {
-                    GameObject extractor = Instantiate(extractorTierOne, tileManager.Tilemap.CellToWorld(new Vector3Int(hoveredTile.x, hoveredTile.y)), Quaternion.identity);
+                    GameObject extractor = Instantiate(extractorTierOne, tileManager.TraversableTilemap.CellToWorld(new Vector3Int(hoveredTile.x, hoveredTile.y)), Quaternion.identity);
                     extractor.GetComponent<ResourceExtractor>().location = hoveredTile;
                     playerBuildings.Add(hoveredTile, extractor);
                     return;
@@ -192,70 +231,81 @@ public class GameManager : Singleton<GameManager>
     // Update is called once per frame
     void Update()
     {
-        tierOneTurretFrame.color = selectedBuildingIndex == 1 ? selectedColor : unselectedColor;
-        tierOneExtractorFrame.color = selectedBuildingIndex == 8 ? selectedColor : unselectedColor;
+        if (active)
+        {
+            tierOneTurretFrame.color = selectedBuildingIndex == 1 ? selectedColor : unselectedColor;
+            tierOneExtractorFrame.color = selectedBuildingIndex == 8 ? selectedColor : unselectedColor;
 
-        tierOneTurretBackground.color = new Color(Mathf.Lerp(unavailableColor.x, availableColor.x, Mathf.Clamp(budget / budgetCosts[1], 0, 1)), Mathf.Lerp(unavailableColor.y, availableColor.y, Mathf.Clamp(budget / budgetCosts[1], 0, 1)), Mathf.Lerp(unavailableColor.z, availableColor.z, Mathf.Clamp(budget / budgetCosts[1], 0, 1)));
-        tierOneExtractorBackground.color = new Color(Mathf.Lerp(unavailableColor.x, availableColor.x, Mathf.Clamp(budget / budgetCosts[8], 0, 1)), Mathf.Lerp(unavailableColor.y, availableColor.y, Mathf.Clamp(budget / budgetCosts[8], 0, 1)), Mathf.Lerp(unavailableColor.z, availableColor.z, Mathf.Clamp(budget / budgetCosts[8], 0, 1)));
+            tierOneTurretBackground.color = new Color(Mathf.Lerp(unavailableColor.x, availableColor.x, Mathf.Clamp(budget / budgetCosts[1], 0, 1)), Mathf.Lerp(unavailableColor.y, availableColor.y, Mathf.Clamp(budget / budgetCosts[1], 0, 1)), Mathf.Lerp(unavailableColor.z, availableColor.z, Mathf.Clamp(budget / budgetCosts[1], 0, 1)));
+            tierOneExtractorBackground.color = new Color(Mathf.Lerp(unavailableColor.x, availableColor.x, Mathf.Clamp(budget / budgetCosts[8], 0, 1)), Mathf.Lerp(unavailableColor.y, availableColor.y, Mathf.Clamp(budget / budgetCosts[8], 0, 1)), Mathf.Lerp(unavailableColor.z, availableColor.z, Mathf.Clamp(budget / budgetCosts[8], 0, 1)));
 
-        budgetText.text = $"Budget: {budget:F2}";
-        incomeText.text = $"Income: {income:F2} / second";
-        nextWaveBackground.color = new Color(Mathf.Lerp(unavailableColor.x, availableColor.x, 1 - Mathf.Clamp(currentEnemies.Count / (float)maxEnemiesThisWave, 0, 1)), Mathf.Lerp(unavailableColor.y, availableColor.y, 1 - Mathf.Clamp(currentEnemies.Count / (float)maxEnemiesThisWave, 0, 1)), Mathf.Lerp(unavailableColor.z, availableColor.z, 1 - Mathf.Clamp(currentEnemies.Count / (float)maxEnemiesThisWave, 0, 1)));
+            budgetText.text = $"Budget: {budget:F2}";
+            incomeText.text = $"Income: {income:F2} / second";
+            nextWaveBackground.color = new Color(Mathf.Lerp(unavailableColor.x, availableColor.x, 1 - Mathf.Clamp(currentEnemies.Count / (float)maxEnemiesThisWave, 0, 1)), Mathf.Lerp(unavailableColor.y, availableColor.y, 1 - Mathf.Clamp(currentEnemies.Count / (float)maxEnemiesThisWave, 0, 1)), Mathf.Lerp(unavailableColor.z, availableColor.z, 1 - Mathf.Clamp(currentEnemies.Count / (float)maxEnemiesThisWave, 0, 1)));
 
-        if (Input.GetKeyDown(KeyCode.Escape) || (selectedBuildingIndex != -1 && budget < budgetCosts[selectedBuildingIndex]))
-        {
-            selectedBuildingIndex = -1;
-            Destroy(selectedBuilding);
-            selectedBuilding = null;
-        }
-        if (Input.GetKeyDown(KeyCode.N))
-        {
-            NextWave();
-        }
-        if (Input.GetAxis("Mouse ScrollWheel") != 0)
-        {
-            Camera.orthographicSize -= Input.GetAxis("Mouse ScrollWheel") * 25 * Time.deltaTime * Camera.orthographicSize;
-        }
-        Vector3 cameraModifier = Vector3.zero;
-        if (Input.GetKey(KeyCode.W) || Input.GetKey(KeyCode.UpArrow))
-        {
-            cameraModifier.y += Camera.orthographicSize * Time.deltaTime;
-        }
-        if (Input.GetKey(KeyCode.A) || Input.GetKey(KeyCode.RightArrow))
-        {
-            cameraModifier.x -= Camera.orthographicSize * Time.deltaTime;
-        }
-        if (Input.GetKey(KeyCode.S) || Input.GetKey(KeyCode.DownArrow))
-        {
-            cameraModifier.y -= Camera.orthographicSize * Time.deltaTime;
-        }
-        if (Input.GetKey(KeyCode.D) || Input.GetKey(KeyCode.LeftArrow))
-        {
-            cameraModifier.x += Camera.orthographicSize * Time.deltaTime;
-        }
-        Camera.transform.position += cameraModifier;
+            if (Input.GetKeyDown(cancelConstructionKey) || (selectedBuildingIndex != -1 && budget < budgetCosts[selectedBuildingIndex]))
+            {
+                selectedBuildingIndex = -1;
+                Destroy(selectedBuilding);
+                selectedBuilding = null;
+            }
+            if (Input.GetKeyDown(nextWaveKey))
+            {
+                NextWave();
+            }
+            if (Input.GetAxis("Mouse ScrollWheel") != 0)
+            {
+                Camera.orthographicSize -= Input.GetAxis("Mouse ScrollWheel") * 25 * Time.deltaTime * Camera.orthographicSize;
+            }
+            Vector3 cameraModifier = Vector3.zero;
+            if (Input.GetKey(forwardKey))
+            {
+                cameraModifier.y += Camera.orthographicSize * Time.deltaTime;
+            }
+            if (Input.GetKey(leftKey))
+            {
+                cameraModifier.x -= Camera.orthographicSize * Time.deltaTime;
+            }
+            if (Input.GetKey(backKey))
+            {
+                cameraModifier.y -= Camera.orthographicSize * Time.deltaTime;
+            }
+            if (Input.GetKey(rightKey))
+            {
+                cameraModifier.x += Camera.orthographicSize * Time.deltaTime;
+            }
+            Camera.transform.position += cameraModifier;
 
-        Vector2Int hoveredTile = (Vector2Int)tileManager.Tilemap.WorldToCell(Camera.ScreenToWorldPoint(Input.mousePosition));
-        if(Input.GetMouseButtonDown(0) && checkPlacement(hoveredTile) && Input.mousePosition.y > 200)
-        {
-            placeBuilding(hoveredTile);
-            budget -= budgetCosts[selectedBuildingIndex];
+            Vector2Int hoveredTile = (Vector2Int)tileManager.TraversableTilemap.WorldToCell(Camera.ScreenToWorldPoint(Input.mousePosition));
+            if (Input.GetMouseButtonDown(0) && checkPlacement(hoveredTile) && Input.mousePosition.y > 200)
+            {
+                placeBuilding(hoveredTile);
+                budget -= budgetCosts[selectedBuildingIndex];
+            }
+            if (selectedBuilding != null)
+            {
+                selectedBuilding.transform.position = tileManager.TraversableTilemap.CellToWorld(new Vector3Int(hoveredTile.x, hoveredTile.y));
+            }
+            if (Input.GetKeyDown(tierOneTurretKey))
+            {
+                TierOneTurret();
+            }
+            if (Input.GetKeyDown(tierOneExtractorKey))
+            {
+                TierOneExtractor();
+            }
+            if (!betweenWaves)
+            {
+                budget += income * Time.deltaTime;
+            }
         }
-        if(selectedBuilding != null)
+        else if (queueInitialize > 0)
         {
-            selectedBuilding.transform.position = tileManager.Tilemap.CellToWorld(new Vector3Int(hoveredTile.x, hoveredTile.y));
-        }
-        if(Input.GetKeyDown(KeyCode.Alpha1))
-        {
-            TierOneTurret();
-        }
-        if(Input.GetKeyDown(KeyCode.Alpha8))
-        {
-            TierOneExtractor();
-        }
-        if (!betweenWaves)
-        {
-            budget += income * Time.deltaTime;
+            if(queueInitialize == 1)
+            {
+                Initialize();
+            }
+            queueInitialize--;
         }
 	}
 

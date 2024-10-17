@@ -35,45 +35,53 @@ public class TileManager : Singleton<TileManager>
     }
 
     int xOffset, yOffset;
-    public Tilemap Tilemap;
-    [SerializeField] TileBase blockerTile;
-    [SerializeField] TileBase traversableTile;
-    [SerializeField] TileBase blockerResourceTile;
-    [SerializeField] TileBase traversableResourceTile;
+    public Tilemap TraversableTilemap;
+    public Tilemap BlockerTilemap;
+    public TileBase blockerTile;
+    public TileBase traversableTile;
+    public TileBase blockerResourceTile;
+    public TileBase traversableResourceTile;
     int mapScaling = 300000000;
-    float resourceScaling = 1.5f;
+    float resourceScaling = 2.5f;
     public Dictionary<Vector2Int, NavNode> Adjacencies = new Dictionary<Vector2Int, NavNode>();
     public List<Vector2Int> BlockerTiles = new List<Vector2Int>();
     private List<Vector2Int> nextExpansion = new List<Vector2Int> { new Vector2Int(0, 0) };
     private List<Vector2Int> subbedTiles = new List<Vector2Int>();
     public List<Vector2Int> potentialSpawnpoints = new List<Vector2Int>();
     public float traversableCutoff = 0.45f;
-    public float resourceCutoff = 0.9f;
-    private uint seedA;
-    private uint seedB;
-    private uint seedC;
-    private uint seedD;
-    private uint seedE;
-    private uint seedF;
+    public float resourceCutoff = 0.725f;
+    public bool customSeeds = false;
+    public uint seedA;
+    public uint seedB;
+    public uint seedC;
+    public uint seedD;
+    public uint seedE;
+    public uint seedF;
     // Start is called before the first frame update
     void Start()
     {
-        seedA = ((uint)UnityEngine.Random.Range(int.MinValue, int.MaxValue)) + int.MaxValue;
-        seedB = ((uint)UnityEngine.Random.Range(int.MinValue, int.MaxValue)) + int.MaxValue;
-        seedC = ((uint)UnityEngine.Random.Range(int.MinValue, int.MaxValue)) + int.MaxValue;
-        seedD = ((uint)UnityEngine.Random.Range(int.MinValue, int.MaxValue)) + int.MaxValue;
-        seedE = ((uint)UnityEngine.Random.Range(int.MinValue, int.MaxValue)) + int.MaxValue;
-        seedF = ((uint)UnityEngine.Random.Range(int.MinValue, int.MaxValue)) + int.MaxValue;
+    }
+    public void Initialize()
+    {
+        if (!customSeeds)
+        {
+            seedA = ((uint)UnityEngine.Random.Range(int.MinValue, int.MaxValue)) + int.MaxValue;
+            seedB = ((uint)UnityEngine.Random.Range(int.MinValue, int.MaxValue)) + int.MaxValue;
+            seedC = ((uint)UnityEngine.Random.Range(int.MinValue, int.MaxValue)) + int.MaxValue;
+            seedD = ((uint)UnityEngine.Random.Range(int.MinValue, int.MaxValue)) + int.MaxValue;
+            seedE = ((uint)UnityEngine.Random.Range(int.MinValue, int.MaxValue)) + int.MaxValue;
+            seedF = ((uint)UnityEngine.Random.Range(int.MinValue, int.MaxValue)) + int.MaxValue;
+            Debug.Log("Seed A: " + seedA);
+            Debug.Log("Seed B: " + seedB);
+            Debug.Log("Seed C: " + seedC);
+            Debug.Log("Seed D: " + seedD);
+            Debug.Log("Seed E: " + seedE);
+            Debug.Log("Seed F: " + seedF);
+        }
         for (int i = 0; i < 15; i++)
         {
             Next();
         }
-        Debug.Log("Seed A: " + seedA);
-        Debug.Log("Seed B: " + seedB);
-        Debug.Log("Seed C: " + seedC);
-        Debug.Log("Seed D: " + seedD);
-        Debug.Log("Seed E: " + seedE);
-        Debug.Log("Seed F: " + seedF);
     }
 
     // Update is called once per frame
@@ -95,7 +103,7 @@ public class TileManager : Singleton<TileManager>
             newExpansion.Remove(location);
             foreach(Vector2Int adjacent in getAllAdjacent(location))
             {
-                if(Tilemap.GetTile(new Vector3Int(adjacent.x, adjacent.y, 0)) == null && !newExpansion.Contains(adjacent))
+                if(TraversableTilemap.GetTile(new Vector3Int(adjacent.x, adjacent.y, 0)) == null && BlockerTilemap.GetTile(new Vector3Int(adjacent.x, adjacent.y, 0)) == null && !newExpansion.Contains(adjacent))
                 {
                     newExpansion.Add(adjacent);
                 }
@@ -135,7 +143,7 @@ public class TileManager : Singleton<TileManager>
         {
             foreach (Vector2Int location in currentExpansion)
             {
-                if (Tilemap.GetTile(new Vector3Int(location.x, location.y)) == null && Check(location.x, location.y) >= traversableCutoff)
+                if (TraversableTilemap.GetTile(new Vector3Int(location.x, location.y)) == null && Check(location.x, location.y) >= traversableCutoff)
                 {
                     return location;
                 }
@@ -194,7 +202,7 @@ public class TileManager : Singleton<TileManager>
                         start.cost = 0;
                         Vector2Int goal = firstValid;
                         SimplePriorityQueue<NavNode, float> queuedNodes = new SimplePriorityQueue<NavNode, float>();
-                        queuedNodes.EnqueueWithoutDuplicates(start, Vector3.Distance(Tilemap.CellToWorld(new Vector3Int(start.location.x, start.location.y, 0)), transform.position));
+                        queuedNodes.EnqueueWithoutDuplicates(start, Vector3.Distance(TraversableTilemap.CellToWorld(new Vector3Int(start.location.x, start.location.y, 0)), transform.position));
                         bool found = false;
                         while (!found && queuedNodes.Count > 0)
                         {
@@ -206,12 +214,12 @@ public class TileManager : Singleton<TileManager>
                             }
                             foreach (NavNode adjacentNode in currentNode.neighbors)
                             {
-                                float cost = currentNode.cost + Vector3.Distance(Tilemap.CellToWorld(new Vector3Int(adjacentNode.location.x, adjacentNode.location.y)), Tilemap.CellToWorld(new Vector3Int(currentNode.location.x, currentNode.location.y)));
+                                float cost = currentNode.cost + Vector3.Distance(TraversableTilemap.CellToWorld(new Vector3Int(adjacentNode.location.x, adjacentNode.location.y)), TraversableTilemap.CellToWorld(new Vector3Int(currentNode.location.x, currentNode.location.y)));
                                 if (cost < adjacentNode.cost)
                                 {
                                     adjacentNode.cost = cost;
                                     adjacentNode.parent = currentNode;
-                                    queuedNodes.EnqueueWithoutDuplicates(adjacentNode, adjacentNode.cost + Vector3.Distance(Tilemap.CellToWorld(new Vector3Int(adjacentNode.location.x, adjacentNode.location.y)), transform.position));
+                                    queuedNodes.EnqueueWithoutDuplicates(adjacentNode, adjacentNode.cost + Vector3.Distance(TraversableTilemap.CellToWorld(new Vector3Int(adjacentNode.location.x, adjacentNode.location.y)), transform.position));
                                 }
                             }
                         }
@@ -235,11 +243,11 @@ public class TileManager : Singleton<TileManager>
     private Vector2Int[] getAllAdjacent(Vector2Int location)
     {
         Vector2Int[] adjacents = new Vector2Int[6];
-        Vector2 world = Tilemap.CellToWorld(new Vector3Int(location.x, location.y, 0));
+        Vector2 world = TraversableTilemap.CellToWorld(new Vector3Int(location.x, location.y, 0));
         Vector2 adjacancyDetector = new Vector2(1, 0);
         for (int i = 0; i < 6; i++)
         {
-            adjacents[i] = (Vector2Int)Tilemap.WorldToCell(world + adjacancyDetector);
+            adjacents[i] = (Vector2Int)TraversableTilemap.WorldToCell(world + adjacancyDetector);
             adjacancyDetector = Quaternion.AngleAxis(60, new Vector3(0, 0, 1)) * adjacancyDetector;
         }
         return adjacents;
@@ -255,11 +263,11 @@ public class TileManager : Singleton<TileManager>
         {
             if (CheckResource(x, y) >= resourceCutoff)
             {
-                Tilemap.SetTile(new Vector3Int(x, y, 0), blockerResourceTile);
+                BlockerTilemap.SetTile(new Vector3Int(x, y, 0), blockerResourceTile);
             }
             else
             {
-                Tilemap.SetTile(new Vector3Int(x, y, 0), blockerTile);
+                BlockerTilemap.SetTile(new Vector3Int(x, y, 0), blockerTile);
             }
             BlockerTiles.Add(new Vector2Int(x, y));
         }
@@ -267,18 +275,18 @@ public class TileManager : Singleton<TileManager>
         {
             if (CheckResource(x, y) >= resourceCutoff)
             {
-                Tilemap.SetTile(new Vector3Int(x, y, 0), traversableResourceTile);
+                TraversableTilemap.SetTile(new Vector3Int(x, y, 0), traversableResourceTile);
             }
             else
             {
-                Tilemap.SetTile(new Vector3Int(x, y, 0), traversableTile);
+                TraversableTilemap.SetTile(new Vector3Int(x, y, 0), traversableTile);
             }
-            Vector2 world = Tilemap.CellToWorld(new Vector3Int(x, y, 0));
+            Vector2 world = BlockerTilemap.CellToWorld(new Vector3Int(x, y, 0));
             Vector2 adjacancyDetector = new Vector2(1, 0);
             NavNode addedNode = new NavNode(new Vector2Int(x, y));
             for (int i = 0; i < 6; i++)
             {
-                Vector2Int currentCheck = (Vector2Int)Tilemap.WorldToCell(world + adjacancyDetector);
+                Vector2Int currentCheck = (Vector2Int)BlockerTilemap.WorldToCell(world + adjacancyDetector);
                 if(Adjacencies.TryGetValue(currentCheck, out NavNode adjacentNode))
                 {
                     addedNode.neighbors.Add(adjacentNode);
