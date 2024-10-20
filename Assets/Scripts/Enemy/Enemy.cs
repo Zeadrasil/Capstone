@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.Tilemaps;
 using Priority_Queue;
 using Unity.VisualScripting;
-public class Enemy : MonoBehaviour, IDamageable
+public class Enemy : MonoBehaviour, IDamageable, IDamager
 {
     private float health = 10;
     private float baseHealth = 10;
@@ -21,6 +21,7 @@ public class Enemy : MonoBehaviour, IDamageable
     [SerializeField] private float radius;
     private Vector3 offset = Vector3.zero;
     private float offsetDistance = 0;
+    private List<IDamager> currentDamagers = new List<IDamager>();
 
     // Start is called before the first frame update
     void Start()
@@ -35,12 +36,6 @@ public class Enemy : MonoBehaviour, IDamageable
 
     void Update()
     {
-        if(target == null && attackMode)
-        {
-            StopAllCoroutines();
-            attackMode = false;
-            blocked = false;
-        }
         if (!attackMode || (ranged && !blocked))
         {
             if (!pitbullMode)
@@ -66,16 +61,7 @@ public class Enemy : MonoBehaviour, IDamageable
     {
         while (true)
         {
-            if (target.takeDamage(damage) <= 0)
-            {
-                attackMode = false;
-                blocked = false;
-                StopAllCoroutines();
-                if (ranged)
-                {
-                    targeter.FindTarget();
-                }
-            }
+            target.TakeDamage(damage);
             yield return new WaitForSeconds(10 / firerate);
         }
 
@@ -110,7 +96,7 @@ public class Enemy : MonoBehaviour, IDamageable
                 float health = 0;
                 if(GameManager.Instance.playerBuildings.TryGetValue(adjacentNode.location, out GameObject holder))
                 {
-                    health = holder.GetComponent<IDamageable>().getHealth();
+                    health = holder.GetComponent<IDamageable>().GetHealth();
                 }
                 float cost = node.cost + Vector3.Distance(tilemap.CellToWorld(new Vector3Int(adjacentNode.location.x, adjacentNode.location.y)), tilemap.CellToWorld(new Vector3Int(node.location.x, node.location.y))) + health * avoidanceModifier;
                 if(cost < adjacentNode.cost)
@@ -185,6 +171,7 @@ public class Enemy : MonoBehaviour, IDamageable
                             blocked = true;
                             attackMode = true;
                             target = hit.collider.gameObject.GetComponent<IDamageable>();
+                            target.AddDamager(this);
                             StartCoroutine(fireLoop());
                         }
                         else if(tags.Tags.Contains("Ground"))
@@ -237,7 +224,11 @@ public class Enemy : MonoBehaviour, IDamageable
                             //if(Vector3.Distance(hit.collider.transform.position, transform.position) < radius * 1.5f)
                             //{
                                 currentGuide = GeneratePath();
-                                transform.rotation = currentGuide.transform.rotation;
+                                if (currentGuide != null)
+                                {
+                                    transform.rotation = currentGuide.transform.rotation;
+                                }
+                                transform.position = TileManager.Instance.BlockerTilemap.CellToWorld(TileManager.Instance.BlockerTilemap.WorldToCell(transform.position));
                             //}
                         }
                     }
@@ -270,21 +261,51 @@ public class Enemy : MonoBehaviour, IDamageable
             attackMode = true;
         }
     }
-    public float takeDamage(float damage)
+    public float TakeDamage(float damage)
     {
         health -= damage;
         if(health <= 0)
         {
             GameManager.Instance.budget += baseHealth * GameManager.Instance.playerIncome;
-            GameManager.Instance.currentEnemies.Remove(this);
-            GameManager.Instance.betweenWaves = GameManager.Instance.currentEnemies.Count == 0;
+            GameManager.Instance.KillEnemy(this);
+            if (target != null)
+            {
+                target.RemoveDamager(this);
+            }
+            foreach(IDamager damager in currentDamagers)
+            {
+                damager.cancelAttack();
+            }
             Destroy(gameObject);
         }
         return health;
     }
 
-    public float getHealth()
+    public float GetHealth()
     {
         return health;
+    }
+
+    public void cancelAttack()
+    {
+        StopAllCoroutines();
+        attackMode = false;
+        blocked = false;
+        target = null;
+    }
+
+    public void AddDamager(IDamager damager)
+    {
+        currentDamagers.Add(damager);
+    }
+
+    public void RemoveDamager(IDamager damager)
+    {
+        currentDamagers.Remove(damager);
+    }
+
+    public void Heal(float healing)
+    {
+        health = Mathf.Min(healing + health, baseHealth);
     }
 }

@@ -79,10 +79,10 @@ public class MenuManager : Singleton<MenuManager>
         {
             gameManager.nextWaveKey = KeyCode.N;
         }
-        gameManager.cancelConstructionKey = (KeyCode)PlayerPrefs.GetInt("cancelConstructionKey");
-        if (gameManager.cancelConstructionKey == KeyCode.None)
+        gameManager.cancelKey = (KeyCode)PlayerPrefs.GetInt("cancelConstructionKey");
+        if (gameManager.cancelKey == KeyCode.None)
         {
-            gameManager.cancelConstructionKey = KeyCode.Escape;
+            gameManager.cancelKey = KeyCode.Escape;
         }
         if(PlayerPrefs.HasKey("previousEnemyDifficulty"))
         {
@@ -164,7 +164,7 @@ public class MenuManager : Singleton<MenuManager>
                             }
                         case 15:
                             {
-                                gameManager.cancelConstructionKey = key;
+                                gameManager.cancelKey = key;
                                 PlayerPrefs.SetInt("cancelConstructionKey", (int)key);
                                 cancelConstructionText.text = key.ToString();
                                 break;
@@ -181,7 +181,7 @@ public class MenuManager : Singleton<MenuManager>
     {
         newGameMenu.enabled = false;
         SceneManager.LoadScene("MainScene");
-        GameManager.Instance.queueInitialize = 2;
+        GameManager.Instance.queueInitialize = 10;
     }
 
     public void Exit()
@@ -201,7 +201,7 @@ public class MenuManager : Singleton<MenuManager>
         tierOneTurretText.text = gameManager.tierOneTurretKey.ToString();
         tierOneExtractorText.text = gameManager.tierOneExtractorKey.ToString();
         nextWaveText.text = gameManager.nextWaveKey.ToString();
-        cancelConstructionText.text = gameManager.cancelConstructionKey.ToString();
+        cancelConstructionText.text = gameManager.cancelKey.ToString();
     }
     public void ExitOptions()
     {

@@ -146,3 +146,19 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   range: 10
   location: {x: 0, y: 0}
+  upgradeLevels: 0000000000000000000000000000000000000000
+  maxSpecializations: 0
+  specializations: 0
+  expenseModifiers:
+  - -1
+  - 1
+  - 1
+  - 1
+  - 1
+  upgradeEffects:
+  - 1.25
+  - 1.25
+  - 1.25
+  - 1.25
+  - 1.25
+  basicDescription: Tier One Turret

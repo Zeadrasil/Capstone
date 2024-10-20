@@ -9,12 +9,12 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 5950621082165533734}
-  - component: {fileID: 613532183892376148}
-  - component: {fileID: -3206490533168196117}
-  - component: {fileID: 3272607861888306181}
-  - component: {fileID: 5725663894091514346}
+  - component: {fileID: 5527901509266212132}
+  - component: {fileID: 8785779746038167672}
+  - component: {fileID: 6207907378279712274}
+  - component: {fileID: 8962210082275859275}
   m_Layer: 3
-  m_Name: Tier1ResourceExtractor
+  m_Name: TierOneWall
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -35,7 +35,7 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &613532183892376148
+--- !u!114 &5527901509266212132
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -44,12 +44,21 @@ MonoBehaviour:
   m_GameObject: {fileID: 8016618778940119860}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8519679220bd2164cb21b7d9225a75f4, type: 3}
+  m_Script: {fileID: 11500000, guid: dc377b36bb2ead845ba5b336ac0880fd, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   location: {x: 0, y: 0}
-  basicDescription: Tier One Extractor
---- !u!114 &-3206490533168196117
+  basicDescription: Tier One Wall
+  baseHealth: 100
+  healingEffectiveness: 1
+  expenseModifiers:
+  - 1.25
+  - 1.25
+  upgradeEffects:
+  - 1.25
+  - 1.25
+  upgradeLevels: 0000000000000000
+--- !u!114 &8785779746038167672
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -63,7 +72,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Tags:
   - PlayerBuilding
---- !u!212 &3272607861888306181
+--- !u!212 &6207907378279712274
 SpriteRenderer:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -115,7 +124,7 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
---- !u!60 &5725663894091514346
+--- !u!60 &8962210082275859275
 PolygonCollider2D:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
