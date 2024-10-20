@@ -1,19 +1,22 @@
-using JetBrains.Annotations;
-using System.Collections;
-using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
+//LocalGameManager allows data to be stored in a scene and then passed into the GameManager
+//It also is used as a relay for buttons.
 public class LocalGameManager : MonoBehaviour
 {
     [SerializeField] TMP_Text nextWaveLabel;
+
+    //Prefabs
     [SerializeField] GameObject turretTierOne;
     [SerializeField] GameObject repairTierOne;
     [SerializeField] GameObject wallTierOne;
     [SerializeField] GameObject extractorTierOne;
     [SerializeField] GameObject baseEnemy;
+    [SerializeField] GameObject enemyCheckpointPrefab;
 
+    //Construction panel data
     [SerializeField] Image nextWaveBackground;
     [SerializeField] Image nextWaveFrame;
     [SerializeField] Image tierOneTurretBackground;
@@ -37,14 +40,17 @@ public class LocalGameManager : MonoBehaviour
     [SerializeField] Image tierThreeExtractorBackground;
     [SerializeField] Image tierThreeExtractorFrame;
 
+    //Economy data
     [SerializeField] TMP_Text budgetText;
     [SerializeField] TMP_Text incomeText;
 
+    //Color data
     [SerializeField] Color unselectedColor;
     [SerializeField] Color selectedColor;
     [SerializeField] Vector3 unavailableColor;
     [SerializeField] Vector3 availableColor;
 
+    //Hotkey labels
     [SerializeField] TMP_Text tierOneTurretLabel;
     [SerializeField] TMP_Text tierTwoTurretLabel;
     [SerializeField] TMP_Text tierThreeTurretLabel;
@@ -56,10 +62,11 @@ public class LocalGameManager : MonoBehaviour
     [SerializeField] TMP_Text tierTwoExtractorLabel;
     [SerializeField] TMP_Text tierThreeExtractorLabel;
 
+    //Other data
     [SerializeField] Camera camera;
-    [SerializeField] GameObject enemyCheckpointPrefab;
     [SerializeField] PlayerBase playerBase;
 
+    //Turret upgrade data
     [SerializeField] Canvas TurretUpgradeWindow;
 
     [SerializeField] TMP_Text turretSplashUpgradeText;
@@ -84,6 +91,24 @@ public class LocalGameManager : MonoBehaviour
 
     [SerializeField] TMP_Text turretDescriptionText;
 
+    //Repair station upgrade data
+    [SerializeField] Canvas RepairUpgradeWindow;
+
+    [SerializeField] TMP_Text repairRangeUpgradeText;
+    [SerializeField] Image repairRangeFrame;
+    [SerializeField] Image repairRangeBackground;
+
+    [SerializeField] TMP_Text repairHealingUpgradeText;
+    [SerializeField] Image repairHealingFrame;
+    [SerializeField] Image repairHealingBackground;
+
+    [SerializeField] TMP_Text repairHealthUpgradeText;
+    [SerializeField] Image repairHealthFrame;
+    [SerializeField] Image repairHealthBackground;
+
+    [SerializeField] TMP_Text repairDescriptionText;
+
+    //Wall upgrade data
     [SerializeField] Canvas WallUpgradeWindow;
 
     [SerializeField] TMP_Text wallHealthUpgradeText;
@@ -95,15 +120,21 @@ public class LocalGameManager : MonoBehaviour
     [SerializeField] Image wallHealingBackground;
 
     [SerializeField] TMP_Text wallDescriptionText;
-    // Start is called before the first frame update
+
+    // Passes data to the GameManager instance
     void Start()
     {
         GameManager.Instance.nextWaveLabel = nextWaveLabel;
+
+        //Pass prefabs
         GameManager.Instance.turretTierOne = turretTierOne;
         GameManager.Instance.repairTierOne = repairTierOne;
         GameManager.Instance.wallTierOne = wallTierOne;
         GameManager.Instance.extractorTierOne = extractorTierOne;
         GameManager.Instance.baseEnemy = baseEnemy;
+        GameManager.Instance.EnemyCheckpointPrefab = enemyCheckpointPrefab;
+
+        //Pass construction panel data
         GameManager.Instance.nextWaveBackground = nextWaveBackground;
         GameManager.Instance.nextWaveFrame = nextWaveFrame;
         GameManager.Instance.tierOneTurretBackground = tierOneTurretBackground;
@@ -126,12 +157,18 @@ public class LocalGameManager : MonoBehaviour
         GameManager.Instance.tierTwoExtractorFrame = tierTwoExtractorFrame;
         GameManager.Instance.tierThreeExtractorBackground = tierThreeExtractorBackground;
         GameManager.Instance.tierThreeExtractorFrame = tierThreeExtractorFrame;
+
+        //Pass economy data
         GameManager.Instance.budgetText = budgetText;
         GameManager.Instance.incomeText = incomeText;
+
+        //Pass color data
         GameManager.Instance.unselectedColor = unselectedColor;
         GameManager.Instance.selectedColor = selectedColor;
         GameManager.Instance.unavailableColor = unavailableColor;
         GameManager.Instance.availableColor = availableColor;
+
+        //Pass hotkey labels
         GameManager.Instance.tierOneTurretLabel = tierOneTurretLabel;
         GameManager.Instance.tierTwoTurretLabel = tierTwoTurretLabel;
         GameManager.Instance.tierThreeTurretLabel = tierThreeTurretLabel;
@@ -142,9 +179,12 @@ public class LocalGameManager : MonoBehaviour
         GameManager.Instance.tierOneExtractorLabel = tierOneExtractorLabel;
         GameManager.Instance.tierTwoExtractorLabel = tierTwoExtractorLabel;
         GameManager.Instance.tierThreeExtractorLabel = tierThreeExtractorLabel;
+
+        //Pass other data
         GameManager.Instance.Camera = camera;
-        GameManager.Instance.EnemyCheckpointPrefab = enemyCheckpointPrefab;
         GameManager.Instance.PlayerBase = playerBase;
+
+        //Pass turret upgrade data
         GameManager.Instance.TurretUpgradeWindow = TurretUpgradeWindow;
         GameManager.Instance.turretSplashUpgradeText = turretSplashUpgradeText;
         GameManager.Instance.turretSplashFrame = turretSplashFrame;
@@ -162,6 +202,21 @@ public class LocalGameManager : MonoBehaviour
         GameManager.Instance.turretHealthFrame = turretHealthFrame;
         GameManager.Instance.turretHealthBackground = turretHealthBackground;
         GameManager.Instance.turretDescriptionText = turretDescriptionText;
+
+        //Pass repair station upgrade data
+        GameManager.Instance.RepairUpgradeWindow = RepairUpgradeWindow;
+        GameManager.Instance.repairRangeUpgradeText = repairRangeUpgradeText;
+        GameManager.Instance.repairRangeFrame = repairRangeFrame;
+        GameManager.Instance.repairRangeBackground = repairRangeBackground;
+        GameManager.Instance.repairHealingUpgradeText = repairHealingUpgradeText;
+        GameManager.Instance.repairHealingFrame = repairHealingFrame;
+        GameManager.Instance.repairHealingBackground = repairHealingBackground;
+        GameManager.Instance.repairHealthUpgradeText = repairHealthUpgradeText;
+        GameManager.Instance.repairHealthFrame = repairHealthFrame;
+        GameManager.Instance.repairHealthBackground = repairHealthBackground;
+        GameManager.Instance.repairDescriptionText = repairDescriptionText;
+
+        //Pass wall upgrade data
         GameManager.Instance.WallUpgradeWindow = WallUpgradeWindow;
         GameManager.Instance.wallHealthUpgradeText = wallHealthUpgradeText;
         GameManager.Instance.wallHealthFrame = wallHealthFrame;
@@ -171,19 +226,28 @@ public class LocalGameManager : MonoBehaviour
         GameManager.Instance.wallHealingBackground = wallHealingBackground;
         GameManager.Instance.wallDescriptionText = wallDescriptionText;
     }
-
+    
+    //Relay for building selection using buttons
     public void Build(int building)
     {
         GameManager.Instance.Build(building);
     }
+    //Relay for turret upgrades using buttons
     public void UpgradeTurret(int upgrade)
     {
         GameManager.Instance.UpgradeTurret(upgrade);
     }
+    //Relay for repair station upgrades using buttons
+    public void UpgradeRepairStation(int upgrade)
+    {
+        GameManager.Instance.UpgradeRepairStation(upgrade);
+    }
+    //Relay for wall upgrades using buttons
     public void UpgradeWall(int upgrade)
     {
         GameManager.Instance.UpgradeWall(upgrade);
     }
+    //Relay for spawning a new wave using buttons
     public void NextWave()
     {
         GameManager.Instance.NextWave();

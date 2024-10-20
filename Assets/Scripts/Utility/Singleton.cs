@@ -1,7 +1,6 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
+//Singletons are used to ensure that you have exactly one of something. Code is imported, so comments will not be added
 public class Singleton<T> : MonoBehaviour where T : Component
 {
     private static T instance;

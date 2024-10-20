@@ -1,7 +1,6 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
+//PerlinGenerator generates perlin noise maps, lack of comments is due to this primarily not being my code.
 public static class PerlinGenerator
 {
     //Taken from Wikipedia (https://en.wikipedia.org/wiki/Perlin_noise#Implementation) and then modified to work with C# instead of C
