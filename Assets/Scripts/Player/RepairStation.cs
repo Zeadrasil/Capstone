@@ -77,6 +77,8 @@ public class RepairStation : PlayerBuilding, IDamageable, IUpgradeable
     public override void Heal(float healing)
     {
         health = Mathf.Min(health + healing, baseHealth);
+        healthBar.transform.localScale = new Vector3(health / baseHealth, 0.1f, 1);
+        healthBar.transform.localPosition = new Vector3((-1 + health / baseHealth) * 0.5f, -0.4f, 0);
     }
 
     //Remove damager from damager list
@@ -89,6 +91,8 @@ public class RepairStation : PlayerBuilding, IDamageable, IUpgradeable
     public override float TakeDamage(float damage)
     {
         health -= damage;
+        healthBar.transform.localScale = new Vector3(health / baseHealth, 0.1f, 1);
+        healthBar.transform.localPosition = new Vector3((-1 + health / baseHealth) * 0.5f, -0.4f, 0);
         //If health is at or below 0
         if (health <= 0)
         {
@@ -101,7 +105,7 @@ public class RepairStation : PlayerBuilding, IDamageable, IUpgradeable
                 damager.cancelAttack();
             }
             //Destroy self
-            Destroy(gameObject);
+            Destroy(transform.parent.gameObject);
         }
         //Return health for utility
         return health;
@@ -112,6 +116,8 @@ public class RepairStation : PlayerBuilding, IDamageable, IUpgradeable
     {
         //Subtract the cost of the upgrade from player budget
         GameManager.Instance.budget -= GetUpgradeCost(type);
+
+        cost += GetUpgradeCost(type);
 
         //Mark level has having increased
         upgradeLevels[type]++;
@@ -174,5 +180,12 @@ public class RepairStation : PlayerBuilding, IDamageable, IUpgradeable
             //Decrease time on cooldown
             cooldown--;
         }
+    }
+
+    public override bool Sell()
+    {
+        GameManager.Instance.playerBuildings.Remove(location);
+        GameManager.Instance.budget += cost * 0.5f * health / baseHealth;
+        return true;
     }
 }

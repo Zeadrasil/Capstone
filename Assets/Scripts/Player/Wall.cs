@@ -69,6 +69,8 @@ public class Wall : PlayerBuilding, IUpgradeable
     public override void Heal(float healing)
     {
         health = Mathf.Min(health + healing * healingEffectiveness, baseHealth);
+        healthBar.transform.localScale = new Vector3(health / baseHealth, 0.1f, 1);
+        healthBar.transform.localPosition = new Vector3((-1 + health / baseHealth) * 0.5f, -0.65f, 0);
     }
 
     //Remove damager from damager list
@@ -77,10 +79,19 @@ public class Wall : PlayerBuilding, IUpgradeable
         currentDamagers.Remove(damager);
     }
 
+    public override bool Sell()
+    {
+        GameManager.Instance.playerBuildings.Remove(location);
+        GameManager.Instance.budget += cost * 0.5f * health / baseHealth;
+        return true;
+    }
+
     //Take damage to self and kill if out of health
     public override float TakeDamage(float damage)
     {
         health -= damage;
+        healthBar.transform.localScale = new Vector3(health / baseHealth, 0.1f, 1);
+        healthBar.transform.localPosition = new Vector3((-1 + health / baseHealth) * 0.5f, -0.65f, 0);
         //If out of health
         if (health <= 0)
         {
@@ -93,7 +104,7 @@ public class Wall : PlayerBuilding, IUpgradeable
                 damager.cancelAttack();
             }
             //Destroy self
-            Destroy(gameObject);
+            Destroy(transform.parent.gameObject);
         }
         //Return health for utility
         return health;
@@ -104,6 +115,8 @@ public class Wall : PlayerBuilding, IUpgradeable
     {
         //Take upgrade cost out of budget
         GameManager.Instance.budget -= GetUpgradeCost(type);
+
+        cost += GetUpgradeCost(type);
 
         //Mark stat as having been upgraded
         upgradeLevels[type]++;

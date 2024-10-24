@@ -252,4 +252,9 @@ public class LocalGameManager : MonoBehaviour
     {
         GameManager.Instance.NextWave();
     }
+
+    public void Sell()
+    {
+        GameManager.Instance.Sell();
+    }
 }

@@ -45,6 +45,8 @@ public class Turret : PlayerBuilding, IDamager, IUpgradeable
         //Subtracts upgrade cost from yourbudget
         GameManager.Instance.budget -= GetUpgradeCost(type);
 
+        cost += GetUpgradeCost(type);
+
         //Marks as having done another upgrade of this type
         upgradeLevels[type]++;
 
@@ -164,6 +166,8 @@ public class Turret : PlayerBuilding, IDamager, IUpgradeable
     public override float TakeDamage(float damage)
     {
         health -= damage;
+        healthBar.transform.localScale = new Vector3(health / baseHealth, 0.1f, 1);
+        healthBar.transform.localPosition = new Vector3((-1 + health / baseHealth) * 0.5f, -0.4f, 0);
         //If out of health
         if (health <= 0)
         {
@@ -196,7 +200,7 @@ public class Turret : PlayerBuilding, IDamager, IUpgradeable
         if(killed)
         {
             StopAllCoroutines();
-            Destroy(gameObject);
+            Destroy(transform.parent.gameObject);
         }
     }
 
@@ -293,5 +297,14 @@ public class Turret : PlayerBuilding, IDamager, IUpgradeable
     public override void Heal(float healing)
     {
         health = Mathf.Min(healing + health, baseHealth);
+        healthBar.transform.localScale = new Vector3(health / baseHealth, 0.1f, 1);
+        healthBar.transform.localPosition = new Vector3((-1 + health / baseHealth) * 0.5f, -0.4f, 0);
+    }
+
+    public override bool Sell()
+    {
+        GameManager.Instance.playerBuildings.Remove(location);
+        GameManager.Instance.budget += cost * 0.5f * health / baseHealth;
+        return true;
     }
 }

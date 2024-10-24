@@ -35,12 +35,19 @@ public class PlayerBase : PlayerBuilding
         currentDamagers.Remove(damager);
     }
 
+    public override bool Sell()
+    {
+        return false;
+    }
+
     //Take damage to self and kill if out
     public override float TakeDamage(float damage)
     {
         health -= damage;
+        healthBar.transform.localScale = new Vector3(health / baseHealth, 0.1f, 1);
+        healthBar.transform.localPosition = new Vector3((-1 + health / baseHealth) * -0.5f, -0.4f, 0);
         //If sufficiently low
-        if(health <= 0)
+        if (health <= 0)
         {
             //Go through all damagers and tell them to find something else to kill
             foreach(IDamager damager in currentDamagers)
@@ -48,7 +55,7 @@ public class PlayerBase : PlayerBuilding
                 damager.cancelAttack();
             }
             //Destroy self
-            Destroy(gameObject);
+            Destroy(transform.parent.gameObject);
         }
         //Return health for utility use
         return health;

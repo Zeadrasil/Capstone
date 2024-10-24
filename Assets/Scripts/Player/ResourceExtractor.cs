@@ -17,6 +17,8 @@ public class ResourceExtractor : PlayerBuilding
     {
         //Remove currently given income
         GameManager.Instance.IncreaseIncome(-extractionRate * health * health / (baseHealth * baseHealth));
+        healthBar.transform.localScale = new Vector3(health / baseHealth, 0.1f, 1);
+        healthBar.transform.localPosition = new Vector3((-1 + health / baseHealth) * 0.5f, -0.55f, 0);
 
         //Decrease health
         health -= damage;
@@ -33,7 +35,7 @@ public class ResourceExtractor : PlayerBuilding
                 damager.cancelAttack();
             }
             //Destroy self
-            Destroy(gameObject);
+            Destroy(transform.parent.gameObject);
         }
         else
         {
@@ -84,6 +86,8 @@ public class ResourceExtractor : PlayerBuilding
     public override void Heal(float healing)
     {
         health = Mathf.Min(baseHealth, health + healing);
+        healthBar.transform.localScale = new Vector3(health / baseHealth, 0.1f, 1);
+        healthBar.transform.localPosition = new Vector3((-1 + health / baseHealth) * 0.5f, -0.55f, 0);
     }
 
     //Upgrade given stat
@@ -109,6 +113,11 @@ public class ResourceExtractor : PlayerBuilding
     //Get the description and location of the building
     //TODO: Implement
     public string GetDescription()
+    {
+        throw new System.NotImplementedException();
+    }
+
+    public override bool Sell()
     {
         throw new System.NotImplementedException();
     }

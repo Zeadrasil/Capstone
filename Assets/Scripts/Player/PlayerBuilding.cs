@@ -5,6 +5,8 @@ public abstract class PlayerBuilding : MonoBehaviour, IDamageable
 {
     //Location data for referencing
     public Vector2Int location = Vector2Int.zero;
+    [SerializeField] protected GameObject healthBar;
+    protected float cost;
 
     //Basic description for upgradeables
     [SerializeField] protected string basicDescription;
@@ -23,4 +25,6 @@ public abstract class PlayerBuilding : MonoBehaviour, IDamageable
 
     //Take damage to self
     public abstract float TakeDamage(float damage);
+
+    public abstract bool Sell();
 }

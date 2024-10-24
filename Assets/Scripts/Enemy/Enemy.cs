@@ -9,7 +9,7 @@ public class Enemy : MonoBehaviour, IDamageable, IDamager
 {
     //Enemy data
     private float health = 10;
-    private float baseHealth = 10;
+    [SerializeField] private float baseHealth = 10;
     private float movementSpeed = 1;
     private float damage = 2;
     private bool attackMode = false;
@@ -24,6 +24,7 @@ public class Enemy : MonoBehaviour, IDamageable, IDamager
     private Vector3 offset = Vector3.zero;
     private float offsetDistance = 0;
     private List<IDamager> currentDamagers = new List<IDamager>();
+    [SerializeField] GameObject healthBar;
 
     // Start is called before the first frame update
     void Start()
@@ -48,12 +49,12 @@ public class Enemy : MonoBehaviour, IDamageable, IDamager
             if (!pitbullMode)
             {
                 //Move according to direction
-                transform.position += movementSpeed * Time.deltaTime * transform.right.normalized;
+                transform.parent.position += movementSpeed * Time.deltaTime * transform.right.normalized;
             }
             else
             {
                 //Move straight to player base
-                transform.position += (Singleton<GameManager>.Instance.PlayerBase.transform.position - transform.position).normalized * movementSpeed * Time.deltaTime;
+                transform.parent.position += (Singleton<GameManager>.Instance.PlayerBase.transform.position - transform.position).normalized * movementSpeed * Time.deltaTime;
             }
         }
     }
@@ -110,7 +111,7 @@ public class Enemy : MonoBehaviour, IDamageable, IDamager
                 float health = 0;
                 if(GameManager.Instance.playerBuildings.TryGetValue(adjacentNode.location, out GameObject holder))
                 {
-                    health = holder.GetComponent<IDamageable>().GetHealth();
+                    health = holder.GetComponentInChildren<IDamageable>().GetHealth();
                 }
                 //Gets cost of going to the node based off of both the distance and health of any buildings
                 float cost = node.cost + Vector3.Distance(tilemap.CellToWorld(new Vector3Int(adjacentNode.location.x, adjacentNode.location.y)), tilemap.CellToWorld(new Vector3Int(node.location.x, node.location.y))) + health * avoidanceModifier;
@@ -229,7 +230,7 @@ public class Enemy : MonoBehaviour, IDamageable, IDamager
                         {
                             transform.rotation = currentGuide.transform.rotation;
                         }
-                        transform.position = TileManager.Instance.BlockerTilemap.CellToWorld(TileManager.Instance.BlockerTilemap.WorldToCell(transform.position));
+                        transform.parent.position = TileManager.Instance.BlockerTilemap.CellToWorld(TileManager.Instance.BlockerTilemap.WorldToCell(transform.position));
                     }
                 }
                 //If it is an enemy checkpoint
@@ -269,7 +270,8 @@ public class Enemy : MonoBehaviour, IDamageable, IDamager
     public float TakeDamage(float damage)
     {
         health -= damage;
-
+        healthBar.transform.localScale = new Vector3(health / baseHealth, 0.1f, 1);
+        healthBar.transform.localPosition = new Vector3((-1 + health / baseHealth) * 0.5f, -0.55f, 0);
         //Kill self if out of health
         if(health <= 0)
         {
@@ -290,7 +292,7 @@ public class Enemy : MonoBehaviour, IDamageable, IDamager
                 damager.cancelAttack();
             }
             //Finish destroying self
-            Destroy(gameObject);
+            Destroy(transform.parent.gameObject);
         }
         //Send health back for use by caller
         return health;
@@ -327,5 +329,7 @@ public class Enemy : MonoBehaviour, IDamageable, IDamager
     public void Heal(float healing)
     {
         health = Mathf.Min(healing + health, baseHealth);
+        healthBar.transform.localScale = new Vector3(health / baseHealth, 0.1f, 1);
+        healthBar.transform.localPosition = new Vector3((-1 + health / baseHealth) * 0.5f, -0.55f, 0);
     }
 }
