@@ -37,6 +37,7 @@ public class Turret : PlayerBuilding, IDamager, IUpgradeable
         baseHealth *= GameManager.Instance.playerPower;
         health = baseHealth;
         damage *= GameManager.Instance.playerPower;
+        cost = GameManager.Instance.budgetCosts[maxSpecializations];
     }
 
     //Upgrade given stat
@@ -301,10 +302,19 @@ public class Turret : PlayerBuilding, IDamager, IUpgradeable
         healthBar.transform.localPosition = new Vector3((-1 + health / baseHealth) * 0.5f, -0.4f, 0);
     }
 
+    //Sell building
     public override bool Sell()
     {
+        //Remove from building list
         GameManager.Instance.playerBuildings.Remove(location);
+
+        //Refund part of build cost
         GameManager.Instance.budget += cost * 0.5f * health / baseHealth;
+
+        //Kill building
+        Destroy(transform.parent.gameObject);
+
+        //Ensures that it is known that building was successfully sold
         return true;
     }
 }

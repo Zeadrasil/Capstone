@@ -66,6 +66,10 @@ public class LocalGameManager : MonoBehaviour
     [SerializeField] Camera camera;
     [SerializeField] PlayerBase playerBase;
 
+    //Selling data
+    [SerializeField] Canvas SellWindow;
+    [SerializeField] TMP_Text sellText;
+
     //Turret upgrade data
     [SerializeField] Canvas TurretUpgradeWindow;
 
@@ -184,6 +188,10 @@ public class LocalGameManager : MonoBehaviour
         GameManager.Instance.Camera = camera;
         GameManager.Instance.PlayerBase = playerBase;
 
+        //Pass sell data
+        GameManager.Instance.SellWindow = SellWindow;
+        GameManager.Instance.sellText = sellText;
+
         //Pass turret upgrade data
         GameManager.Instance.TurretUpgradeWindow = TurretUpgradeWindow;
         GameManager.Instance.turretSplashUpgradeText = turretSplashUpgradeText;
@@ -252,7 +260,7 @@ public class LocalGameManager : MonoBehaviour
     {
         GameManager.Instance.NextWave();
     }
-
+    //Relay for selling buildings using buttons
     public void Sell()
     {
         GameManager.Instance.Sell();

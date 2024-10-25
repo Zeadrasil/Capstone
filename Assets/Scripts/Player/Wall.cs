@@ -79,10 +79,19 @@ public class Wall : PlayerBuilding, IUpgradeable
         currentDamagers.Remove(damager);
     }
 
+    //Sell building
     public override bool Sell()
     {
+        //Remove from building list
         GameManager.Instance.playerBuildings.Remove(location);
+
+        //Refund part of build cost
         GameManager.Instance.budget += cost * 0.5f * health / baseHealth;
+
+        //Kill building
+        Destroy(transform.parent.gameObject);
+
+        //Ensures that it is known that building was successfully sold
         return true;
     }
 

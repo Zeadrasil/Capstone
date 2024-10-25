@@ -144,6 +144,11 @@ public class GameManager : Singleton<GameManager>
     private bool active = false;
     public int queueInitialize = -1;
 
+    //Selling data storage
+    public Canvas SellWindow;
+    public TMP_Text sellText;
+    public KeyCode sellKey = KeyCode.Backspace;
+
     //UI storage for the turret upgrade window
     public Canvas TurretUpgradeWindow;
 
@@ -229,16 +234,18 @@ public class GameManager : Singleton<GameManager>
         //Enable self
         active = true;
 
-        //Hide upgrade windows
+        //Hide non-starting windows
         TurretUpgradeWindow.enabled = false;
         RepairUpgradeWindow.enabled = false;
         WallUpgradeWindow.enabled = false;
+        SellWindow.enabled = false;
 
         //Set hotkey text
-        tierOneTurretLabel.text = tierOneTurretKey.ToString().Contains("Alpha") ? tierOneTurretKey.ToString().Remove(0, 5) : tierOneTurretKey.ToString();
-        tierOneExtractorLabel.text = tierOneExtractorKey.ToString().Contains("Alpha") ? tierOneExtractorKey.ToString().Remove(0, 5) : tierOneExtractorKey.ToString();
-        nextWaveLabel.text = nextWaveKey.ToString().Contains("Alpha") ? nextWaveKey.ToString().Remove(0, 5) : nextWaveKey.ToString();
-        
+        tierOneTurretLabel.text = BasicUtils.TranslateKey(tierOneTurretKey);
+        tierOneExtractorLabel.text = BasicUtils.TranslateKey(tierOneExtractorKey);
+        nextWaveLabel.text = BasicUtils.TranslateKey(nextWaveKey);
+        sellText.text = $"Sell ({BasicUtils.TranslateKey(sellKey)})";
+
         //Ensure that wave background indicates that you can start a new wave
         nextWaveBackground.color = new Color(availableColor.x, availableColor.y, availableColor.z);
 
@@ -255,15 +262,11 @@ public class GameManager : Singleton<GameManager>
         //You cannot start a wave if you have not finished your current wave, might change this later
         if(betweenWaves)
         {
-            //Selects new wave in the bottom menu
-            selectedConstructionIndex = 10;
-            nextWaveFrame.color = selectedColor;
-
             //Changes color to indicate that you cannot yet start a new wave
             nextWaveBackground.color = new Color(unavailableColor.x, unavailableColor.y, unavailableColor.z);
 
-            //Clear out construction and upgrade data
-            Build(-1);
+            //Clear out construction and upgrade data as well as selects new wave in the bottom menu
+            Build(10);
 
             //Mark new wave
             wave++;
@@ -408,11 +411,16 @@ public class GameManager : Singleton<GameManager>
             TurretUpgradeWindow.enabled = false;
             RepairUpgradeWindow.enabled = false;
             WallUpgradeWindow.enabled = false;
+            SellWindow.enabled = false;
         }
         else
         {
+            //Open the sell window
+            SellWindow.enabled = true;
+
             //Identifies what type of building you selected
-            if(selectedBuilding.TryGetComponent(out Turret turret))
+            Turret turret = selectedBuilding.GetComponentInChildren<Turret>();
+            if (turret != null)
             {
                 //Enables the turret upgrade window
                 TurretUpgradeWindow.enabled = true;
@@ -427,34 +435,38 @@ public class GameManager : Singleton<GameManager>
                 updateUpgradeCost(0, 3);
                 updateUpgradeCost(0, 4);
             }
-            else if(selectedBuilding.TryGetComponent(out RepairStation repair))
+            else
             {
-                //Enables the repair station upgrade window
-                RepairUpgradeWindow.enabled = true;
+                RepairStation repair = selectedBuilding.GetComponentInChildren<RepairStation>();
+                if (repair != null)
+                {
+                    //Enables the repair station upgrade window
+                    RepairUpgradeWindow.enabled = true;
 
-                //Writes the description so that you know what you have selected
-                repairDescriptionText.text = repair.GetDescription();
+                    //Writes the description so that you know what you have selected
+                    repairDescriptionText.text = repair.GetDescription();
 
-                //Ensures that all of the upgrade panels have accurate information
-                updateUpgradeCost(1, 0);
-                updateUpgradeCost(1, 1);
-                updateUpgradeCost(1, 2);
-            }
-            else if(selectedBuilding.TryGetComponent(out Wall wall))
-            {
-                //Enables the wall upgrade window
-                WallUpgradeWindow.enabled = true;
+                    //Ensures that all of the upgrade panels have accurate information
+                    updateUpgradeCost(1, 0);
+                    updateUpgradeCost(1, 1);
+                    updateUpgradeCost(1, 2);
+                }
+                else
+                {
+                    Wall wall = selectedBuilding.GetComponentInChildren<Wall>();
+                    if (wall != null)
+                    {
+                        //Enables the wall upgrade window
+                        WallUpgradeWindow.enabled = true;
 
-                //Writes the description so that you know what you have selected
-                wallDescriptionText.text = wall.GetDescription();
+                        //Writes the description so that you know what you have selected
+                        wallDescriptionText.text = wall.GetDescription();
 
-                //Ensures that all of the upgrade panels have accurate information
-                updateUpgradeCost(2, 0);
-                updateUpgradeCost(2, 1);
-            }
-            else if (selectedBuilding.TryGetComponent(out ResourceExtractor extractor))
-            {
-                
+                        //Ensures that all of the upgrade panels have accurate information
+                        updateUpgradeCost(2, 0);
+                        updateUpgradeCost(2, 1);
+                    }
+                }
             }
         }
     }
@@ -846,7 +858,6 @@ public class GameManager : Singleton<GameManager>
                     //Update selected construction data
                     Build(selectedConstructionIndex);
                 }
-
                 //Stores the tile that your mouse is above
                 Vector2Int hoveredTile = (Vector2Int)tileManager.TraversableTilemap.WorldToCell(Camera.ScreenToWorldPoint(Input.mousePosition));
 
@@ -858,6 +869,7 @@ public class GameManager : Singleton<GameManager>
                     {
                         //Clears building data
                         Build(-1);
+
                         //Updates upgrade data
                         selectedUpgrade = 0;
                         selectedBuilding = building;
@@ -871,87 +883,97 @@ public class GameManager : Singleton<GameManager>
                         budget -= budgetCosts[selectedConstructionIndex];
                     }
                 }
-                //Moves selected upgrade down when you use your down navigation key
-                if (Input.GetKeyDown(moveSelectionDownKey) && selectedBuilding != null)
+
+                //Actions for when you have a selected building
+                if (selectedBuilding != null)
                 {
-                    //Sets the number of different upgrades based on the type of building
-                    int cap = 0;
+                    //Moves selected upgrade down when you use your down navigation key
+                    if (Input.GetKeyDown(moveSelectionDownKey))
+                    {
+                        //Sets the number of different upgrades based on the type of building
+                        int cap = 0;
 
-                    //Turret has 5 different upgrades
-                    if (selectedBuilding.TryGetComponent(out Turret ignoreableTurret))
-                    {
-                        cap = 5;
-                    }
-                    else if (selectedBuilding.TryGetComponent(out RepairStation ignoreableRepair))
-                    {
-                        cap = 3;
-                    }
-                    //Wall has 2 different upgrades
-                    else if (selectedBuilding.TryGetComponent(out Wall ignoreableWall))
-                    {
-                        cap = 2;
-                    }
-                    //Increase the index of the selected upgrade
-                    selectedUpgrade++;
+                        //Turret has 5 different upgrades
+                        if (selectedBuilding.TryGetComponent(out Turret ignoreableTurret))
+                        {
+                            cap = 5;
+                        }
+                        else if (selectedBuilding.TryGetComponent(out RepairStation ignoreableRepair))
+                        {
+                            cap = 3;
+                        }
+                        //Wall has 2 different upgrades
+                        else if (selectedBuilding.TryGetComponent(out Wall ignoreableWall))
+                        {
+                            cap = 2;
+                        }
+                        //Increase the index of the selected upgrade
+                        selectedUpgrade++;
 
-                    //Wrap around based on the cap
-                    if (selectedUpgrade == cap)
-                    {
-                        selectedUpgrade = 0;
+                        //Wrap around based on the cap
+                        if (selectedUpgrade == cap)
+                        {
+                            selectedUpgrade = 0;
+                        }
+                        //Update the shown data to reflect new selection
+                        updateSelection();
                     }
-                    //Update the shown data to reflect new selection
-                    updateSelection();
-                }
-                //Moves selected upgrade up when you use your up navigation key
-                if (Input.GetKeyDown(moveSelectionUpKey) && selectedBuilding != null)
-                {
-                    //Sets the number of different upgrades based on the type of building
-                    int cap = 0;
+                    //Moves selected upgrade up when you use your up navigation key
+                    if (Input.GetKeyDown(moveSelectionUpKey))
+                    {
+                        //Sets the number of different upgrades based on the type of building
+                        int cap = 0;
 
-                    //Turret has 5 upgrades, subtract one due to zero based index
-                    if (selectedBuilding.TryGetComponent(out Turret ignoreableTurret))
-                    {
-                        cap = 4;
-                    }
-                    //Repair Station has 3 upgrade, subtract one due to zero based index
-                    else if (selectedBuilding.TryGetComponent(out RepairStation ignoreableRepair))
-                    {
-                        cap = 2;
-                    }
-                    //Wall has 2 upgrades, subtract one due to zero based index
-                    else if (selectedBuilding.TryGetComponent(out Wall ignoreableWall))
-                    {
-                        cap = 1;
-                    }
-                    //Decrease the index of the selected upgrade
-                    selectedUpgrade--;
+                        //Turret has 5 upgrades, subtract one due to zero based index
+                        if (selectedBuilding.TryGetComponent(out Turret ignoreableTurret))
+                        {
+                            cap = 4;
+                        }
+                        //Repair Station has 3 upgrade, subtract one due to zero based index
+                        else if (selectedBuilding.TryGetComponent(out RepairStation ignoreableRepair))
+                        {
+                            cap = 2;
+                        }
+                        //Wall has 2 upgrades, subtract one due to zero based index
+                        else if (selectedBuilding.TryGetComponent(out Wall ignoreableWall))
+                        {
+                            cap = 1;
+                        }
+                        //Decrease the index of the selected upgrade
+                        selectedUpgrade--;
 
-                    //Wrap around based on the cap
-                    if (selectedUpgrade == -1)
-                    {
-                        selectedUpgrade = cap;
+                        //Wrap around based on the cap
+                        if (selectedUpgrade == -1)
+                        {
+                            selectedUpgrade = cap;
+                        }
+                        //Update the shown data to reflect new data
+                        updateSelection();
                     }
-                    //Update the shown data to reflect new data
-                    updateSelection();
-                }
-                //Allows you to upgrade using hotkeys
-                if (Input.GetKeyDown(confirmKey) && selectedBuilding != null)
-                {
-                    //Identify building type that you are trying to upgrade
-                    if (selectedBuilding.TryGetComponent(out Turret ignoreableTurret))
+                    //Allows you to upgrade using hotkeys
+                    if (Input.GetKeyDown(confirmKey))
                     {
-                        //Upgrade turret with selected upgrade
-                        upgradeBuilding(0, selectedUpgrade);
+                        //Identify building type that you are trying to upgrade
+                        if (selectedBuilding.TryGetComponent(out Turret ignoreableTurret))
+                        {
+                            //Upgrade turret with selected upgrade
+                            upgradeBuilding(0, selectedUpgrade);
+                        }
+                        else if (selectedBuilding.TryGetComponent(out RepairStation ignoreableRepair))
+                        {
+                            //upgrade repair station with selected upgrade
+                            upgradeBuilding(1, selectedUpgrade);
+                        }
+                        else if (selectedBuilding.TryGetComponent(out Wall ignoreableWall))
+                        {
+                            //Upgrade wall with selected upgrade
+                            upgradeBuilding(2, selectedUpgrade);
+                        }
                     }
-                    else if (selectedBuilding.TryGetComponent(out RepairStation ignoreableRepair))
+                    //Allows you to sell buildings with hotkeys
+                    if(Input.GetKeyDown(sellKey))
                     {
-                        //upgrade repair station with selected upgrade
-                        upgradeBuilding(1, selectedUpgrade);
-                    }
-                    else if (selectedBuilding.TryGetComponent(out Wall ignoreableWall))
-                    {
-                        //Upgrade wall with selected upgrade
-                        upgradeBuilding(2, selectedUpgrade);
+                        Sell();
                     }
                 }
                 //Allows you to cancel constructions using right click
@@ -1025,12 +1047,17 @@ public class GameManager : Singleton<GameManager>
         nextWaveBackground.color = new Color(Mathf.Lerp(unavailableColor.x, availableColor.x, 1 - Mathf.Clamp(currentEnemies.Count / (float)maxEnemiesThisWave, 0, 1)), Mathf.Lerp(unavailableColor.y, availableColor.y, 1 - Mathf.Clamp(currentEnemies.Count / (float)maxEnemiesThisWave, 0, 1)), Mathf.Lerp(unavailableColor.z, availableColor.z, 1 - Mathf.Clamp(currentEnemies.Count / (float)maxEnemiesThisWave, 0, 1)));
     }
 
+    //Function to remove a building
     public void Sell()
     {
+        //Do not attempt to remove a building if you do not have a building selected
         if(selectedBuilding != null)
         {
+            //Checks to see if you can remove the building
             if(selectedBuilding.GetComponentInChildren<PlayerBuilding>().Sell())
             {
+                //Clears building selection
+                selectedBuilding = null;
                 standardUpgradeEvents();
             }
         }
