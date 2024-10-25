@@ -8,13 +8,46 @@ public class LocalGameManager : MonoBehaviour
 {
     [SerializeField] TMP_Text nextWaveLabel;
 
-    //Prefabs
+    //Building prefabs
     [SerializeField] GameObject turretTierOne;
     [SerializeField] GameObject repairTierOne;
     [SerializeField] GameObject wallTierOne;
     [SerializeField] GameObject extractorTierOne;
-    [SerializeField] GameObject baseEnemy;
+
+    //Enemy prefabs
     [SerializeField] GameObject enemyCheckpointPrefab;
+    [SerializeField] GameObject baseEnemy;
+    [SerializeField] GameObject fastEnemy;
+    [SerializeField] GameObject swarmEnemy;
+    [SerializeField] GameObject fastSwarmEnemy;
+    [SerializeField] GameObject tankEnemy;
+    [SerializeField] GameObject fastTankEnemy;
+    [SerializeField] GameObject swarmTankEnemy;
+    [SerializeField] GameObject fastSwarmTankEnemy;
+    [SerializeField] GameObject deadlyEnemy;
+    [SerializeField] GameObject fastDeadlyEnemy;
+    [SerializeField] GameObject swarmDeadlyEnemy;
+    [SerializeField] GameObject fastSwarmDeadlyEnemy;
+    [SerializeField] GameObject tankDeadlyEnemy;
+    [SerializeField] GameObject fastTankDeadlyEnemy;
+    [SerializeField] GameObject swarmTankDeadlyEnemy;
+    [SerializeField] GameObject fastSwarmTankDeadlyEnemy;
+    [SerializeField] GameObject spammyEnemy;
+    [SerializeField] GameObject fastSpammyEnemy;
+    [SerializeField] GameObject swarmSpammyEnemy;
+    [SerializeField] GameObject fastSwarmSpammyEnemy;
+    [SerializeField] GameObject tankSpammyEnemy;
+    [SerializeField] GameObject fastTankSpammyEnemy;
+    [SerializeField] GameObject swarmTankSpammyEnemy;
+    [SerializeField] GameObject fastSwarmTankSpammyEnemy;
+    [SerializeField] GameObject deadlySpammyEnemy;
+    [SerializeField] GameObject fastDeadlySpammyEnemy;
+    [SerializeField] GameObject swarmDeadlySpammyEnemy;
+    [SerializeField] GameObject fastSwarmDeadlySpammyEnemy;
+    [SerializeField] GameObject tankDeadlySpammyEnemy;
+    [SerializeField] GameObject fastTankDeadlySpammyEnemy;
+    [SerializeField] GameObject swarmTankDeadlySpammyEnemy;
+    [SerializeField] GameObject fastSwarmTankDeadlySpammyEnemy;
 
     //Construction panel data
     [SerializeField] Image nextWaveBackground;
@@ -130,13 +163,46 @@ public class LocalGameManager : MonoBehaviour
     {
         GameManager.Instance.nextWaveLabel = nextWaveLabel;
 
-        //Pass prefabs
+        //Pass building prefabs
         GameManager.Instance.turretTierOne = turretTierOne;
         GameManager.Instance.repairTierOne = repairTierOne;
         GameManager.Instance.wallTierOne = wallTierOne;
         GameManager.Instance.extractorTierOne = extractorTierOne;
+
+        //Pass enemy prefabs
         GameManager.Instance.baseEnemy = baseEnemy;
         GameManager.Instance.EnemyCheckpointPrefab = enemyCheckpointPrefab;
+        GameManager.Instance.fastEnemy = fastEnemy;
+        GameManager.Instance.swarmEnemy = swarmEnemy;
+        GameManager.Instance.fastSwarmEnemy = fastSwarmEnemy;
+        GameManager.Instance.tankEnemy = tankEnemy;
+        GameManager.Instance.fastTankEnemy = fastTankEnemy;
+        GameManager.Instance.swarmTankEnemy = swarmTankEnemy;
+        GameManager.Instance.fastSwarmTankEnemy = fastSwarmTankEnemy;
+        GameManager.Instance.deadlyEnemy = deadlyEnemy;
+        GameManager.Instance.fastDeadlyEnemy = fastDeadlyEnemy;
+        GameManager.Instance.swarmDeadlyEnemy = swarmDeadlyEnemy;
+        GameManager.Instance.fastSwarmDeadlyEnemy = fastSwarmDeadlyEnemy;
+        GameManager.Instance.tankDeadlyEnemy = tankDeadlyEnemy;
+        GameManager.Instance.fastTankDeadlyEnemy = fastTankDeadlyEnemy;
+        GameManager.Instance.swarmTankDeadlyEnemy = swarmTankDeadlyEnemy;
+        GameManager.Instance.fastSwarmTankDeadlyEnemy = fastSwarmTankDeadlyEnemy;
+        GameManager.Instance.spammyEnemy = spammyEnemy;
+        GameManager.Instance.fastSpammyEnemy = fastSpammyEnemy;
+        GameManager.Instance.swarmSpammyEnemy= swarmSpammyEnemy;
+        GameManager.Instance.fastSwarmSpammyEnemy = fastSwarmSpammyEnemy;
+        GameManager.Instance.tankSpammyEnemy = tankSpammyEnemy;
+        GameManager.Instance.fastTankSpammyEnemy = fastTankSpammyEnemy;
+        GameManager.Instance.swarmTankSpammyEnemy = swarmTankSpammyEnemy;
+        GameManager.Instance.fastSwarmTankSpammyEnemy = fastSwarmTankSpammyEnemy;
+        GameManager.Instance.deadlySpammyEnemy = deadlySpammyEnemy;
+        GameManager.Instance.fastDeadlySpammyEnemy = fastDeadlySpammyEnemy;
+        GameManager.Instance.swarmDeadlySpammyEnemy = swarmDeadlySpammyEnemy;
+        GameManager.Instance.fastSwarmDeadlySpammyEnemy = fastSwarmDeadlySpammyEnemy;
+        GameManager.Instance.tankDeadlySpammyEnemy = tankDeadlySpammyEnemy;
+        GameManager.Instance.fastTankDeadlySpammyEnemy = fastTankDeadlySpammyEnemy;
+        GameManager.Instance.swarmTankDeadlySpammyEnemy = swarmTankDeadlySpammyEnemy;
+        GameManager.Instance.fastSwarmTankDeadlySpammyEnemy = fastSwarmTankDeadlySpammyEnemy;
 
         //Pass construction panel data
         GameManager.Instance.nextWaveBackground = nextWaveBackground;

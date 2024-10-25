@@ -7383,8 +7383,39 @@ MonoBehaviour:
   repairTierOne: {fileID: 8016618778940119860, guid: 3176282f1096c894983b994b689bc876, type: 3}
   wallTierOne: {fileID: 8016618778940119860, guid: 850084f788baf72429629f1cee29687c, type: 3}
   extractorTierOne: {fileID: 8016618778940119860, guid: 627fe18eedb6358448cf5ea4327a4f45, type: 3}
-  baseEnemy: {fileID: 4756387668570662307, guid: 293c27808f492ab40afe184631338d18, type: 3}
   enemyCheckpointPrefab: {fileID: 8856849199956707201, guid: a72f0cfc2d3c11c4490146f7542969a9, type: 3}
+  baseEnemy: {fileID: 4756387668570662307, guid: 293c27808f492ab40afe184631338d18, type: 3}
+  fastEnemy: {fileID: 4756387668570662307, guid: 6cfafe8b63e943c478aebed8b60170de, type: 3}
+  swarmEnemy: {fileID: 4756387668570662307, guid: c9778cb6d6e928647a68a8b251e16b72, type: 3}
+  fastSwarmEnemy: {fileID: 4756387668570662307, guid: 5b2f77bb2ff673843bb7ebf0212356f1, type: 3}
+  tankEnemy: {fileID: 4756387668570662307, guid: d79123fcfc1d6134e9db745f7be2e789, type: 3}
+  fastTankEnemy: {fileID: 4756387668570662307, guid: e04ec8c2f20c1254898c09f8d5db4d7f, type: 3}
+  swarmTankEnemy: {fileID: 4756387668570662307, guid: 1f6c5b24a63737d44b4a49e2406139e0, type: 3}
+  fastSwarmTankEnemy: {fileID: 4756387668570662307, guid: bcb792510d349c446a220734bdeaad73, type: 3}
+  deadlyEnemy: {fileID: 4756387668570662307, guid: bf1784600bfbbec459598c0ee233f2eb, type: 3}
+  fastDeadlyEnemy: {fileID: 4756387668570662307, guid: d0481661ca9ce0440821c1e8dbaaf3c3, type: 3}
+  swarmDeadlyEnemy: {fileID: 4756387668570662307, guid: 2617966ad27d7bc49a459d8a194ca2fc, type: 3}
+  fastSwarmDeadlyEnemy: {fileID: 4756387668570662307, guid: 1f4da2a6598a0d3439da532c9d3c1c2a, type: 3}
+  tankDeadlyEnemy: {fileID: 4756387668570662307, guid: dbd4e80f26b802b42872655b5605bcd1, type: 3}
+  fastTankDeadlyEnemy: {fileID: 4756387668570662307, guid: 57535a621040fc540839e32022f08a99, type: 3}
+  swarmTankDeadlyEnemy: {fileID: 4756387668570662307, guid: 7accd631aff35194ca24c4b41a5dc5f6, type: 3}
+  fastSwarmTankDeadlyEnemy: {fileID: 4756387668570662307, guid: 8aaf32b4b7506c1468dee2de72cffec4, type: 3}
+  spammyEnemy: {fileID: 4756387668570662307, guid: cfa0ae817f5ef6a48abf7cee1ab12d1f, type: 3}
+  fastSpammyEnemy: {fileID: 4756387668570662307, guid: 8335fe018ec804e4d8a5bdd56fb460db, type: 3}
+  swarmSpammyEnemy: {fileID: 4756387668570662307, guid: 442e085e13173904e825f402c08759a7, type: 3}
+  fastSwarmSpammyEnemy: {fileID: 4756387668570662307, guid: ff8da98f18d4d8e41aa1e01ee6e1ff2b, type: 3}
+  tankSpammyEnemy: {fileID: 4756387668570662307, guid: 895eded3c1f0a4f449bdd3d831181020, type: 3}
+  fastTankSpammyEnemy: {fileID: 4756387668570662307, guid: cd6a5ff0949deb345a4c3bea56d572cb, type: 3}
+  swarmTankSpammyEnemy: {fileID: 4756387668570662307, guid: e0bb3b05661c5bd4cbe73eabe0010c6b, type: 3}
+  fastSwarmTankSpammyEnemy: {fileID: 4756387668570662307, guid: be2f26f270b35ac4796ddc3753b1a6d2, type: 3}
+  deadlySpammyEnemy: {fileID: 4756387668570662307, guid: 209493a674715894e8631d290f5073b4, type: 3}
+  fastDeadlySpammyEnemy: {fileID: 4756387668570662307, guid: e0ee09301e081ec449b54198a0a0231d, type: 3}
+  swarmDeadlySpammyEnemy: {fileID: 4756387668570662307, guid: 26dca62a41eb459439061296e796b12a, type: 3}
+  fastSwarmDeadlySpammyEnemy: {fileID: 4756387668570662307, guid: 421761c19ef30c5468c070bc7e5f0e12, type: 3}
+  tankDeadlySpammyEnemy: {fileID: 4756387668570662307, guid: 94fbaea41aba58c4dbf7fd6781c2dd15, type: 3}
+  fastTankDeadlySpammyEnemy: {fileID: 4756387668570662307, guid: fbdc275be867c0b469a1ff61819eef32, type: 3}
+  swarmTankDeadlySpammyEnemy: {fileID: 4756387668570662307, guid: 11953d9a860f03048a488ab208ff2be1, type: 3}
+  fastSwarmTankDeadlySpammyEnemy: {fileID: 4756387668570662307, guid: 79bb13f170105f441939923727bade3f, type: 3}
   nextWaveBackground: {fileID: 345020067}
   nextWaveFrame: {fileID: 681577564}
   tierOneTurretBackground: {fileID: 1407618499}

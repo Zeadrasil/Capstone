@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
@@ -81,7 +82,40 @@ public class GameManager : Singleton<GameManager>
     public GameObject repairTierOne;
     public GameObject wallTierOne;
     public GameObject extractorTierOne;
+
+    //Enemy prefabs
     public GameObject baseEnemy;
+    public GameObject fastEnemy;
+    public GameObject swarmEnemy;
+    public GameObject fastSwarmEnemy;
+    public GameObject tankEnemy;
+    public GameObject fastTankEnemy;
+    public GameObject swarmTankEnemy;
+    public GameObject fastSwarmTankEnemy;
+    public GameObject deadlyEnemy;
+    public GameObject fastDeadlyEnemy;
+    public GameObject swarmDeadlyEnemy;
+    public GameObject fastSwarmDeadlyEnemy;
+    public GameObject tankDeadlyEnemy;
+    public GameObject fastTankDeadlyEnemy;
+    public GameObject swarmTankDeadlyEnemy;
+    public GameObject fastSwarmTankDeadlyEnemy;
+    public GameObject spammyEnemy;
+    public GameObject fastSpammyEnemy;
+    public GameObject swarmSpammyEnemy;
+    public GameObject fastSwarmSpammyEnemy;
+    public GameObject tankSpammyEnemy;
+    public GameObject fastTankSpammyEnemy;
+    public GameObject swarmTankSpammyEnemy;
+    public GameObject fastSwarmTankSpammyEnemy;
+    public GameObject deadlySpammyEnemy;
+    public GameObject fastDeadlySpammyEnemy;
+    public GameObject swarmDeadlySpammyEnemy;
+    public GameObject fastSwarmDeadlySpammyEnemy;
+    public GameObject tankDeadlySpammyEnemy;
+    public GameObject fastTankDeadlySpammyEnemy;
+    public GameObject swarmTankDeadlySpammyEnemy;
+    public GameObject fastSwarmTankDeadlySpammyEnemy;
 
     //Building UI storage
     public Image nextWaveBackground;
@@ -211,6 +245,14 @@ public class GameManager : Singleton<GameManager>
     public TMP_Text extractorRateUpgradeText;
     public TMP_Text extractorHealthUpgradeText;
 
+    //Holds enemy types for easier access
+    GameObject[] allEnemies;
+    GameObject[] tierOneEnemies;
+    GameObject[] tierTwoEnemies;
+    GameObject[] tierThreeEnemies;
+    GameObject[] tierFourEnemies;
+    GameObject[] tierFiveEnemies;
+
     //Sets the TileManager instance
     void Start()
     {
@@ -221,7 +263,28 @@ public class GameManager : Singleton<GameManager>
     public void Initialize()
     {
         //Sets the RNG seed so that you can generate the same map every time
-        Random.InitState(simplifiedSeed);
+        UnityEngine.Random.InitState(simplifiedSeed);
+
+        //Assigns enemies to proper tier storages
+        tierOneEnemies = new GameObject[] { fastEnemy, swarmEnemy, tankEnemy, deadlyEnemy, spammyEnemy };
+        tierTwoEnemies = new GameObject[] { fastSwarmEnemy, fastTankEnemy, fastDeadlyEnemy, fastSpammyEnemy,
+            swarmTankEnemy, swarmDeadlyEnemy, swarmSpammyEnemy, tankDeadlyEnemy, tankSpammyEnemy, deadlySpammyEnemy };
+        tierThreeEnemies = new GameObject[] { fastSwarmTankEnemy, fastSwarmDeadlyEnemy, fastSwarmSpammyEnemy,
+            fastTankDeadlyEnemy, fastTankSpammyEnemy, fastDeadlySpammyEnemy, swarmTankDeadlyEnemy, swarmTankSpammyEnemy,
+            swarmDeadlySpammyEnemy, tankDeadlySpammyEnemy };
+        tierFourEnemies = new GameObject[] { fastSwarmTankDeadlyEnemy, fastSwarmTankSpammyEnemy,
+            fastSwarmDeadlySpammyEnemy, fastTankDeadlySpammyEnemy, swarmTankDeadlySpammyEnemy };
+        tierFiveEnemies = new GameObject[] { };//{ fastSwarmTankDeadlySpammyEnemy };
+
+        //Combine tier storages to form overall storage
+        allEnemies = new GameObject[tierOneEnemies.Length + tierTwoEnemies.Length + tierThreeEnemies.Length + tierFourEnemies.Length + tierFiveEnemies.Length + 2];
+        allEnemies[0] = baseEnemy;
+        Array.Copy(tierOneEnemies, 0, allEnemies, 1, tierOneEnemies.Length);
+        Array.Copy(tierTwoEnemies, 0, allEnemies, tierOneEnemies.Length + 1, tierTwoEnemies.Length);
+        Array.Copy(tierThreeEnemies, 0, allEnemies, tierOneEnemies.Length + tierTwoEnemies.Length + 1, tierThreeEnemies.Length);
+        Array.Copy(tierFourEnemies, 0, allEnemies, tierOneEnemies.Length + tierTwoEnemies.Length + tierThreeEnemies.Length + 1, tierFourEnemies.Length);
+        Array.Copy(tierFiveEnemies, 0, allEnemies, tierOneEnemies.Length + tierTwoEnemies.Length + tierThreeEnemies.Length + tierFourEnemies.Length + 1, tierFiveEnemies.Length);
+        allEnemies[allEnemies.Length - 1] = fastSwarmTankDeadlySpammyEnemy;
 
         //Modifies starting budget by the difficulty modifier
         budget *= playerIncome;
@@ -293,7 +356,13 @@ public class GameManager : Singleton<GameManager>
             //Creates the correct amount of enemies for the wave and spreads them evenly among spawn points
             for (int i = 0; i < 5 * Mathf.Pow(wave, 1 + (0.25f * enemyDifficulty)) * enemyDifficulty; i++)
             {
-                enemySpawns[i % enemySpawns.Count].Add(Instantiate(baseEnemy, TileManager.Instance.TraversableTilemap.CellToWorld(new Vector3Int(TileManager.Instance.potentialSpawnpoints[i % enemySpawns.Count].x, TileManager.Instance.potentialSpawnpoints[i % enemySpawns.Count].y)) + new Vector3(UnityEngine.Random.Range(-0.2f, 0.2f), UnityEngine.Random.Range(-0.2f, 0.2f)), Quaternion.identity).GetComponentInChildren<Enemy>());
+                int at = UnityEngine.Random.Range(0, TileManager.Instance.potentialSpawnpoints.Count);
+                Enemy createdEnemy = Instantiate(allEnemies[UnityEngine.Random.Range(0, allEnemies.Length)], TileManager.Instance.TraversableTilemap.CellToWorld(new Vector3Int(TileManager.Instance.potentialSpawnpoints[at].x, TileManager.Instance.potentialSpawnpoints[at].y)) + new Vector3(UnityEngine.Random.Range(-0.2f, 0.2f), UnityEngine.Random.Range(-0.2f, 0.2f)), Quaternion.identity).GetComponentInChildren<Enemy>();
+                enemySpawns[at].Add(createdEnemy);
+                if (createdEnemy.swarmer)
+                {
+                    enemySpawns[at].Add(Instantiate(allEnemies[UnityEngine.Random.Range(0, allEnemies.Length)], TileManager.Instance.TraversableTilemap.CellToWorld(new Vector3Int(TileManager.Instance.potentialSpawnpoints[at].x, TileManager.Instance.potentialSpawnpoints[at].y)) + new Vector3(UnityEngine.Random.Range(-0.2f, 0.2f), UnityEngine.Random.Range(-0.2f, 0.2f)), Quaternion.identity).GetComponentInChildren<Enemy>());
+                }
             }
             //Goes through every spawnpoint
             for (int i = 0; i < enemySpawns.Count; i++)

@@ -10,13 +10,14 @@ public class Enemy : MonoBehaviour, IDamageable, IDamager
     //Enemy data
     private float health = 10;
     [SerializeField] private float baseHealth = 10;
-    private float movementSpeed = 1;
-    private float damage = 2;
+    [SerializeField] private float movementSpeed = 1;
+    [SerializeField] private float damage = 2;
     private bool attackMode = false;
     private bool pitbullMode = false;
     private bool ranged = false;
     private bool blocked = false;
-    private float firerate = 10;
+    [SerializeField] private float firerate = 10;
+    public bool swarmer = false;
     public EnemyCheckpoint currentGuide;
     private IDamageable target;
     private RangedEnemyTargeter targeter;
