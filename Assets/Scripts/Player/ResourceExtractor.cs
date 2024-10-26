@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 //ResourceExtractors are used to generate resources for the player
-public class ResourceExtractor : PlayerBuilding
+public class ResourceExtractor : PlayerBuilding, IUpgradeable
 {
     //Basic stats
     float health = 10;
@@ -118,6 +118,21 @@ public class ResourceExtractor : PlayerBuilding
     }
 
     public override bool Sell()
+    {
+        throw new System.NotImplementedException();
+    }
+
+    public float GetUpgradeEnergy(int type)
+    {
+        throw new System.NotImplementedException();
+    }
+
+    public override float Disable()
+    {
+        throw new System.NotImplementedException();
+    }
+
+    public override float Enable()
     {
         throw new System.NotImplementedException();
     }

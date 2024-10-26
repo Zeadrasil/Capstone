@@ -7,7 +7,6 @@ public class PlayerBase : PlayerBuilding
     //Basic data
     float health = 100;
     float baseHealth = 100;
-
     //Damagers to avoid null references and improve reaction time
     private List<IDamager> currentDamagers = new List<IDamager>();
 
@@ -15,6 +14,16 @@ public class PlayerBase : PlayerBuilding
     public override void AddDamager(IDamager damager)
     {
         currentDamagers.Add(damager);
+    }
+
+    public override float Disable()
+    {
+        throw new System.NotImplementedException();
+    }
+
+    public override float Enable()
+    {
+        throw new System.NotImplementedException();
     }
 
     //Send health to callers for them to use

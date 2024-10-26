@@ -134,6 +134,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   location: {x: 0, y: 0}
   healthBar: {fileID: 5474852193492080398}
+  energyCost: 0
+  previousChanged: {fileID: 0}
+  nextChanged: {fileID: 0}
   basicDescription: Tier One Wall
   baseHealth: 100
   healingEffectiveness: 1

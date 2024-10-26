@@ -153,4 +153,22 @@ public class Wall : PlayerBuilding, IUpgradeable
     {
         health = baseHealth;
     }
+
+    //Get energy required to upgrade stat
+    public float GetUpgradeEnergy(int type)
+    {
+        return 0;
+    }
+
+    //Walls cannot be disabled
+    public override float Disable()
+    {
+        return 0;
+    }
+
+    //Walls cannot be enabled
+    public override float Enable()
+    {
+        return 0;
+    }
 }

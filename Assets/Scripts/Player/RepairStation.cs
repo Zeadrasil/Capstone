@@ -20,6 +20,11 @@ public class RepairStation : PlayerBuilding, IDamageable, IUpgradeable
     [SerializeField] float[] upgradeEffects = new float[] { 1.25f, 1.25f, 1.25f };
     [SerializeField] int[] upgradeLevels = new int[] { 0, 0, 0 };
 
+    //Energy data
+    public float[] energyCosts = new float[] { 0.1f, 0.1f, 0.1f };
+    bool active = true;
+    [SerializeField] SpriteRenderer spriteRenderer;
+
     //Add damager to list
     public override void AddDamager(IDamager damager)
     {
@@ -156,29 +161,32 @@ public class RepairStation : PlayerBuilding, IDamageable, IUpgradeable
     // Update is called once per frame
     void FixedUpdate()
     {
-        //Every so often heal nearby buildings
-        if(cooldown == 0)
+        if (active)
         {
-            //Gets all colliders nearby
-            Collider2D[] hits = Physics2D.OverlapCircleAll(new Vector2(transform.position.x, transform.position.y), range);
-            
-            //Goes through all of them
-            foreach(Collider2D hit in hits)
+            //Every so often heal nearby buildings
+            if (cooldown == 0)
             {
-                //Checks to see if it is a building that is not itself
-                if(hit.gameObject.TryGetComponent(out PlayerBuilding building) && building.gameObject != gameObject)
+                //Gets all colliders nearby
+                Collider2D[] hits = Physics2D.OverlapCircleAll(new Vector2(transform.position.x, transform.position.y), range);
+
+                //Goes through all of them
+                foreach (Collider2D hit in hits)
                 {
-                    //Heals it if so
-                    building.Heal(healing * 0.2f);
+                    //Checks to see if it is a building that is not itself
+                    if (hit.gameObject.TryGetComponent(out PlayerBuilding building) && building.gameObject != gameObject)
+                    {
+                        //Heals it if so
+                        building.Heal(healing * 0.2f);
+                    }
                 }
+                //Reset cooldown
+                cooldown = baseCooldown;
             }
-            //Reset cooldown
-            cooldown = baseCooldown;
-        }
-        else
-        {
-            //Decrease time on cooldown
-            cooldown--;
+            else
+            {
+                //Decrease time on cooldown
+                cooldown--;
+            }
         }
     }
 
@@ -196,5 +204,27 @@ public class RepairStation : PlayerBuilding, IDamageable, IUpgradeable
 
         //Ensures that it is known that building was successfully sold
         return true;
+    }
+
+    //Get energy required to upgrade stat
+    public float GetUpgradeEnergy(int type)
+    {
+        return energyCosts[type];
+    }
+
+    //Disable repair station to save energy
+    public override float Disable()
+    {
+        active = false;
+        spriteRenderer.color = Color.black;
+        return -energyCost;
+    }
+
+    //Enable repair station after getting enough energy
+    public override float Enable()
+    {
+        active = true;
+        spriteRenderer.color = Color.white;
+        return energyCost;
     }
 }

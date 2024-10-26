@@ -101,7 +101,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   location: {x: 0, y: 0}
   healthBar: {fileID: 2355942953785155904}
+  energyCost: 1
+  previousChanged: {fileID: 0}
+  nextChanged: {fileID: 0}
   basicDescription: Tier One Turret
+  firerate: 3
+  damage: 10
+  baseHealth: 20
   range: 10
   upgradeLevels: 0000000000000000000000000000000000000000
   maxSpecializations: 0
@@ -118,6 +124,13 @@ MonoBehaviour:
   - 1.25
   - 1.25
   - 1.25
+  energyCosts:
+  - 0.1
+  - 0.1
+  - 0.1
+  - 0.1
+  - 0.1
+  spriteRenderer: {fileID: 1380160134539347422}
 --- !u!61 &1460355017745350883
 BoxCollider2D:
   m_ObjectHideFlags: 0

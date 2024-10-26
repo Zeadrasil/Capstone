@@ -31,6 +31,10 @@ public class GameManager : Singleton<GameManager>
     //Economy data
     public float budget = 100;
     private float income = 0;
+    private float energy = 10;
+    private float usedEnergy = 0;
+    private float energyDeficit = 0;
+    private PlayerBuilding mostRecentEnergyDecrease = null;
 
     //Stores which wave you are on
     int wave = 0;
@@ -148,6 +152,7 @@ public class GameManager : Singleton<GameManager>
     //Economy text
     public TMP_Text budgetText;
     public TMP_Text incomeText;
+    public TMP_Text energyText;
 
     //Menu colors
     public Color unselectedColor;
@@ -367,6 +372,7 @@ public class GameManager : Singleton<GameManager>
             //Goes through every spawnpoint
             for (int i = 0; i < enemySpawns.Count; i++)
             {
+                //TODO: Fix edge case where this removes all valid spawnpoints
                 //If there are no enemies that will spawn there, remove the point
                 if (enemySpawns[i].Count == 0)
                 {
@@ -376,6 +382,7 @@ public class GameManager : Singleton<GameManager>
                 }
                 //Generates a path for the spawnpoint
                 EnemyCheckpoint checkpoint = enemySpawns[i][0].GeneratePath();
+
                 //Ensure that there is actually a path
                 if (checkpoint != null)
                 {
@@ -649,7 +656,29 @@ public class GameManager : Singleton<GameManager>
                 return;
         }
         //Sets the location so that the building can know where it is
-        go.GetComponentInChildren<PlayerBuilding>().location = hoveredTile;
+        PlayerBuilding pb = go.GetComponentInChildren<PlayerBuilding>();
+        pb.location = hoveredTile;
+
+        //Add to the very end of enabling queue
+        if (mostRecentEnergyDecrease != null)
+        {
+            PlayerBuilding holder = mostRecentEnergyDecrease;
+            while (holder.nextChanged != null)
+            {
+                holder = holder.nextChanged;
+            }
+            holder.nextChanged = pb;
+        }
+        else
+        {
+            //If the most recent is null, this must be the first
+            mostRecentEnergyDecrease = pb;
+        }
+
+        //Energy management
+        energyDeficit += pb.Disable();
+        ChangeEnergyUsage(pb.energyCost);
+
 
         //Add to the tracked building dictionary
         playerBuildings.Add(hoveredTile, go);
@@ -1123,12 +1152,71 @@ public class GameManager : Singleton<GameManager>
         if(selectedBuilding != null)
         {
             //Checks to see if you can remove the building
-            if(selectedBuilding.GetComponentInChildren<PlayerBuilding>().Sell())
+            PlayerBuilding building = selectedBuilding.GetComponentInChildren<PlayerBuilding>();
+            if (building)
             {
+                //Rearranges building queue for energy saving
+                if(building.previousChanged != null)
+                {
+                    building.previousChanged.nextChanged = building.nextChanged;
+                }
+                if(building.nextChanged != null)
+                {
+                    building.nextChanged.previousChanged = building.previousChanged;
+                }
+
                 //Clears building selection
                 selectedBuilding = null;
                 standardUpgradeEvents();
             }
+        }
+    }
+
+    //Incrase or decrease max energy
+    public void ChangeEnergyCap(float difference)
+    {
+        energy += difference;
+        updateEnergy();
+    }
+
+    //Increase or decrease energy usage
+    public void ChangeEnergyUsage(float difference)
+    {
+        usedEnergy += difference;
+        updateEnergy();
+    }
+
+    //Update all of the energy details
+    private void updateEnergy()
+    {
+        //Update UI
+        energyText.text = $"Energy Usage: {usedEnergy} / {energy}";
+
+        //If you are now in an energy deficit not already accounted for
+        if(energy - usedEnergy < energyDeficit)
+        {
+            //Disables one building if possible and runs through checks again
+            if (mostRecentEnergyDecrease != null)
+            {
+                energyDeficit += mostRecentEnergyDecrease.Disable();
+                mostRecentEnergyDecrease = mostRecentEnergyDecrease.previousChanged;
+                updateEnergy();
+            }
+        }
+        //Otherwise if you have enough energy to reenable a building
+        else if(mostRecentEnergyDecrease.nextChanged != null && energy - (usedEnergy + energyDeficit) >= mostRecentEnergyDecrease.nextChanged.energyCost)
+        {
+            //Reenable a building and run through checks again
+            energyDeficit += mostRecentEnergyDecrease.nextChanged.Enable();
+            mostRecentEnergyDecrease = mostRecentEnergyDecrease.nextChanged;
+            updateEnergy();
+        }
+        //Should only run on the very first building as it checks to see if there is no previous or next, which should only happen then
+        //Enables the building if it runs
+        else if(mostRecentEnergyDecrease.nextChanged == null && mostRecentEnergyDecrease.previousChanged == null && energy - usedEnergy >= mostRecentEnergyDecrease.energyCost && energyDeficit < 0)
+        {
+            energyDeficit += mostRecentEnergyDecrease.Enable();
+            updateEnergy();
         }
     }
 

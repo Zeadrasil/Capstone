@@ -76,6 +76,7 @@ public class LocalGameManager : MonoBehaviour
     //Economy data
     [SerializeField] TMP_Text budgetText;
     [SerializeField] TMP_Text incomeText;
+    [SerializeField] TMP_Text energyText;
 
     //Color data
     [SerializeField] Color unselectedColor;
@@ -231,6 +232,7 @@ public class LocalGameManager : MonoBehaviour
         //Pass economy data
         GameManager.Instance.budgetText = budgetText;
         GameManager.Instance.incomeText = incomeText;
+        GameManager.Instance.energyText = energyText;
 
         //Pass color data
         GameManager.Instance.unselectedColor = unselectedColor;

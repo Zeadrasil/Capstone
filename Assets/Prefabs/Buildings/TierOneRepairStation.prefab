@@ -316,6 +316,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   location: {x: 0, y: 0}
   healthBar: {fileID: 699949112715201076}
+  energyCost: 1
+  previousChanged: {fileID: 0}
+  nextChanged: {fileID: 0}
   basicDescription: Tier One Repair
   baseHealth: 2
   healing: 5
@@ -329,6 +332,11 @@ MonoBehaviour:
   - 1.25
   - 1.25
   upgradeLevels: 000000000000000000000000
+  energyCosts:
+  - 0.1
+  - 0.1
+  - 0.1
+  spriteRenderer: {fileID: 1335997090493122668}
 --- !u!60 &7836262703086842780
 PolygonCollider2D:
   m_ObjectHideFlags: 0

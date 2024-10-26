@@ -13,4 +13,7 @@ public interface IUpgradeable
 
     //Gets the description string for the upgrade window
     public string GetDescription();
+
+    //Gets the energy required for upgrading a specific stat
+    public float GetUpgradeEnergy(int type);
 }

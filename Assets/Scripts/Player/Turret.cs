@@ -6,10 +6,10 @@ using UnityEngine;
 public class Turret : PlayerBuilding, IDamager, IUpgradeable
 {
     //Basic stats
-    float firerate = 3;
-    float damage = 10;
+    [SerializeField] float firerate = 3;
+    [SerializeField] float damage = 10;
     float health = 20;
-    float baseHealth = 20;
+    [SerializeField] float baseHealth = 20;
     bool splash = false;
     float splashRange = 0.1f;
     [SerializeField] float range = 100;
@@ -28,6 +28,11 @@ public class Turret : PlayerBuilding, IDamager, IUpgradeable
     public int specializations;
     public float[] expenseModifiers = new float[] { -1, 1, 1, 1, 1 };
     public float[] upgradeEffects = new float[] { 1.25f, 1.25f, 1.25f, 1.25f, 1.25f };
+
+    //Energy info
+    public float[] energyCosts = new float[] { 0.1f, 0.1f, 0.1f, 0.1f, 0.1f };
+    private bool active = true;
+    [SerializeField] SpriteRenderer spriteRenderer;
 
     // Start is called before the first frame update
     void Start()
@@ -143,7 +148,7 @@ public class Turret : PlayerBuilding, IDamager, IUpgradeable
     void Update()
     {
         //If no target find one
-        if(target == null)
+        if(active && target == null)
         {
             target = findTargets();
 
@@ -316,5 +321,29 @@ public class Turret : PlayerBuilding, IDamager, IUpgradeable
 
         //Ensures that it is known that building was successfully sold
         return true;
+    }
+
+    //Get energy required to upgrade stat
+    public float GetUpgradeEnergy(int type)
+    {
+        return energyCosts[type];
+    }
+
+    //Disable turret to save energy
+    public override float Disable()
+    {
+        StopAllCoroutines();
+        active = false;
+        spriteRenderer.color = Color.black;
+        return -energyCost;
+    }
+
+    //Enable turret once you get enough energy
+    public override float Enable()
+    {
+        target = null;
+        active = true;
+        spriteRenderer.color = Color.white;
+        return energyCost;
     }
 }

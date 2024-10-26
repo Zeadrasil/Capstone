@@ -8,6 +8,12 @@ public abstract class PlayerBuilding : MonoBehaviour, IDamageable
     [SerializeField] protected GameObject healthBar;
     protected float cost;
 
+    //Energy data
+    public float energyCost = 1;
+
+    public PlayerBuilding previousChanged;
+    public PlayerBuilding nextChanged;
+
     //Basic description for upgradeables
     [SerializeField] protected string basicDescription;
 
@@ -26,5 +32,13 @@ public abstract class PlayerBuilding : MonoBehaviour, IDamageable
     //Take damage to self
     public abstract float TakeDamage(float damage);
 
+    //Sell in order to refund money and energy
     public abstract bool Sell();
+
+    //Temporarily disable in order to allow for more energy usage, should return a negative number indicating the difference in energy usage
+    public abstract float Disable();
+
+    //Reeanable once energy allows, should return a positive number indicating the difference in energy usage
+    public abstract float Enable();
+
 }
