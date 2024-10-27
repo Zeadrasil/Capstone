@@ -22,7 +22,6 @@ public class RepairStation : PlayerBuilding, IDamageable, IUpgradeable
 
     //Energy data
     public float[] energyCosts = new float[] { 0.1f, 0.1f, 0.1f };
-    bool active = true;
     [SerializeField] SpriteRenderer spriteRenderer;
 
     //Add damager to list

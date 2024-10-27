@@ -159,6 +159,29 @@ public class LocalGameManager : MonoBehaviour
 
     [SerializeField] TMP_Text wallDescriptionText;
 
+
+    //UI storage for repair station upgrade window
+    [SerializeField] Canvas ExtractorUpgradeWindow;
+
+    [SerializeField] TMP_Text extractorExtractionUpgradeText;
+    [SerializeField] Image extractorExtractionFrame;
+    [SerializeField] Image extractorExtractionBackground;
+
+    [SerializeField] TMP_Text extractorEnergyUpgradeText;
+    [SerializeField] Image extractorEnergyFrame;
+    [SerializeField] Image extractorEnergyBackground;
+
+    [SerializeField] TMP_Text extractorProtectionUpgradeText;
+    [SerializeField] Image extractorProtectionFrame;
+    [SerializeField] Image extractorProtectionBackground;
+
+    [SerializeField] TMP_Text extractorHealthUpgradeText;
+    [SerializeField] Image extractorHealthFrame;
+    [SerializeField] Image extractorHealthBackground;
+
+    [SerializeField] TMP_Text extractorDescriptionText;
+
+
     // Passes data to the GameManager instance
     void Start()
     {
@@ -301,6 +324,22 @@ public class LocalGameManager : MonoBehaviour
         GameManager.Instance.wallHealingFrame = wallHealingFrame;
         GameManager.Instance.wallHealingBackground = wallHealingBackground;
         GameManager.Instance.wallDescriptionText = wallDescriptionText;
+
+        //Pass extractor upgrade data
+        GameManager.Instance.ExtractorUpgradeWindow = ExtractorUpgradeWindow;
+        GameManager.Instance.extractorExtractionUpgradeText = extractorExtractionUpgradeText;
+        GameManager.Instance.extractorExtractionFrame = extractorExtractionFrame;
+        GameManager.Instance.extractorExtractionBackground = extractorExtractionBackground;
+        GameManager.Instance.extractorEnergyUpgradeText = extractorEnergyUpgradeText;
+        GameManager.Instance.extractorEnergyFrame = extractorEnergyFrame;
+        GameManager.Instance.extractorEnergyBackground = extractorEnergyBackground;
+        GameManager.Instance.extractorProtectionUpgradeText = extractorProtectionUpgradeText;
+        GameManager.Instance.extractorProtectionFrame = extractorProtectionFrame;
+        GameManager.Instance.extractorProtectionBackground = extractorProtectionBackground;
+        GameManager.Instance.extractorHealthUpgradeText = extractorHealthUpgradeText;
+        GameManager.Instance.extractorHealthFrame = extractorHealthFrame;
+        GameManager.Instance.extractorHealthBackground = extractorHealthBackground;
+        GameManager.Instance.extractorDescriptionText = extractorDescriptionText;
     }
     
     //Relay for building selection using buttons
@@ -311,17 +350,22 @@ public class LocalGameManager : MonoBehaviour
     //Relay for turret upgrades using buttons
     public void UpgradeTurret(int upgrade)
     {
-        GameManager.Instance.UpgradeTurret(upgrade);
+        GameManager.Instance.UpgradeBuilding(0, upgrade);
     }
     //Relay for repair station upgrades using buttons
     public void UpgradeRepairStation(int upgrade)
     {
-        GameManager.Instance.UpgradeRepairStation(upgrade);
+        GameManager.Instance.UpgradeBuilding(1, upgrade);
     }
     //Relay for wall upgrades using buttons
     public void UpgradeWall(int upgrade)
     {
-        GameManager.Instance.UpgradeWall(upgrade);
+        GameManager.Instance.UpgradeBuilding(2, upgrade);
+    }
+    //Relay for extractor upgrades using buttons
+    public void UpgradeExtractor(int upgrade)
+    {
+        GameManager.Instance.UpgradeBuilding(3, upgrade);
     }
     //Relay for spawning a new wave using buttons
     public void NextWave()

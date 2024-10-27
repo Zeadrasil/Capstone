@@ -31,7 +31,6 @@ public class Turret : PlayerBuilding, IDamager, IUpgradeable
 
     //Energy info
     public float[] energyCosts = new float[] { 0.1f, 0.1f, 0.1f, 0.1f, 0.1f };
-    private bool active = true;
     [SerializeField] SpriteRenderer spriteRenderer;
 
     // Start is called before the first frame update

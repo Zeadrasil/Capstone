@@ -10,7 +10,7 @@ public abstract class PlayerBuilding : MonoBehaviour, IDamageable
 
     //Energy data
     public float energyCost = 1;
-
+    public bool active = true;
     public PlayerBuilding previousChanged;
     public PlayerBuilding nextChanged;
 

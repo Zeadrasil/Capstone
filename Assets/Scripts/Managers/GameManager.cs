@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using static UnityEngine.GraphicsBuffer;
 
 //GameManager manages everything inside the game that is not directly related to the main menu or tiles
 public class GameManager : Singleton<GameManager>
@@ -243,12 +244,26 @@ public class GameManager : Singleton<GameManager>
 
     public TMP_Text wallDescriptionText;
 
-    //UI storage for extractor upgrade window
+    //UI storage for repair station upgrade window
     public Canvas ExtractorUpgradeWindow;
 
-    public TMP_Text extractorEnergyModeText;
-    public TMP_Text extractorRateUpgradeText;
+    public TMP_Text extractorExtractionUpgradeText;
+    public Image extractorExtractionFrame;
+    public Image extractorExtractionBackground;
+
+    public TMP_Text extractorEnergyUpgradeText;
+    public Image extractorEnergyFrame;
+    public Image extractorEnergyBackground;
+
+    public TMP_Text extractorProtectionUpgradeText;
+    public Image extractorProtectionFrame;
+    public Image extractorProtectionBackground;
+
     public TMP_Text extractorHealthUpgradeText;
+    public Image extractorHealthFrame;
+    public Image extractorHealthBackground;
+
+    public TMP_Text extractorDescriptionText;
 
     //Holds enemy types for easier access
     GameObject[] allEnemies;
@@ -306,6 +321,7 @@ public class GameManager : Singleton<GameManager>
         TurretUpgradeWindow.enabled = false;
         RepairUpgradeWindow.enabled = false;
         WallUpgradeWindow.enabled = false;
+        ExtractorUpgradeWindow.enabled = false;
         SellWindow.enabled = false;
 
         //Set hotkey text
@@ -487,6 +503,7 @@ public class GameManager : Singleton<GameManager>
             TurretUpgradeWindow.enabled = false;
             RepairUpgradeWindow.enabled = false;
             WallUpgradeWindow.enabled = false;
+            ExtractorUpgradeWindow.enabled = false;
             SellWindow.enabled = false;
         }
         else
@@ -542,31 +559,35 @@ public class GameManager : Singleton<GameManager>
                         updateUpgradeCost(2, 0);
                         updateUpgradeCost(2, 1);
                     }
+                    else
+                    {
+                        ResourceExtractor extractor = selectedBuilding.GetComponentInChildren<ResourceExtractor>();
+                        if(extractor != null)
+                        {
+                            //Enables the extractor upgrade window
+                            ExtractorUpgradeWindow.enabled = true;
+
+                            //Writes the description so that you know what you have selected
+                            extractorDescriptionText.text = extractor.GetDescription();
+
+                            //Ensures that all of the upgrade panels have accurate information
+                            updateUpgradeCost(3, 0);
+                            updateUpgradeCost(3, 1);
+                            updateUpgradeCost(3, 2);
+                            updateUpgradeCost(3, 3);
+                        }
+                        else
+                        {
+                            SellWindow.enabled = false;
+                        }
+                    }
                 }
             }
         }
     }
 
-    //Calls up the upgrade function with the proper data for a turret
-    public void UpgradeTurret(int upgrade)
-    {
-        upgradeBuilding(0, upgrade);
-    }
-
-    //Calls up the upgrade function with the proper data for a repair station
-    public void UpgradeRepairStation(int upgrade)
-    {
-        upgradeBuilding(1, upgrade);
-    }
-
-    //Calls up the upgrade the function with the proper data or a wall
-    public void UpgradeWall(int upgrade)
-    {
-        upgradeBuilding(2, upgrade);
-    }
-
     //Upgrade a building
-    private void upgradeBuilding(int type, int upgrade)
+    public void UpgradeBuilding(int type, int upgrade)
     {
         //Ensures that selection is up to date
         selectedUpgrade = upgrade;
@@ -782,6 +803,42 @@ public class GameManager : Singleton<GameManager>
                     }
                     break;
                 }
+            //Extractors
+            case 3:
+                {
+                    //Grabs the exact extractor that you want to get data from
+                    ResourceExtractor extractor = selectedBuilding.GetComponentInChildren<ResourceExtractor>();
+
+                    //Switch based on the specific data you want to update
+                    switch (upgradeType)
+                    {
+                        //Extractor range
+                        case 0:
+                            {
+                                extractorExtractionUpgradeText.text = extractor.GetUpgradeCost(upgradeType) >= 0 ? $"Extraction Upgrade:\n{extractor.GetUpgradeEffects(upgradeType)}\nCost:\n{extractor.GetUpgradeCost(upgradeType):F2}" : "NOT\nAVAILABLE";
+                                break;
+                            }
+                        //Extractor healing
+                        case 1:
+                            {
+                                extractorEnergyUpgradeText.text = extractor.GetUpgradeCost(upgradeType) >= 0 ? $"Energy Upgrade:\n{extractor.GetUpgradeEffects(upgradeType)}\nCost:\n{extractor.GetUpgradeCost(upgradeType):F2}" : "NOT\nAVAILABLE";
+                                break;
+                            }
+                        //Extractor protection
+                        case 2:
+                            {
+                                extractorProtectionUpgradeText.text = extractor.GetUpgradeCost(upgradeType) >= 0 ? $"Protection Upgrade:\n{extractor.GetUpgradeEffects(upgradeType)}\nCost:\n{extractor.GetUpgradeCost(upgradeType):F2}" : "NOT\nAVAILABLE";
+                                break;
+                            }
+                        //Extractor health
+                        case 3:
+                            {
+                                extractorHealthUpgradeText.text = extractor.GetUpgradeCost(upgradeType) >= 0 ? $"Health Upgrade:\n{extractor.GetUpgradeEffects(upgradeType)}\nCost:\n{extractor.GetUpgradeCost(upgradeType):F2}" : "NOT\nAVAILABLE";
+                                break;
+                            }
+                    }
+                    break;
+                }
         }
     }
 
@@ -789,7 +846,8 @@ public class GameManager : Singleton<GameManager>
     private void updateSelection()
     {
         //Identifies type of building you are upgrading
-        if (selectedBuilding.TryGetComponent(out Turret ignoreableTurret))
+        Turret turret = selectedBuilding.GetComponentInChildren<Turret>();
+        if (turret != null)
         {
             //Goes through all of the turret upgrade panel frames and sets them to the appropriate color
             turretSplashFrame.color = selectedUpgrade == 0 ? selectedColor : unselectedColor;
@@ -798,18 +856,38 @@ public class GameManager : Singleton<GameManager>
             turretFirerateFrame.color = selectedUpgrade == 3 ? selectedColor : unselectedColor;
             turretHealthFrame.color = selectedUpgrade == 4 ? selectedColor : unselectedColor;
         }
-        else if(selectedBuilding.TryGetComponent(out RepairStation ignoreableRepair))
+        else
         {
-            //Goes through all of the repair station upgrade panel frames and sets them to the appropriate color
-            repairRangeFrame.color = selectedUpgrade == 0 ? selectedColor : unselectedColor;
-            repairHealingFrame.color = selectedUpgrade == 1 ? selectedColor : unselectedColor;
-            repairHealthFrame.color = selectedUpgrade == 2 ? selectedColor : unselectedColor;
-        }
-        else if(selectedBuilding.TryGetComponent(out Wall ignoreableWall))
-        {
-            //Goes through all of the wall upgrade panel frames and sets them to the appropriate color
-            wallHealthFrame.color = selectedUpgrade == 0 ? selectedColor : unselectedColor;
-            wallHealingFrame.color = selectedUpgrade == 1 ? selectedColor : unselectedColor;
+            RepairStation repair = selectedBuilding.GetComponentInChildren<RepairStation>();
+            if (repair != null)
+            {
+                //Goes through all of the repair station upgrade panel frames and sets them to the appropriate color
+                repairRangeFrame.color = selectedUpgrade == 0 ? selectedColor : unselectedColor;
+                repairHealingFrame.color = selectedUpgrade == 1 ? selectedColor : unselectedColor;
+                repairHealthFrame.color = selectedUpgrade == 2 ? selectedColor : unselectedColor;
+            }
+            else
+            {
+                Wall wall = selectedBuilding.GetComponentInChildren<Wall>();
+                if (wall != null)
+                {
+                    //Goes through all of the wall upgrade panel frames and sets them to the appropriate color
+                    wallHealthFrame.color = selectedUpgrade == 0 ? selectedColor : unselectedColor;
+                    wallHealingFrame.color = selectedUpgrade == 1 ? selectedColor : unselectedColor;
+                }
+                else
+                {
+                    ResourceExtractor extractor = selectedBuilding.GetComponentInChildren<ResourceExtractor>();
+                    if(extractor != null)
+                    {
+                        //Goes through all of the extractor upgrade panel frames and sets them to the appropriate color
+                        extractorExtractionFrame.color = selectedUpgrade == 0 ? selectedColor : unselectedColor;
+                        extractorEnergyFrame.color = selectedUpgrade == 1 ? selectedColor : unselectedColor;
+                        extractorProtectionFrame.color = selectedUpgrade == 2 ? selectedColor : unselectedColor;
+                        extractorHealthFrame.color = selectedUpgrade == 3 ? selectedColor : unselectedColor;
+                    }
+                }
+            }
         }
     }
 
@@ -865,6 +943,19 @@ public class GameManager : Singleton<GameManager>
                 //Sets the background color based on how close you are to being able to afford it
                 wallHealthBackground.color = new Color(Mathf.Lerp(unavailableColor.x, availableColor.x, Mathf.Clamp(budget / wall.GetUpgradeCost(0), 0, 1)), Mathf.Lerp(unavailableColor.y, availableColor.y, Mathf.Clamp(budget / wall.GetUpgradeCost(0), 0, 1)), Mathf.Lerp(unavailableColor.z, availableColor.z, Mathf.Clamp(budget / wall.GetUpgradeCost(0), 0, 1)));
                 wallHealingBackground.color = new Color(Mathf.Lerp(unavailableColor.x, availableColor.x, Mathf.Clamp(budget / wall.GetUpgradeCost(1), 0, 1)), Mathf.Lerp(unavailableColor.y, availableColor.y, Mathf.Clamp(budget / wall.GetUpgradeCost(1), 0, 1)), Mathf.Lerp(unavailableColor.z, availableColor.z, Mathf.Clamp(budget / wall.GetUpgradeCost(1), 0, 1)));
+            }
+            //Only bother updating the extractor upgrade backgrounds if you have the window open, also skip this check if you know that another window is open
+            else if (ExtractorUpgradeWindow.enabled)
+            {
+                //Gets a regerence to the specific extractor you have selected
+                ResourceExtractor extractor = selectedBuilding.GetComponentInChildren<ResourceExtractor>();
+
+                //Sets the backgroun color based on how close you are to being able to afford it
+                extractorExtractionBackground.color = new Color(Mathf.Lerp(unavailableColor.x, availableColor.x, Mathf.Clamp(budget / extractor.GetUpgradeCost(0), 0, 1)), Mathf.Lerp(unavailableColor.y, availableColor.y, Mathf.Clamp(budget / extractor.GetUpgradeCost(0), 0, 1)), Mathf.Lerp(unavailableColor.z, availableColor.z, Mathf.Clamp(budget / extractor.GetUpgradeCost(0), 0, 1)));
+                extractorEnergyBackground.color = new Color(Mathf.Lerp(unavailableColor.x, availableColor.x, Mathf.Clamp(budget / extractor.GetUpgradeCost(1), 0, 1)), Mathf.Lerp(unavailableColor.y, availableColor.y, Mathf.Clamp(budget / extractor.GetUpgradeCost(1), 0, 1)), Mathf.Lerp(unavailableColor.z, availableColor.z, Mathf.Clamp(budget / extractor.GetUpgradeCost(1), 0, 1)));
+                extractorProtectionBackground.color = new Color(Mathf.Lerp(unavailableColor.x, availableColor.x, Mathf.Clamp(budget / extractor.GetUpgradeCost(2), 0, 1)), Mathf.Lerp(unavailableColor.y, availableColor.y, Mathf.Clamp(budget / extractor.GetUpgradeCost(2), 0, 1)), Mathf.Lerp(unavailableColor.z, availableColor.z, Mathf.Clamp(budget / extractor.GetUpgradeCost(2), 0, 1)));
+                extractorHealthBackground.color = new Color(Mathf.Lerp(unavailableColor.x, availableColor.x, Mathf.Clamp(budget / extractor.GetUpgradeCost(3), 0, 1)), Mathf.Lerp(unavailableColor.y, availableColor.y, Mathf.Clamp(budget / extractor.GetUpgradeCost(3), 0, 1)), Mathf.Lerp(unavailableColor.z, availableColor.z, Mathf.Clamp(budget / extractor.GetUpgradeCost(3), 0, 1)));
+
             }
             //Updates your budget text to match your actual budget
             budgetText.text = $"Budget: {budget:F2}";
@@ -991,19 +1082,38 @@ public class GameManager : Singleton<GameManager>
                         //Sets the number of different upgrades based on the type of building
                         int cap = 0;
 
-                        //Turret has 5 different upgrades
-                        if (selectedBuilding.TryGetComponent(out Turret ignoreableTurret))
+                        //Turret has 5 upgrades, subtract one due to zero based index
+                        Turret turret = selectedBuilding.GetComponentInChildren<Turret>();
+                        if (turret != null)
                         {
                             cap = 5;
                         }
-                        else if (selectedBuilding.TryGetComponent(out RepairStation ignoreableRepair))
+                        else
                         {
-                            cap = 3;
-                        }
-                        //Wall has 2 different upgrades
-                        else if (selectedBuilding.TryGetComponent(out Wall ignoreableWall))
-                        {
-                            cap = 2;
+                            //Repair Station has 3 upgrade, subtract one due to zero based index
+                            RepairStation repair = selectedBuilding.GetComponentInChildren<RepairStation>();
+                            if (repair != null)
+                            {
+                                cap = 3;
+                            }
+                            else
+                            {
+                                //Wall has 2 upgrades, subtract one due to zreo based index
+                                Wall wall = selectedBuilding.GetComponentInChildren<Wall>();
+                                if (wall != null)
+                                {
+                                    cap = 2;
+                                }
+                                else
+                                {
+                                    //Resource Extractor has 4 upgrades, subtract one due to zero based index
+                                    ResourceExtractor extractor = selectedBuilding.GetComponentInChildren<ResourceExtractor>();
+                                    if (extractor != null)
+                                    {
+                                        cap = 4;
+                                    }
+                                }
+                            }
                         }
                         //Increase the index of the selected upgrade
                         selectedUpgrade++;
@@ -1023,19 +1133,37 @@ public class GameManager : Singleton<GameManager>
                         int cap = 0;
 
                         //Turret has 5 upgrades, subtract one due to zero based index
-                        if (selectedBuilding.TryGetComponent(out Turret ignoreableTurret))
+                        Turret turret = selectedBuilding.GetComponentInChildren<Turret>();
+                        if (turret != null)
                         {
                             cap = 4;
                         }
-                        //Repair Station has 3 upgrade, subtract one due to zero based index
-                        else if (selectedBuilding.TryGetComponent(out RepairStation ignoreableRepair))
+                        else
                         {
-                            cap = 2;
-                        }
-                        //Wall has 2 upgrades, subtract one due to zero based index
-                        else if (selectedBuilding.TryGetComponent(out Wall ignoreableWall))
-                        {
-                            cap = 1;
+                            //Repair Station has 3 upgrade, subtract one due to zero based index
+                            RepairStation repair = selectedBuilding.GetComponentInChildren<RepairStation>();
+                            if (repair != null)
+                            {
+                                cap = 2;
+                            }
+                            else
+                            {
+                                //Wall has 2 upgrades, subtract one due to zreo based index
+                                Wall wall = selectedBuilding.GetComponentInChildren<Wall>();
+                                if (wall != null)
+                                {
+                                    cap = 1;
+                                }
+                                else
+                                {
+                                    //Resource Extractor has 4 upgrades, subtract one due to zero based index
+                                    ResourceExtractor extractor = selectedBuilding.GetComponentInChildren<ResourceExtractor>();
+                                    if(extractor != null)
+                                    {
+                                        cap = 3;
+                                    }
+                                }
+                            }
                         }
                         //Decrease the index of the selected upgrade
                         selectedUpgrade--;
@@ -1052,20 +1180,37 @@ public class GameManager : Singleton<GameManager>
                     if (Input.GetKeyDown(confirmKey))
                     {
                         //Identify building type that you are trying to upgrade
-                        if (selectedBuilding.TryGetComponent(out Turret ignoreableTurret))
+                        Turret turret = selectedBuilding.GetComponentInChildren<Turret>();
+                        if (turret != null)
                         {
                             //Upgrade turret with selected upgrade
-                            upgradeBuilding(0, selectedUpgrade);
+                            UpgradeBuilding(0, selectedUpgrade);
                         }
-                        else if (selectedBuilding.TryGetComponent(out RepairStation ignoreableRepair))
+                        else
                         {
-                            //upgrade repair station with selected upgrade
-                            upgradeBuilding(1, selectedUpgrade);
-                        }
-                        else if (selectedBuilding.TryGetComponent(out Wall ignoreableWall))
-                        {
-                            //Upgrade wall with selected upgrade
-                            upgradeBuilding(2, selectedUpgrade);
+                            RepairStation repair = selectedBuilding.GetComponentInChildren<RepairStation>();
+                            if (repair != null)
+                            {
+                                //upgrade repair station with selected upgrade
+                                UpgradeBuilding(1, selectedUpgrade);
+                            }
+                            else
+                            {
+                                Wall wall = selectedBuilding.GetComponentInChildren<Wall>();
+                                if (wall != null)
+                                {
+                                    //Upgrade wall with selected upgrade
+                                    UpgradeBuilding(2, selectedUpgrade);
+                                }
+                                else
+                                {
+                                    ResourceExtractor extractor = selectedBuilding.GetComponentInChildren<ResourceExtractor>();
+                                    if(extractor != null)
+                                    {
+                                        UpgradeBuilding(3, selectedUpgrade);
+                                    }
+                                }
+                            }
                         }
                     }
                     //Allows you to sell buildings with hotkeys
@@ -1164,10 +1309,12 @@ public class GameManager : Singleton<GameManager>
                 {
                     building.nextChanged.previousChanged = building.previousChanged;
                 }
-
-                //Clears building selection
-                selectedBuilding = null;
-                standardUpgradeEvents();
+                if (building.Sell())
+                {
+                    //Clears building selection
+                    selectedBuilding = null;
+                    standardUpgradeEvents();
+                }
             }
         }
     }
@@ -1190,7 +1337,7 @@ public class GameManager : Singleton<GameManager>
     private void updateEnergy()
     {
         //Update UI
-        energyText.text = $"Energy Usage: {usedEnergy} / {energy}";
+        energyText.text = $"Energy Usage: {usedEnergy:F2} / {energy:F2}";
 
         //If you are now in an energy deficit not already accounted for
         if(energy - usedEnergy < energyDeficit)
@@ -1218,6 +1365,11 @@ public class GameManager : Singleton<GameManager>
             energyDeficit += mostRecentEnergyDecrease.Enable();
             updateEnergy();
         }
+    }
+
+    public void RemoveBuilding()
+    {
+
     }
 
 }

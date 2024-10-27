@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 //ResourceExtractors are used to generate resources for the player
 public class ResourceExtractor : PlayerBuilding, IUpgradeable
@@ -8,6 +9,20 @@ public class ResourceExtractor : PlayerBuilding, IUpgradeable
     float health = 10;
     float baseHealth = 10;
     float extractionRate = 0.1f;
+    float energyRate = 0;
+    float damageEffectiveness = 10;
+
+    //Upgrade data
+    public int[] upgradeLevels = new int[] { 0, 0, 0, 0 };
+    [SerializeField] int maxSpecializations;
+    public int specializations;
+    public float[] expenseModifiers = new float[] { 1, 1, 1, 1 };
+    public float[] upgradeEffects = new float[] {1.25f, 1.25f, 0.9f, 1.25f };
+
+    //Energy info
+    public float[] energyCosts = new float[] { 0.1f, 0f, 0.1f, 0.1f };
+    [SerializeField] SpriteRenderer spriteRenderer;
+    private bool activate = false;
 
     //Damager list to avoid null references and improve reaction speed
     private List<IDamager> currentDamagers = new List<IDamager>();
@@ -61,7 +76,12 @@ public class ResourceExtractor : PlayerBuilding, IUpgradeable
     // Update is called once per frame
     void Update()
     {
-        
+        if(activate)
+        {
+            activate = false;
+            GameManager.Instance.IncreaseIncome(extractionRate);
+            GameManager.Instance.ChangeEnergyCap(energyRate);
+        }
     }
 
     //Send health to callers for use
@@ -94,46 +114,147 @@ public class ResourceExtractor : PlayerBuilding, IUpgradeable
     //TODO: Implement
     public void Upgrade(int type)
     {
-        throw new System.NotImplementedException();
+        //Increase noted cost
+        cost += GetUpgradeCost(type);
+
+        //Remove budget
+        GameManager.Instance.budget -= GetUpgradeCost(type);
+
+        //Mark upgraded
+        upgradeLevels[type]++;
+
+        //Upgrade depending on type
+        switch (type)
+        {
+            //Increase extraction rate
+            case 0:
+                {
+                    GameManager.Instance.IncreaseIncome(-extractionRate);
+                    extractionRate *= upgradeEffects[type];
+                    GameManager.Instance.IncreaseIncome(extractionRate);
+                    break;
+                }
+            //Increase energy production
+            case 1:
+                {
+                    energyRate += upgradeEffects[type];
+                    GameManager.Instance.ChangeEnergyCap(upgradeEffects[type]);
+                    break;
+                }
+            //Increase protection
+            case 2:
+                {
+                    damageEffectiveness *= upgradeEffects[type];
+                    break;
+                }
+            //Increase health
+            case 3:
+                {
+                    baseHealth *= upgradeEffects[type];
+                    health *= upgradeEffects[type];
+                    break;
+                }
+            default:
+                {
+                    break;
+                }
+        }
     }
 
     //Get cost to upgrade given stat
     //TODO: Implement
     public float GetUpgradeCost(int type)
     {
-        throw new System.NotImplementedException();
+        return 2 * Mathf.Pow(1 + 0.25f * expenseModifiers[type], upgradeLevels[type]) * expenseModifiers[type];
     }
 
     //Get potential effects of given upgrade
     //TODO: Implement
     public string GetUpgradeEffects(int type)
     {
-        throw new System.NotImplementedException();
+        //Switch based on desired upgrade type
+        switch (type)
+        {
+            //Increase extraction rate
+            case 0:
+                {
+                    return $"{extractionRate:F2} > {extractionRate * upgradeEffects[type]:F2}";
+                }
+            //Increase energy production
+            case 1:
+                {
+                    return $"{energyRate:F2} > {energyRate + upgradeEffects[type]:F2}";
+                }
+            //Increase damage protection
+            case 2:
+                {
+                    return $"{damageEffectiveness:F2} > {damageEffectiveness * upgradeEffects[type]:F2}";
+                }
+            //Increase health
+            case 3:
+                {
+                    return $"{baseHealth:F2} > {baseHealth * upgradeEffects[type]:F2}";
+                }
+            //Default
+            default:
+                {
+                    return "";
+                }
+        }
     }
     //Get the description and location of the building
     //TODO: Implement
     public string GetDescription()
     {
-        throw new System.NotImplementedException();
+        return $"{basicDescription}\n({location.x}, {location.y})";
     }
 
     public override bool Sell()
     {
-        throw new System.NotImplementedException();
+        //Remove from building list
+        GameManager.Instance.playerBuildings.Remove(location);
+
+        //Refund part of build cost
+        GameManager.Instance.budget += cost * 0.5f * health / baseHealth;
+
+        //Kill building
+        Destroy(transform.parent.gameObject);
+
+        //Ensures that it is known that building was successfully sold
+        return true;
     }
 
+    //Gets energy required for sleected upgrade (not useable yet)
     public float GetUpgradeEnergy(int type)
     {
-        throw new System.NotImplementedException();
+        return energyCosts[type];
     }
 
+    //Disables in order to save energy usage
     public override float Disable()
     {
-        throw new System.NotImplementedException();
+        //Only disable if doing so would be a net energy increase
+        if(energyRate < energyCost)
+        {
+            active = false;
+            GameManager.Instance.IncreaseIncome(-extractionRate);
+            GameManager.Instance.ChangeEnergyCap(-energyRate);
+            return -energyCost;
+        }
+        return 0;
+
     }
 
+    //Reenable once energy is available
     public override float Enable()
     {
-        throw new System.NotImplementedException();
+        //Ensures that it only reenables if it was disabled
+        if(!active)
+        {
+            active = true;
+            activate = true;
+            return energyCost;
+        }
+        return 0;
     }
 }

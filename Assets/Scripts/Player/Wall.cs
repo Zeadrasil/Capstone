@@ -41,7 +41,7 @@ public class Wall : PlayerBuilding, IUpgradeable
         return 2 * Mathf.Pow(1 + 0.25f * expenseModifiers[type], upgradeLevels[type]) * expenseModifiers[type];
     }
 
-    //Get the potential effects of upgradin a specific stat
+    //Get the potential effects of upgrading a specific stat
     public string GetUpgradeEffects(int type)
     {
         //Switch based on desired upgrade type
