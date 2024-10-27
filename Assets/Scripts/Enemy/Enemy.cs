@@ -109,21 +109,75 @@ public class Enemy : MonoBehaviour, IDamageable, IDamager
             //Goes through each of the connected nodes
             foreach (NavNode adjacentNode in node.neighbors)
             {
-                float health = 0;
-                if(GameManager.Instance.playerBuildings.TryGetValue(adjacentNode.location, out GameObject holder))
+                //Try to avoid walls if possible
+                float healthCost = 0;
+
+                //Destroy turrets if it is worthwhile
+                float damagePreventionModifier = 0;
+
+                //Cost based on distance travelled
+                float distanceCost = Vector3.Distance(tilemap.CellToWorld(new Vector3Int(adjacentNode.location.x, adjacentNode.location.y)), tilemap.CellToWorld(new Vector3Int(node.location.x, node.location.y)));
+
+                //Destroy repair stations if it is worthwhile
+                float repairPreventionModifier = 0;
+
+                //Destroy resource extractors if it is worthwhile
+                float resourceDenialModifier = 0;
+                if (GameManager.Instance.playerBuildings.TryGetValue(adjacentNode.location, out GameObject holder))
                 {
-                    health = holder.GetComponentInChildren<IDamageable>().GetHealth();
+                    //Update health
+                    healthCost = holder.GetComponentInChildren<IDamageable>().GetHealth() * avoidanceModifier;
+
+                    //Check if turret
+                    Turret turretData = holder.GetComponentInChildren<Turret>();
+                    if (turretData != null)
+                    {
+                        //If turret apply desire to destroy to prevent damage
+                        damagePreventionModifier = turretData.damage * turretData.firerate * turretData.range / (healthCost * 10);
+                    }
+
+                    //Check if repair station
+                    RepairStation repairData = holder.GetComponentInChildren<RepairStation>();
+                    if (repairData != null)
+                    {
+                        //If repair station apply desire to destroy to prevent it from repairing structures you want to destroy
+                        repairPreventionModifier = repairData.healing * repairData.range * 5 / healthCost;
+                    }
+
+                    //Check if resurce extractor
+                    ResourceExtractor extractorData = holder.GetComponentInChildren<ResourceExtractor>();
+                    if (extractorData != null)
+                    {
+                        //If resource extractor apply desire to destroy to prevent the player from getting resources
+                        resourceDenialModifier = (extractorData.extractionRate * 2 + extractorData.energyRate * 5) * extractorData.damageEffectiveness / healthCost;
+                    }
                 }
-                //Gets cost of going to the node based off of both the distance and health of any buildings
-                float cost = node.cost + Vector3.Distance(tilemap.CellToWorld(new Vector3Int(adjacentNode.location.x, adjacentNode.location.y)), tilemap.CellToWorld(new Vector3Int(node.location.x, node.location.y))) + health * avoidanceModifier;
-                
+
+                //Combine together weights to form overall weight
+                float cost = node.cost + healthCost - damagePreventionModifier - repairPreventionModifier - resourceDenialModifier;
+
                 //If the adjacent node already has a cost, skip it unless this is a cheaper path
-                if(cost < adjacentNode.cost)
+                if (cost < adjacentNode.cost)
                 {
-                    //Set cost and parent to new optimal path, and then add it to the queue
-                    adjacentNode.cost = cost;
-                    adjacentNode.parent = node;
-                    nodes.EnqueueWithoutDuplicates(adjacentNode, adjacentNode.cost + Vector3.Distance(tilemap.CellToWorld(new Vector3Int(adjacentNode.location.x, adjacentNode.location.y)), transform.position));
+                    //Ensures that it does not accidently cut off its own path
+                    bool valid = true;
+                    NavNode parentNode = node.parent;
+                    while (parentNode != null)
+                    {
+                        if (parentNode.Equals(adjacentNode))
+                        {
+                            valid = false;
+                            break;
+                        }
+                        parentNode = parentNode.parent;
+                    }
+                    //Set cost and parent to new optimal path, and then add it to the queue if it would not cut itself off
+                    if (valid)
+                    {
+                        adjacentNode.cost = cost;
+                        adjacentNode.parent = node;
+                        nodes.EnqueueWithoutDuplicates(adjacentNode, adjacentNode.cost + Vector3.Distance(tilemap.CellToWorld(new Vector3Int(adjacentNode.location.x, adjacentNode.location.y)), transform.position));
+                    }
                 }
             }
         }
@@ -194,9 +248,10 @@ public class Enemy : MonoBehaviour, IDamageable, IDamager
     }
 
     //Set guide to a generated path
-    public void activatePath(EnemyCheckpoint checkpoint)
+    public void ActivatePath(EnemyCheckpoint checkpoint)
     {
         currentGuide = checkpoint;
+        transform.rotation = checkpoint.transform.rotation;
     }
 
     //Physics so that rigidbodies can be avoided in order to improve performance

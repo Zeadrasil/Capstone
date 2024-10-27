@@ -64,6 +64,10 @@ public static class BasicUtils
                 {
                     return "Left";
                 }
+            case KeyCode.Return:
+                {
+                    return "Enter";
+                }
             default:
                 {
                     return keyCode.ToString();

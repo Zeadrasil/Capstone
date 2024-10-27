@@ -6,13 +6,13 @@ using UnityEngine;
 public class Turret : PlayerBuilding, IDamager, IUpgradeable
 {
     //Basic stats
-    [SerializeField] float firerate = 3;
-    [SerializeField] float damage = 10;
+    public float firerate = 3;
+    public float damage = 10;
     float health = 20;
     [SerializeField] float baseHealth = 20;
     bool splash = false;
     float splashRange = 0.1f;
-    [SerializeField] float range = 100;
+    public float range = 100;
 
     //Other
     bool killed = false;

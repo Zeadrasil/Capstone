@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
-using static UnityEngine.GraphicsBuffer;
 
 //GameManager manages everything inside the game that is not directly related to the main menu or tiles
 public class GameManager : Singleton<GameManager>
@@ -38,7 +37,7 @@ public class GameManager : Singleton<GameManager>
     private PlayerBuilding mostRecentEnergyDecrease = null;
 
     //Stores which wave you are on
-    int wave = 0;
+    public int wave = 0;
 
     //Stores enemies so that it is known when you have killed them all
     private List<Enemy> currentEnemies = new List<Enemy>();
@@ -266,7 +265,7 @@ public class GameManager : Singleton<GameManager>
     public TMP_Text extractorDescriptionText;
 
     //Holds enemy types for easier access
-    GameObject[] allEnemies;
+    //GameObject[] allEnemies;
     GameObject[] tierOneEnemies;
     GameObject[] tierTwoEnemies;
     GameObject[] tierThreeEnemies;
@@ -294,17 +293,17 @@ public class GameManager : Singleton<GameManager>
             swarmDeadlySpammyEnemy, tankDeadlySpammyEnemy };
         tierFourEnemies = new GameObject[] { fastSwarmTankDeadlyEnemy, fastSwarmTankSpammyEnemy,
             fastSwarmDeadlySpammyEnemy, fastTankDeadlySpammyEnemy, swarmTankDeadlySpammyEnemy };
-        tierFiveEnemies = new GameObject[] { };//{ fastSwarmTankDeadlySpammyEnemy };
+        tierFiveEnemies = new GameObject[] { fastSwarmTankDeadlySpammyEnemy };
 
         //Combine tier storages to form overall storage
-        allEnemies = new GameObject[tierOneEnemies.Length + tierTwoEnemies.Length + tierThreeEnemies.Length + tierFourEnemies.Length + tierFiveEnemies.Length + 2];
-        allEnemies[0] = baseEnemy;
-        Array.Copy(tierOneEnemies, 0, allEnemies, 1, tierOneEnemies.Length);
-        Array.Copy(tierTwoEnemies, 0, allEnemies, tierOneEnemies.Length + 1, tierTwoEnemies.Length);
-        Array.Copy(tierThreeEnemies, 0, allEnemies, tierOneEnemies.Length + tierTwoEnemies.Length + 1, tierThreeEnemies.Length);
-        Array.Copy(tierFourEnemies, 0, allEnemies, tierOneEnemies.Length + tierTwoEnemies.Length + tierThreeEnemies.Length + 1, tierFourEnemies.Length);
-        Array.Copy(tierFiveEnemies, 0, allEnemies, tierOneEnemies.Length + tierTwoEnemies.Length + tierThreeEnemies.Length + tierFourEnemies.Length + 1, tierFiveEnemies.Length);
-        allEnemies[allEnemies.Length - 1] = fastSwarmTankDeadlySpammyEnemy;
+        //allEnemies = new GameObject[tierOneEnemies.Length + tierTwoEnemies.Length + tierThreeEnemies.Length + tierFourEnemies.Length + tierFiveEnemies.Length + 2];
+        //allEnemies[0] = baseEnemy;
+        //Array.Copy(tierOneEnemies, 0, allEnemies, 1, tierOneEnemies.Length);
+        //Array.Copy(tierTwoEnemies, 0, allEnemies, tierOneEnemies.Length + 1, tierTwoEnemies.Length);
+        //Array.Copy(tierThreeEnemies, 0, allEnemies, tierOneEnemies.Length + tierTwoEnemies.Length + 1, tierThreeEnemies.Length);
+        //Array.Copy(tierFourEnemies, 0, allEnemies, tierOneEnemies.Length + tierTwoEnemies.Length + tierThreeEnemies.Length + 1, tierFourEnemies.Length);
+        //Array.Copy(tierFiveEnemies, 0, allEnemies, tierOneEnemies.Length + tierTwoEnemies.Length + tierThreeEnemies.Length + tierFourEnemies.Length + 1, tierFiveEnemies.Length);
+        //allEnemies[allEnemies.Length - 1] = fastSwarmTankDeadlySpammyEnemy;
 
         //Modifies starting budget by the difficulty modifier
         budget *= playerIncome;
@@ -326,6 +325,8 @@ public class GameManager : Singleton<GameManager>
 
         //Set hotkey text
         tierOneTurretLabel.text = BasicUtils.TranslateKey(tierOneTurretKey);
+        tierOneRepairLabel.text = BasicUtils.TranslateKey(tierOneRepairKey);
+        tierOneWallLabel.text = BasicUtils.TranslateKey(tierOneWallKey);
         tierOneExtractorLabel.text = BasicUtils.TranslateKey(tierOneExtractorKey);
         nextWaveLabel.text = BasicUtils.TranslateKey(nextWaveKey);
         sellText.text = $"Sell ({BasicUtils.TranslateKey(sellKey)})";
@@ -367,79 +368,86 @@ public class GameManager : Singleton<GameManager>
             checkpoints.Clear();
 
             //List where new enemies will be kept, each inside list is all of the enemies that will spawn at the same spot
-            List<List<Enemy>> enemySpawns = new List<List<Enemy>>();
+            List<Enemy> enemySpawns = new List<Enemy>();
 
-            //Creates a list for each spot you can maybe spawn an enemy
-            for (int i = 0; i < TileManager.Instance.potentialSpawnpoints.Count; i++)
-            {
-                enemySpawns.Add(new List<Enemy>());
-            }
-            //Creates the correct amount of enemies for the wave and spreads them evenly among spawn points
-            for (int i = 0; i < 5 * Mathf.Pow(wave, 1 + (0.25f * enemyDifficulty)) * enemyDifficulty; i++)
+            //Creates the correct amount of tier zero enemies for the wave
+            int tierZeroEnemyCount = (int)(2 * Mathf.Max(Mathf.Pow(wave, 1 + (0.25f * enemyDifficulty)) - Mathf.Max(Mathf.Pow(wave, 1 + (0.3f * enemyDifficulty)) - 8.10328298346f, 0), 0) * enemyDifficulty);
+            for (int i = 0; i < tierZeroEnemyCount; i++)
             {
                 int at = UnityEngine.Random.Range(0, TileManager.Instance.potentialSpawnpoints.Count);
-                Enemy createdEnemy = Instantiate(allEnemies[UnityEngine.Random.Range(0, allEnemies.Length)], TileManager.Instance.TraversableTilemap.CellToWorld(new Vector3Int(TileManager.Instance.potentialSpawnpoints[at].x, TileManager.Instance.potentialSpawnpoints[at].y)) + new Vector3(UnityEngine.Random.Range(-0.2f, 0.2f), UnityEngine.Random.Range(-0.2f, 0.2f)), Quaternion.identity).GetComponentInChildren<Enemy>();
-                enemySpawns[at].Add(createdEnemy);
-                if (createdEnemy.swarmer)
-                {
-                    enemySpawns[at].Add(Instantiate(allEnemies[UnityEngine.Random.Range(0, allEnemies.Length)], TileManager.Instance.TraversableTilemap.CellToWorld(new Vector3Int(TileManager.Instance.potentialSpawnpoints[at].x, TileManager.Instance.potentialSpawnpoints[at].y)) + new Vector3(UnityEngine.Random.Range(-0.2f, 0.2f), UnityEngine.Random.Range(-0.2f, 0.2f)), Quaternion.identity).GetComponentInChildren<Enemy>());
-                }
+                Enemy createdEnemy = Instantiate(baseEnemy, TileManager.Instance.TraversableTilemap.CellToWorld(new Vector3Int(TileManager.Instance.potentialSpawnpoints[at].x, TileManager.Instance.potentialSpawnpoints[at].y)) + new Vector3(UnityEngine.Random.Range(-0.2f, 0.2f), UnityEngine.Random.Range(-0.2f, 0.2f)), Quaternion.identity).GetComponentInChildren<Enemy>();
+                enemySpawns.Add(createdEnemy);
             }
-            //Goes through every spawnpoint
-            for (int i = 0; i < enemySpawns.Count; i++)
+            //Creates the correct amount of tier one enemies for the wave
+            int tierOneEnemyCount = (int)(2 * Mathf.Max(Mathf.Pow(wave - 6, 1 + (0.21f * enemyDifficulty)) - Mathf.Max(Mathf.Pow(wave - 6, 1 + (0.25f * enemyDifficulty)) - 17.7827941004f, 0), 0) * enemyDifficulty);
+            for (int i = 0; i < tierOneEnemyCount; i++)
             {
-                //TODO: Fix edge case where this removes all valid spawnpoints
-                //If there are no enemies that will spawn there, remove the point
-                if (enemySpawns[i].Count == 0)
-                {
-                    enemySpawns.RemoveAt(i);
-                    i--;
-                    continue;
-                }
-                //Generates a path for the spawnpoint
-                EnemyCheckpoint checkpoint = enemySpawns[i][0].GeneratePath();
+                int at = UnityEngine.Random.Range(0, TileManager.Instance.potentialSpawnpoints.Count);
+                Enemy createdEnemy = Instantiate(tierOneEnemies[UnityEngine.Random.Range(0, tierOneEnemies.Length)], TileManager.Instance.TraversableTilemap.CellToWorld(new Vector3Int(TileManager.Instance.potentialSpawnpoints[at].x, TileManager.Instance.potentialSpawnpoints[at].y)) + new Vector3(UnityEngine.Random.Range(-0.2f, 0.2f), UnityEngine.Random.Range(-0.2f, 0.2f)), Quaternion.identity).GetComponentInChildren<Enemy>();
+                enemySpawns.Add(createdEnemy);
+            }
+            //Creates the correct amount of tier two enemies for the wave
+            int tierTwoEnemyCount = (int)(2 * Mathf.Max(Mathf.Pow(wave - 16, 1 + (0.17f * enemyDifficulty)) - Mathf.Max(Mathf.Pow(wave - 16, 1 + (0.2f * enemyDifficulty)) - 36.4112840605f, 0), 0) * enemyDifficulty);
+            for (int i = 0; i < tierTwoEnemyCount; i++)
+            {
+                int at = UnityEngine.Random.Range(0, TileManager.Instance.potentialSpawnpoints.Count);
+                Enemy createdEnemy = Instantiate(tierTwoEnemies[UnityEngine.Random.Range(0, tierTwoEnemies.Length)], TileManager.Instance.TraversableTilemap.CellToWorld(new Vector3Int(TileManager.Instance.potentialSpawnpoints[at].x, TileManager.Instance.potentialSpawnpoints[at].y)) + new Vector3(UnityEngine.Random.Range(-0.2f, 0.2f), UnityEngine.Random.Range(-0.2f, 0.2f)), Quaternion.identity).GetComponentInChildren<Enemy>();
+                enemySpawns.Add(createdEnemy);
+            }
+            //Creates the correct amount of tier three enemies for the wave
+            int tierThreeEnemyCount = (int)(2 * Mathf.Max(Mathf.Pow(wave - 36, 1 + (0.13f * enemyDifficulty)) - Mathf.Max(Mathf.Pow(wave - 36, 1 + (0.15f * enemyDifficulty)) - 69.5615082681f, 0), 0) * enemyDifficulty);
+            for (int i = 0; i < tierThreeEnemyCount; i++)
+            {
+                int at = UnityEngine.Random.Range(0, TileManager.Instance.potentialSpawnpoints.Count);
+                Enemy createdEnemy = Instantiate(tierThreeEnemies[UnityEngine.Random.Range(0, tierThreeEnemies.Length)], TileManager.Instance.TraversableTilemap.CellToWorld(new Vector3Int(TileManager.Instance.potentialSpawnpoints[at].x, TileManager.Instance.potentialSpawnpoints[at].y)) + new Vector3(UnityEngine.Random.Range(-0.2f, 0.2f), UnityEngine.Random.Range(-0.2f, 0.2f)), Quaternion.identity).GetComponentInChildren<Enemy>();
+                enemySpawns.Add(createdEnemy);
+            }
+            //Creates the correct amount of tier four enemies for the wave
+            int tierFourEnemyCount = (int)(2 * Mathf.Max(Mathf.Pow(wave - 76, 1 + (0.09f * enemyDifficulty)) - Mathf.Max(Mathf.Pow(wave - 76, 1 + (0.1f * enemyDifficulty)) - 123.993519004f, 0), 0) * enemyDifficulty);
+            for (int i = 0; i < tierThreeEnemyCount; i++)
+            {
+                int at = UnityEngine.Random.Range(0, TileManager.Instance.potentialSpawnpoints.Count);
+                Enemy createdEnemy = Instantiate(tierFourEnemies[UnityEngine.Random.Range(0, tierFourEnemies.Length)], TileManager.Instance.TraversableTilemap.CellToWorld(new Vector3Int(TileManager.Instance.potentialSpawnpoints[at].x, TileManager.Instance.potentialSpawnpoints[at].y)) + new Vector3(UnityEngine.Random.Range(-0.2f, 0.2f), UnityEngine.Random.Range(-0.2f, 0.2f)), Quaternion.identity).GetComponentInChildren<Enemy>();
+                enemySpawns.Add(createdEnemy);
+            }
+            //Creates the correct amount of tier five enemies for the wave
+            int tierFiveEnemyCount = (int)(2 * Mathf.Max(Mathf.Pow(wave - 156, 1 + (0.05f * enemyDifficulty)) - Mathf.Max(Mathf.Pow(wave - 156, 1 + (0.06f * enemyDifficulty)) - 216.953760189f, 0), 0) * enemyDifficulty);
+            for (int i = 0; i < tierThreeEnemyCount; i++)
+            {
+                int at = UnityEngine.Random.Range(0, TileManager.Instance.potentialSpawnpoints.Count);
+                Enemy createdEnemy = Instantiate(tierFiveEnemies[UnityEngine.Random.Range(0, tierFiveEnemies.Length)], TileManager.Instance.TraversableTilemap.CellToWorld(new Vector3Int(TileManager.Instance.potentialSpawnpoints[at].x, TileManager.Instance.potentialSpawnpoints[at].y)) + new Vector3(UnityEngine.Random.Range(-0.2f, 0.2f), UnityEngine.Random.Range(-0.2f, 0.2f)), Quaternion.identity).GetComponentInChildren<Enemy>();
+                enemySpawns.Add(createdEnemy);
+            }
+            ////Creates the correct amount of tier six enemies for the wave
+            //int tierSixEnemyCount = (int)(2 * Mathf.Max(Mathf.Pow(wave - 316, 1 + (0.01f * enemyDifficulty - 0.01f)), 0) * enemyDifficulty);
+            //for (int i = 0; i < tierThreeEnemyCount; i++)
+            //{
+            //    int at = UnityEngine.Random.Range(0, TileManager.Instance.potentialSpawnpoints.Count);
+            //    Enemy createdEnemy = Instantiate(ultimateEnemy, TileManager.Instance.TraversableTilemap.CellToWorld(new Vector3Int(TileManager.Instance.potentialSpawnpoints[at].x, TileManager.Instance.potentialSpawnpoints[at].y)) + new Vector3(UnityEngine.Random.Range(-0.2f, 0.2f), UnityEngine.Random.Range(-0.2f, 0.2f)), Quaternion.identity).GetComponentInChildren<Enemy>();
+            //    enemySpawns.Add(createdEnemy);
+            //}
+            //Goes through every enemy
+            foreach(Enemy enemy in enemySpawns)
+            {
+                //Generates a path for the enemy
+                EnemyCheckpoint checkpoint = enemy.GeneratePath();
 
                 //Ensure that there is actually a path
-                if (checkpoint != null)
+                while(checkpoint == null)
                 {
-                    //Activate the path that the first enemy generated for all of the enemies at that same spawn point
-                    foreach (Enemy enemy in enemySpawns[i])
-                    {
-                        enemy.activatePath(checkpoint);
-                        currentEnemies.Add(enemy);
-                    }
+                    int at = UnityEngine.Random.Range(0, TileManager.Instance.potentialSpawnpoints.Count);
+                    enemy.transform.position = TileManager.Instance.TraversableTilemap.CellToWorld(new Vector3Int(TileManager.Instance.potentialSpawnpoints[at].x, TileManager.Instance.potentialSpawnpoints[at].y)) + new Vector3(UnityEngine.Random.Range(-0.2f, 0.2f), UnityEngine.Random.Range(-0.2f, 0.2f));
+                    checkpoint = enemy.GeneratePath();
                 }
-                else
+                if(enemy.swarmer)
                 {
-                    //Gets the list of enemies that do not have a path
-                    List<Enemy> enemies = enemySpawns[i];
-                    //Removes the current spawn point
-                    enemySpawns.RemoveAt(i);
-                    i--;
-                    //Goes through all of the enemies
-                    for (int j = 0, k = 0; j < enemies.Count; j++)
-                    {
-                        //Ensure that you do not place an enemy where you cannot
-                        while (enemySpawns[(j + k) % enemySpawns.Count].Count == 0)
-                        {
-                            k++;
-                        }
-                        //If a path has already been generated for that spawnpoint, use that path
-                        if (enemySpawns[(j + k) % enemySpawns.Count][0].currentGuide != null)
-                        {
-                            enemies[j].activatePath(enemySpawns[(j + k) % enemySpawns.Count][0].currentGuide);
-                            currentEnemies.Add(enemies[j]);
-                        }
-                        //Ensure that you are in the correct position
-                        enemies[j].transform.parent.position = enemySpawns[(j + k) % enemySpawns.Count][0].transform.parent.position;
-                        
-                        //Ensure that you are stored in the proper spawnpoint
-                        enemySpawns[j % enemySpawns.Count].Add(enemies[j]);
-                    }
+                    Instantiate(enemy, TileManager.Instance.TraversableTilemap.CellToWorld(TileManager.Instance.TraversableTilemap.WorldToCell(enemy.transform.position)) + new Vector3(UnityEngine.Random.Range(-0.2f, 0.2f), UnityEngine.Random.Range(-0.2f, 0.2f)), Quaternion.identity).ActivatePath(checkpoint);
                 }
-                //Max enemies in order to ensure that you can tell how many more you need to kill to do the next wave
-                maxEnemiesThisWave = currentEnemies.Count;
+                enemy.ActivatePath(checkpoint);
             }
+            //Max enemies in order to ensure that you can tell how many more you need to kill to do the next wave
+            maxEnemiesThisWave = currentEnemies.Count;
+
             //Expand the map two tiles
             TileManager.Instance.Next();
             TileManager.Instance.Next();

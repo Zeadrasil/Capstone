@@ -12,8 +12,8 @@ public class RepairStation : PlayerBuilding, IDamageable, IUpgradeable
     int cooldown = 10;
     int baseCooldown = 10;
     [SerializeField] float baseHealth;
-    [SerializeField] float healing;
-    [SerializeField] float range;
+    public float healing;
+    public float range;
 
     //Upgrade details
     [SerializeField] float[] expenseModifiers = new float[] { 1.25f, 1.25f, 1.25f };

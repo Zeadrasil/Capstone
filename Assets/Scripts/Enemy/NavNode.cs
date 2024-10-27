@@ -10,11 +10,19 @@ public class NavNode
     public NavNode parent;
     public Vector2Int location;
     public float cost;
+    private static int tracker;
+    private int id;
 
     //Constructor only allows NavNodes with locations
     public NavNode(Vector2Int location)
     {
         this.location = location;
         neighbors = new List<NavNode>();
+        id = tracker++;
+    }
+
+    public bool Equals(NavNode other)
+    {
+        return id == other.id;
     }
 }

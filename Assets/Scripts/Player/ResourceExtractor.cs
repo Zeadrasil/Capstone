@@ -7,10 +7,10 @@ public class ResourceExtractor : PlayerBuilding, IUpgradeable
 {
     //Basic stats
     float health = 10;
-    float baseHealth = 10;
-    float extractionRate = 0.1f;
-    float energyRate = 0;
-    float damageEffectiveness = 10;
+    [SerializeField] float baseHealth = 10;
+    public float extractionRate = 0.1f;
+    public float energyRate = 0;
+    public float damageEffectiveness = 10;
 
     //Upgrade data
     public int[] upgradeLevels = new int[] { 0, 0, 0, 0 };
