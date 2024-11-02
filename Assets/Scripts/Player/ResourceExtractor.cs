@@ -392,4 +392,43 @@ public class ResourceExtractor : PlayerBuilding, IUpgradeable
     {
         return finishedAligning;
     }
+
+    //Creates a BuildingData object with the identifying information of this extractor
+    public override BuildingData GetAsData()
+    {
+        BuildingData data = new BuildingData();
+
+        //Sets building type
+        data.type = 7;
+
+        //Sets resource extractor data
+        data.extractionRate = extractionRate;
+        data.energyRate = energyRate;
+        data.damageEffectiveness = damageEffectiveness;
+
+        //Sets generic data
+        data.health = health;
+        data.baseHealth = baseHealth;
+        data.energyCost = energyCost;
+        data.cost = cost;
+        data.location = location;
+
+        //Sets upgrade data
+        data.expenseModifiers = expenseModifiers;
+        data.upgradeLevels = upgradeLevels;
+
+        //Sets alignment data
+        data.maxAlignments = maxAlignments;
+        data.alignments = alignments;
+        data.finishedAligning = finishedAligning;
+
+        return data;
+    }
+
+    //Loads data from a BuildingData object into the extractor
+    //TODO - Implement
+    public override void LoadData(BuildingData data)
+    {
+        throw new System.NotImplementedException();
+    }
 }

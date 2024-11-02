@@ -300,7 +300,7 @@ MonoBehaviour:
   - 0.5
   upgradeEffects:
   - 1.2
-  - 1.2
+  - 0.25
   - 0.9
   - 1.2
   baseUpgradeCost: 10

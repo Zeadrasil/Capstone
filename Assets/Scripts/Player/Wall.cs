@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using static UnityEditor.Searcher.SearcherWindow;
 
 //Walls literally just stand in the way of enemies, and they are very good at that, especially with how easy they are to repair
 public class Wall : PlayerBuilding, IUpgradeable
@@ -20,7 +21,6 @@ public class Wall : PlayerBuilding, IUpgradeable
 
     //Alignment data
     public int maxAlignments = 0;
-    private int alignments = 0;
     private bool finishedAligning = false;
 
     //Other
@@ -208,5 +208,40 @@ public class Wall : PlayerBuilding, IUpgradeable
     public bool IsAligned()
     {
         return finishedAligning;
+    }
+
+    //Creates a BuildingData object with the identifying information of this wall
+    public override BuildingData GetAsData()
+    {
+        BuildingData data = new BuildingData();
+
+        //Sets building type
+        data.type = 5;
+
+        //Sets wall data
+        data.healingEffectiveness = healingEffectiveness;
+
+        //Sets generic data
+        data.health = health;
+        data.baseHealth = baseHealth;
+        data.cost = cost;
+        data.location = location;
+
+        //Sets upgrade data
+        data.expenseModifiers = expenseModifiers;
+        data.upgradeLevels = upgradeLevels;
+
+        //Sets alignment data
+        data.maxAlignments = maxAlignments;
+        data.finishedAligning = finishedAligning;
+
+        return data;
+    }
+
+    //Loads data from a BuildingData object into the wall
+    //TODO - Implement
+    public override void LoadData(BuildingData data)
+    {
+        throw new System.NotImplementedException();
     }
 }

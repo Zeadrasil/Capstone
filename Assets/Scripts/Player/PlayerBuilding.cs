@@ -44,4 +44,10 @@ public abstract class PlayerBuilding : MonoBehaviour, IDamageable
     //Remove the building for any reason, destroyed, sold, etc
     protected abstract void Remove();
 
+    //Get the unique data required to recreate a copy using the prefabs
+    public abstract BuildingData GetAsData();
+
+    //Take the data from a save file to recreate a copy of the saved building using the prefabs
+    public abstract void LoadData(BuildingData data);
+
 }

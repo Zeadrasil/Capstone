@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Data;
 using UnityEngine;
 
 //RepairStations allow buildings to be repaired, though a repair station can only repair other buildings and repair stations and not itself
@@ -189,7 +190,7 @@ public class RepairStation : PlayerBuilding, IDamageable, IUpgradeable
     // Update is called once per frame
     void FixedUpdate()
     {
-        if (active)
+        if (!GameManager.Instance.betweenWaves && active)
         {
             //Every so often heal nearby buildings
             if (cooldown == 0)
@@ -305,5 +306,44 @@ public class RepairStation : PlayerBuilding, IDamageable, IUpgradeable
     public bool IsAligned()
     {
         return finishedAligning;
+    }
+
+    //Creates a BuildingData object with the identifying information of this repair station
+    public override BuildingData GetAsData()
+    {
+        BuildingData data = new BuildingData();
+
+        //Sets building type
+        data.type = 3;
+
+        //Sets repair station data
+        data.healing = healing;
+        data.baseCooldown = baseCooldown;
+        data.cooldown = cooldown;
+
+        //Sets generic data
+        data.health = health;
+        data.baseHealth = baseHealth;
+        data.cost = cost;
+        data.location = location;
+        data.range = range;
+
+        //Sets upgrade data
+        data.expenseModifiers = expenseModifiers;
+        data.upgradeLevels = upgradeLevels;
+
+        //Sets alignment data
+        data.maxAlignments = maxAlignments;
+        data.alignments = alignments;
+        data.finishedAligning = finishedAligning;
+
+        return data;
+    }
+
+    //Loads data from a BuildingData object into the repair station
+    //TODO - Implement
+    public override void LoadData(BuildingData data)
+    {
+        throw new System.NotImplementedException();
     }
 }

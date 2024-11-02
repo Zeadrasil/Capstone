@@ -84,4 +84,14 @@ public class PlayerBase : PlayerBuilding
         //Destroy self
         Destroy(transform.parent.gameObject);
     }
+
+    public override BuildingData GetAsData()
+    {
+        throw new System.NotImplementedException();
+    }
+
+    public override void LoadData(BuildingData data)
+    {
+        throw new System.NotImplementedException();
+    }
 }

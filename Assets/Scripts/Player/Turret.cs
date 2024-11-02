@@ -449,4 +449,45 @@ public class Turret : PlayerBuilding, IDamager, IUpgradeable
     {
         return finishedAligning;
     }
+
+    //Creates a BuildingData object with the identifying information of this turret
+    public override BuildingData GetAsData()
+    {
+        BuildingData data = new BuildingData();
+
+        //Sets building type
+        data.type = 5;
+
+        //Sets turret data
+        data.damage = damage;
+        data.firerate = firerate;
+        data.splashRange = splashRange;
+        data.splash = splash;
+
+        //Sets generic data
+        data.health = health;
+        data.baseHealth = baseHealth;
+        data.cost = cost;
+        data.location = location;
+        data.range = range;
+
+        //Sets upgrade data
+        data.expenseModifiers = expenseModifiers;
+        data.upgradeLevels = upgradeLevels;
+
+        //Sets alignment data
+        data.maxAlignments = maxAlignments;
+        data.alignments = alignments;
+        data.primaryMisalignmentChosen = primaryMisalignmentChosen;
+        data.finishedAligning = finishedAligning;
+
+        return data;
+    }
+
+    //Loads data from a BuildingData object into the turret
+    //TODO - Implement
+    public override void LoadData(BuildingData data)
+    {
+        throw new System.NotImplementedException();
+    }
 }

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -1433,6 +1434,11 @@ public class GameManager : Singleton<GameManager>
         //Checks to see if the wave is over
         betweenWaves = currentEnemies.Count == 0;
 
+        if(betweenWaves && wave % 5 == 0)
+        {
+            FileManager.Instance.Save();
+        }
+
         //Sets the wave background to show what the remaining enemy status is
         nextWaveBackground.color = new Color(Mathf.Lerp(unavailableColor.x, availableColor.x, 1 - Mathf.Clamp(currentEnemies.Count / (float)maxEnemiesThisWave, 0, 1)), Mathf.Lerp(unavailableColor.y, availableColor.y, 1 - Mathf.Clamp(currentEnemies.Count / (float)maxEnemiesThisWave, 0, 1)), Mathf.Lerp(unavailableColor.z, availableColor.z, 1 - Mathf.Clamp(currentEnemies.Count / (float)maxEnemiesThisWave, 0, 1)));
     }
@@ -1535,8 +1541,41 @@ public class GameManager : Singleton<GameManager>
         playerBuildings.Remove(building.location);
     }
 
+    //Gets the data so that it can be saved
     public GameData GetSaveData()
     {
-        throw new NotImplementedException();
+        GameData data = new GameData();
+
+        //Seed data
+        data.simplifiedSeed = simplifiedSeed;
+        data.seedA = tileManager.seedA;
+        data.seedB = tileManager.seedB;
+        data.seedC = tileManager.seedC;
+        data.seedD = tileManager.seedD;
+        data.seedE = tileManager.seedE;
+        data.seedF = tileManager.seedF;
+
+        //Economy info
+        data.budgetCosts = budgetCosts;
+        data.budget = budget;
+
+        //Other
+        data.wave = wave;
+
+        //Difficulty
+        data.enemyDifficulty = enemyDifficulty;
+        data.playerPower = playerPower;
+        data.playerIncome = playerIncome;
+        data.playerCosts = playerCosts;
+
+        //Buildings
+        data.buildings = new BuildingData[playerBuildings.Count - 1];
+        GameObject[] buildingArray = playerBuildings.Values.ToArray();
+        for(int i = 0; i < data.buildings.Length; i++)
+        {
+            data.buildings[i] = buildingArray[i + 1].GetComponentInChildren<PlayerBuilding>().GetAsData();
+        }
+
+        return data;
     }
 }
