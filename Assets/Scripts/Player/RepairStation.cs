@@ -16,13 +16,22 @@ public class RepairStation : PlayerBuilding, IDamageable, IUpgradeable
     public float range;
 
     //Upgrade details
-    [SerializeField] float[] expenseModifiers = new float[] { 1.25f, 1.25f, 1.25f };
-    [SerializeField] float[] upgradeEffects = new float[] { 1.25f, 1.25f, 1.25f };
+    [SerializeField] float[] expenseModifiers = new float[] { 1.5f, 1.5f, 1.5f };
+    [SerializeField] float[] upgradeEffects = new float[] { 1.2f, 1.2f, 1.2f };
     [SerializeField] int[] upgradeLevels = new int[] { 0, 0, 0 };
+    [SerializeField] int baseUpgradeCost = 10;
+
+    //Alignment data
+    public int maxAlignments = 0;
+    private int alignments = 0;
+    private bool finishedAligning = false;
 
     //Energy data
     public float[] energyCosts = new float[] { 0.1f, 0.1f, 0.1f };
     [SerializeField] SpriteRenderer spriteRenderer;
+
+    //Other
+    [SerializeField] Color activeColor = Color.white;
 
     //Add damager to list
     public override void AddDamager(IDamager damager)
@@ -46,29 +55,42 @@ public class RepairStation : PlayerBuilding, IDamageable, IUpgradeable
     public float GetUpgradeCost(int type)
     {
         //Applies various modifiers to the expense to get the cost
-        return 2 * Mathf.Pow(1 + 0.25f * expenseModifiers[type], upgradeLevels[type]) * expenseModifiers[type];
+        return baseUpgradeCost * Mathf.Pow(1 + 0.25f * expenseModifiers[type] * GameManager.Instance.playerCosts, upgradeLevels[type]) * expenseModifiers[type] * GameManager.Instance.playerCosts;
     }
 
     //Gets a string representing the potential changes of an upgrade
     public string GetUpgradeEffects(int type)
     {
+        //Change displayed string if it is still aligning
+        if(!finishedAligning)
+        {
+            if(alignments == 0)
+            {
+                return "Select as Alignment";
+            }
+            if (expenseModifiers[type] != 1.3f)
+            {
+                return "Select as Primary Misalignment";
+            }
+            return "N/A";
+        }
         //Switch based on which upgrade you are checking the effects of
         switch (type)
         {
             //Range
             case 0:
                 {
-                    return $"{range:F2} > {range * upgradeEffects[type]:F2}";
+                    return $"{range:F2} > {range * upgradeEffects[type] * GameManager.Instance.playerPower:F2}";
                 }
             //Healing power
             case 1:
                 {
-                    return $"{healing:F2} > {healing * upgradeEffects[type]:F2}";
+                    return $"{healing:F2} > {healing * upgradeEffects[type] * GameManager.Instance.playerPower:F2}";
                 }
             //Building health
             case 2:
                 {
-                    return $"{baseHealth:F2} > {baseHealth * upgradeEffects[type]:F2}";
+                    return $"{baseHealth:F2} > {baseHealth * upgradeEffects[type] * GameManager.Instance.playerPower:F2}";
                 }
             default:
                 {
@@ -100,16 +122,8 @@ public class RepairStation : PlayerBuilding, IDamageable, IUpgradeable
         //If health is at or below 0
         if (health <= 0)
         {
-            //Remove from building list
-            GameManager.Instance.playerBuildings.Remove(location);
-
-            //Tell all damagers to find something else
-            foreach (IDamager damager in currentDamagers)
-            {
-                damager.cancelAttack();
-            }
-            //Destroy self
-            Destroy(transform.parent.gameObject);
+            //Do remove events
+            Remove();
         }
         //Return health for utility
         return health;
@@ -132,29 +146,44 @@ public class RepairStation : PlayerBuilding, IDamageable, IUpgradeable
             //Range
             case 0:
                 {
-                    range *= upgradeEffects[0];
+                    range *= upgradeEffects[0] * GameManager.Instance.playerPower;
                     break;
                 }
             //Healing power
             case 1:
                 {
-                    healing *= upgradeEffects[1];
+                    healing *= upgradeEffects[1] * GameManager.Instance.playerPower;
                     break;
                 }
             //Building Health
             case 2:
                 {
-                    baseHealth *= upgradeEffects[2];
-                    health += upgradeEffects[2];
+                    baseHealth *= upgradeEffects[2] * GameManager.Instance.playerPower;
+                    health += upgradeEffects[2] * GameManager.Instance.playerPower;
                     break;
                 }
         }
+        //Increase energy cost by proper amount for the upgrade
+        energyCost += GetUpgradeEnergy(type);
+
+        //If the building is not active update the energy deficit before notifying the manager of the energy usage increase
+        if (!active)
+        {
+            GameManager.Instance.energyDeficit -= GetUpgradeEnergy(type);
+        }
+        GameManager.Instance.ChangeEnergyUsage(GetUpgradeEnergy(type));
     }
 
     // Start is called before the first frame update
     void Start()
     {
+        baseHealth *= GameManager.Instance.playerPower;
+        healing *= GameManager.Instance.playerPower;
+        range *= GameManager.Instance.playerPower;
         health = baseHealth;
+
+        //If you are unable to specialize, you are finished specializing
+        finishedAligning = maxAlignments == 0;
     }
 
     // Update is called once per frame
@@ -192,14 +221,11 @@ public class RepairStation : PlayerBuilding, IDamageable, IUpgradeable
     //Sell building
     public override bool Sell()
     {
-        //Remove from building list
-        GameManager.Instance.playerBuildings.Remove(location);
-
         //Refund part of build cost
         GameManager.Instance.budget += cost * 0.5f * health / baseHealth;
 
-        //Kill building
-        Destroy(transform.parent.gameObject);
+        //Do removal events
+        Remove();
 
         //Ensures that it is known that building was successfully sold
         return true;
@@ -208,7 +234,7 @@ public class RepairStation : PlayerBuilding, IDamageable, IUpgradeable
     //Get energy required to upgrade stat
     public float GetUpgradeEnergy(int type)
     {
-        return energyCosts[type];
+        return energyCosts[type] * GameManager.Instance.playerCosts;
     }
 
     //Disable repair station to save energy
@@ -223,7 +249,61 @@ public class RepairStation : PlayerBuilding, IDamageable, IUpgradeable
     public override float Enable()
     {
         active = true;
-        spriteRenderer.color = Color.white;
+        spriteRenderer.color = activeColor;
         return energyCost;
+    }
+
+    //Events that are always done when the building is removed
+    protected override void Remove()
+    {
+        //Call GameManager removal
+        GameManager.Instance.RemoveBuilding(this);
+
+        //Tell all damagers to find something else
+        foreach (IDamager damager in currentDamagers)
+        {
+            damager.cancelAttack();
+        }
+        //Destroy self
+        Destroy(transform.parent.gameObject);
+    }
+
+    //Handles alignment
+    public void Align(int type)
+    {
+        //Cannot select alignment twice
+        if (expenseModifiers[type] == 1.5f)
+        {
+            //If you are selecting a misalignment type
+            if (maxAlignments == alignments)
+            {
+                //Type passed in is primary misalignment
+                expenseModifiers[type] = 3;
+
+                //Goes through all of the possibilities for misalignment in order to find the one that still has the default alignment
+                for (int i = 0; i < expenseModifiers.Length; i++)
+                {
+                    if (expenseModifiers[i] == 1.5f)
+                    {
+                        //Sets as secondary misalignment
+                        expenseModifiers[i] = 2.25f;
+                        finishedAligning = true;
+                        return;
+                    }
+                }
+            }
+            else
+            {
+                //Select primary alignment
+                alignments++;
+                expenseModifiers[type] = 1.3f;
+            }
+        }
+    }
+
+    //Call to get whether this has finished the alignment process
+    public bool IsAligned()
+    {
+        return finishedAligning;
     }
 }

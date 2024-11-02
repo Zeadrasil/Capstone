@@ -33,7 +33,7 @@ public class GameManager : Singleton<GameManager>
     private float income = 0;
     private float energy = 10;
     private float usedEnergy = 0;
-    private float energyDeficit = 0;
+    public float energyDeficit = 0;
     private PlayerBuilding mostRecentEnergyDecrease = null;
 
     //Stores which wave you are on
@@ -181,7 +181,6 @@ public class GameManager : Singleton<GameManager>
 
     //Prevents exceptions due to data for in-game updates not being passed in yet
     private bool active = false;
-    public int queueInitialize = -1;
 
     //Selling data storage
     public Canvas SellWindow;
@@ -278,11 +277,36 @@ public class GameManager : Singleton<GameManager>
         tileManager = TileManager.Instance;
     }
 
+    public void Initialize(int simplifiedSeed, float enemyDifficulty, float playerPower, float playerEconomy)
+    {
+        //Sets the passed in data
+        this.simplifiedSeed = simplifiedSeed;
+        this.enemyDifficulty = enemyDifficulty;
+        this.playerPower = playerPower;
+        playerIncome = playerEconomy;
+        playerCosts = 1 / playerEconomy;
+        TileManager.Instance.customSeeds = false;
+
+        //Sets the RNG seed so that you can generate the same map every time if you use the same seed
+        UnityEngine.Random.InitState(simplifiedSeed);
+
+        //Modifies starting budget by the difficulty modifier
+        budget *= playerIncome;
+
+        //Modifies building costs by difficulty modifier
+        for (int i = 0; i < budgetCosts.Length; i++)
+        {
+            budgetCosts[i] *= playerCosts;
+        }
+
+        //Calls common initialization events
+        Initialize();
+    }
+
+
     //Initialize the manager since you cannot pass in most of the data until you open the main scene
     public void Initialize()
     {
-        //Sets the RNG seed so that you can generate the same map every time
-        UnityEngine.Random.InitState(simplifiedSeed);
 
         //Assigns enemies to proper tier storages
         tierOneEnemies = new GameObject[] { fastEnemy, swarmEnemy, tankEnemy, deadlyEnemy, spammyEnemy };
@@ -305,14 +329,6 @@ public class GameManager : Singleton<GameManager>
         //Array.Copy(tierFiveEnemies, 0, allEnemies, tierOneEnemies.Length + tierTwoEnemies.Length + tierThreeEnemies.Length + tierFourEnemies.Length + 1, tierFiveEnemies.Length);
         //allEnemies[allEnemies.Length - 1] = fastSwarmTankDeadlySpammyEnemy;
 
-        //Modifies starting budget by the difficulty modifier
-        budget *= playerIncome;
-
-        //Modifies building costs by difficulty modifier
-        for(int i = 0; i < budgetCosts.Length; i++)
-        {
-            budgetCosts[i] *= playerCosts;
-        }
         //Enable self
         active = true;
 
@@ -339,6 +355,9 @@ public class GameManager : Singleton<GameManager>
         
         //Initialize the tilemanager for the same reason that this needs to be initialized
         TileManager.Instance.Initialize();
+
+        //Sets the player base as the first item that is affecting energy
+        mostRecentEnergyDecrease = PlayerBase;
     }
 
     //Start a new wave
@@ -429,6 +448,9 @@ public class GameManager : Singleton<GameManager>
             //Goes through every enemy
             foreach(Enemy enemy in enemySpawns)
             {
+                //Adds the enemy to the list of current enemies
+                currentEnemies.Add(enemy);
+
                 //Generates a path for the enemy
                 EnemyCheckpoint checkpoint = enemy.GeneratePath();
 
@@ -436,12 +458,15 @@ public class GameManager : Singleton<GameManager>
                 while(checkpoint == null)
                 {
                     int at = UnityEngine.Random.Range(0, TileManager.Instance.potentialSpawnpoints.Count);
-                    enemy.transform.position = TileManager.Instance.TraversableTilemap.CellToWorld(new Vector3Int(TileManager.Instance.potentialSpawnpoints[at].x, TileManager.Instance.potentialSpawnpoints[at].y)) + new Vector3(UnityEngine.Random.Range(-0.2f, 0.2f), UnityEngine.Random.Range(-0.2f, 0.2f));
+                    enemy.transform.parent.position = TileManager.Instance.TraversableTilemap.CellToWorld(new Vector3Int(TileManager.Instance.potentialSpawnpoints[at].x, TileManager.Instance.potentialSpawnpoints[at].y)) + new Vector3(UnityEngine.Random.Range(-0.2f, 0.2f), UnityEngine.Random.Range(-0.2f, 0.2f));
                     checkpoint = enemy.GeneratePath();
                 }
+                //Duplicates swarmer enemies
                 if(enemy.swarmer)
                 {
-                    Instantiate(enemy, TileManager.Instance.TraversableTilemap.CellToWorld(TileManager.Instance.TraversableTilemap.WorldToCell(enemy.transform.position)) + new Vector3(UnityEngine.Random.Range(-0.2f, 0.2f), UnityEngine.Random.Range(-0.2f, 0.2f)), Quaternion.identity).ActivatePath(checkpoint);
+                    Enemy duplicateEnemy = Instantiate(enemy, TileManager.Instance.TraversableTilemap.CellToWorld(TileManager.Instance.TraversableTilemap.WorldToCell(enemy.transform.position)) + new Vector3(UnityEngine.Random.Range(-0.2f, 0.2f), UnityEngine.Random.Range(-0.2f, 0.2f)), Quaternion.identity);
+                    currentEnemies.Add(duplicateEnemy);
+                    duplicateEnemy.ActivatePath(checkpoint);
                 }
                 enemy.ActivatePath(checkpoint);
             }
@@ -689,20 +714,13 @@ public class GameManager : Singleton<GameManager>
         pb.location = hoveredTile;
 
         //Add to the very end of enabling queue
-        if (mostRecentEnergyDecrease != null)
+        PlayerBuilding holder = mostRecentEnergyDecrease;
+        while (holder.nextChanged != null)
         {
-            PlayerBuilding holder = mostRecentEnergyDecrease;
-            while (holder.nextChanged != null)
-            {
-                holder = holder.nextChanged;
-            }
-            holder.nextChanged = pb;
+            holder = holder.nextChanged;
         }
-        else
-        {
-            //If the most recent is null, this must be the first
-            mostRecentEnergyDecrease = pb;
-        }
+        holder.nextChanged = pb;
+        pb.previousChanged = holder;
 
         //Energy management
         energyDeficit += pb.Disable();
@@ -731,31 +749,31 @@ public class GameManager : Singleton<GameManager>
                         //Turret splash damage range
                         case 0:
                             {
-                                turretSplashUpgradeText.text = turret.GetUpgradeCost(upgradeType) >= 0 ? $"Splash Upgrade:\n{turret.GetUpgradeEffects(upgradeType)}\nCost:\n{turret.GetUpgradeCost(upgradeType):F2}" : "NOT\nAVAILABLE";
+                                turretSplashUpgradeText.text = turret.IsAligned() ? turret.GetUpgradeCost(upgradeType) >= 0 ? $"Splash Upgrade:\n{turret.GetUpgradeEffects(upgradeType)}\nCost:\n{turret.GetUpgradeCost(upgradeType):F2}" : "NOT\nAVAILABLE" : $"Splash Range:\n{turret.GetUpgradeEffects(upgradeType)}";
                                 break;
                             }
                         //Turret range
                         case 1:
                             {
-                                turretRangeUpgradeText.text = turret.GetUpgradeCost(upgradeType) >= 0 ? $"Range Upgrade:\n{turret.GetUpgradeEffects(upgradeType)}\nCost:\n{turret.GetUpgradeCost(upgradeType):F2}" : "NOT\nAVAILABLE";
+                                turretRangeUpgradeText.text = turret.IsAligned() ? turret.GetUpgradeCost(upgradeType) >= 0 ? $"Range Upgrade:\n{turret.GetUpgradeEffects(upgradeType)}\nCost:\n{turret.GetUpgradeCost(upgradeType):F2}" : "NOT\nAVAILABLE" : $"Range:\n{turret.GetUpgradeEffects(upgradeType)}";
                                 break;
                             }
                         //Turret damage
                         case 2:
                             {
-                                turretDamageUpgradeText.text = turret.GetUpgradeCost(upgradeType) >= 0 ? $"Damage Upgrade:\n{turret.GetUpgradeEffects(upgradeType)}\nCost:\n{turret.GetUpgradeCost(upgradeType):F2}" : "NOT\nAVAILABLE";
+                                turretDamageUpgradeText.text = turret.IsAligned() ? turret.GetUpgradeCost(upgradeType) >= 0 ? $"Damage Upgrade:\n{turret.GetUpgradeEffects(upgradeType)}\nCost:\n{turret.GetUpgradeCost(upgradeType):F2}" : "NOT\nAVAILABLE" : $"Damage:\n{turret.GetUpgradeEffects(upgradeType)}";
                                 break;
                             }
                         //Turret firerate
                         case 3:
                             {
-                                turretFirerateUpgradeText.text = turret.GetUpgradeCost(upgradeType) >= 0 ? $"Firerate Upgrade:\n{turret.GetUpgradeEffects(upgradeType)}\nCost:\n{turret.GetUpgradeCost(upgradeType):F2}" : "NOT\nAVAILABLE";
+                                turretFirerateUpgradeText.text = turret.IsAligned() ? turret.GetUpgradeCost(upgradeType) >= 0 ? $"Firerate Upgrade:\n{turret.GetUpgradeEffects(upgradeType)}\nCost:\n{turret.GetUpgradeCost(upgradeType):F2}" : "NOT\nAVAILABLE" : $"Firerate:\n{turret.GetUpgradeEffects(upgradeType)}";
                                 break;
                             }
                         //Turret health
                         case 4:
                             {
-                                turretHealthUpgradeText.text = turret.GetUpgradeCost(upgradeType) >= 0 ? $"Health Upgrade:\n{turret.GetUpgradeEffects(upgradeType)}\nCost:\n{turret.GetUpgradeCost(upgradeType):F2}" : "NOT\nAVAILABLE";
+                                turretHealthUpgradeText.text = turret.IsAligned() ? turret.GetUpgradeCost(upgradeType) >= 0 ? $"Health Upgrade:\n{turret.GetUpgradeEffects(upgradeType)}\nCost:\n{turret.GetUpgradeCost(upgradeType):F2}" : "NOT\nAVAILABLE" : $"Health:\n{turret.GetUpgradeEffects(upgradeType)}";
                                 break;
                             }
 
@@ -1267,15 +1285,6 @@ public class GameManager : Singleton<GameManager>
                 budget += income * Time.deltaTime;
             }
         }
-        //Delay initialization in order to ensure that all of the data gets passed through
-        else if (queueInitialize > 0)
-        {
-            if(queueInitialize == 1)
-            {
-                Initialize();
-            }
-            queueInitialize--;
-        }
 	}
 
     //Function to increase income in order to improve performance of constant checks
@@ -1292,8 +1301,10 @@ public class GameManager : Singleton<GameManager>
     {
         //Removes from stored enemies
         currentEnemies.Remove(enemy);
+
         //Checks to see if the wave is over
         betweenWaves = currentEnemies.Count == 0;
+
         //Sets the wave background to show what the remaining enemy status is
         nextWaveBackground.color = new Color(Mathf.Lerp(unavailableColor.x, availableColor.x, 1 - Mathf.Clamp(currentEnemies.Count / (float)maxEnemiesThisWave, 0, 1)), Mathf.Lerp(unavailableColor.y, availableColor.y, 1 - Mathf.Clamp(currentEnemies.Count / (float)maxEnemiesThisWave, 0, 1)), Mathf.Lerp(unavailableColor.z, availableColor.z, 1 - Mathf.Clamp(currentEnemies.Count / (float)maxEnemiesThisWave, 0, 1)));
     }
@@ -1308,15 +1319,6 @@ public class GameManager : Singleton<GameManager>
             PlayerBuilding building = selectedBuilding.GetComponentInChildren<PlayerBuilding>();
             if (building)
             {
-                //Rearranges building queue for energy saving
-                if(building.previousChanged != null)
-                {
-                    building.previousChanged.nextChanged = building.nextChanged;
-                }
-                if(building.nextChanged != null)
-                {
-                    building.nextChanged.previousChanged = building.previousChanged;
-                }
                 if (building.Sell())
                 {
                     //Clears building selection
@@ -1374,10 +1376,34 @@ public class GameManager : Singleton<GameManager>
             updateEnergy();
         }
     }
-
-    public void RemoveBuilding()
+    //Events for building removal
+    public void RemoveBuilding(PlayerBuilding building)
     {
 
-    }
+        //Ensures that the previous changed building does not lose its next link
+        if (building.previousChanged != null)
+        {
+            building.previousChanged.nextChanged = building.nextChanged;
+        }
+        //Ensures that the next changed building does not lose its previous link
+        if (building.nextChanged != null)
+        {
+            building.nextChanged.previousChanged = building.previousChanged;
+        }
+        //Updates energy data
+        if (building.active)
+        {
+            //If it is an active building remove the energy cost from it
+            ChangeEnergyUsage(-building.energyCost);
 
+            //Ensure that all economy data from extractors is cleared
+            if(building.gameObject.TryGetComponent(out ResourceExtractor extractor))
+            {
+                IncreaseIncome(-extractor.extractionRate);
+                ChangeEnergyCap(-extractor.energyRate);
+            }
+        }
+        //Remove from building tracker
+        playerBuildings.Remove(building.location);
+    }
 }

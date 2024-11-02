@@ -16,4 +16,10 @@ public interface IUpgradeable
 
     //Gets the energy required for upgrading a specific stat
     public float GetUpgradeEnergy(int type);
+
+    //Handles alignment, which is choosing what a building is good at and bad at
+    public void Align(int type);
+
+    //Helper method so that the GameManager can ask if it has finished aligning itself
+    public bool IsAligned();
 }

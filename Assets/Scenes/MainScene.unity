@@ -1300,7 +1300,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Color: {r: 0, g: 0, b: 1, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -1824,7 +1824,6 @@ GameObject:
   - component: {fileID: 214252367}
   - component: {fileID: 214252364}
   - component: {fileID: 214252366}
-  - component: {fileID: 214252365}
   m_Layer: 0
   m_Name: TraversableTilemap
   m_TagString: Untagged
@@ -1870,18 +1869,6 @@ Tilemap:
     e31: 0
     e32: 0
     e33: 1
---- !u!114 &214252365
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 214252363}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fc581242ff6da8c4ba4c8ae247fa2a1b, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!483693784 &214252366
 TilemapRenderer:
   m_ObjectHideFlags: 0
@@ -3447,7 +3434,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Color: {r: 0, g: 0, b: 1, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -5804,7 +5791,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Color: {r: 0, g: 0, b: 1, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -10687,7 +10674,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Color: {r: 0.49803922, g: 0.49803922, b: 1, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -11635,7 +11622,6 @@ GameObject:
   - component: {fileID: 1316658656}
   - component: {fileID: 1316658659}
   - component: {fileID: 1316658658}
-  - component: {fileID: 1316658660}
   - component: {fileID: 1316658664}
   - component: {fileID: 1316658663}
   - component: {fileID: 1316658662}
@@ -11749,18 +11735,6 @@ Tilemap:
     e31: 0
     e32: 0
     e33: 1
---- !u!114 &1316658660
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1316658655}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fc581242ff6da8c4ba4c8ae247fa2a1b, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!66 &1316658661
 CompositeCollider2D:
   m_ObjectHideFlags: 0
@@ -12548,6 +12522,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1403578385}
   - component: {fileID: 1403578384}
+  - component: {fileID: 1403578386}
   m_Layer: 0
   m_Name: Grid
   m_TagString: Untagged
@@ -12584,6 +12559,18 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1403578386
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1403578383}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fc581242ff6da8c4ba4c8ae247fa2a1b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &1407618497
 GameObject:
   m_ObjectHideFlags: 0
@@ -12865,7 +12852,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Color: {r: 0, g: 0, b: 1, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -16453,7 +16440,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Color: {r: 0.5019608, g: 0.5019608, b: 1, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1

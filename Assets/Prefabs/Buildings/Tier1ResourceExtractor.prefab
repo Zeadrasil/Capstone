@@ -288,6 +288,10 @@ MonoBehaviour:
   previousChanged: {fileID: 0}
   nextChanged: {fileID: 0}
   basicDescription: Tier One Extractor
+  baseHealth: 10
+  extractionRate: 0.1
+  energyRate: 0
+  damageEffectiveness: 10
   upgradeLevels: 00000000000000000000000000000000
   maxSpecializations: 0
   specializations: 0
@@ -306,7 +310,7 @@ MonoBehaviour:
   - 0
   - 0.1
   - 0.1
-  spriteRenderer: {fileID: 0}
+  spriteRenderer: {fileID: 835329686602771236}
 --- !u!60 &681314530299543385
 PolygonCollider2D:
   m_ObjectHideFlags: 0

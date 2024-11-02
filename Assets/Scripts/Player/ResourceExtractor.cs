@@ -14,15 +14,20 @@ public class ResourceExtractor : PlayerBuilding, IUpgradeable
 
     //Upgrade data
     public int[] upgradeLevels = new int[] { 0, 0, 0, 0 };
-    [SerializeField] int maxSpecializations;
-    public int specializations;
     public float[] expenseModifiers = new float[] { 1, 1, 1, 1 };
-    public float[] upgradeEffects = new float[] {1.25f, 1.25f, 0.9f, 1.25f };
+    public float[] upgradeEffects = new float[] {1.25f, 0.25f, 0.9f, 1.25f };
+    [SerializeField] int baseUpgradeCost = 0;
 
     //Energy info
     public float[] energyCosts = new float[] { 0.1f, 0f, 0.1f, 0.1f };
     [SerializeField] SpriteRenderer spriteRenderer;
     private bool activate = false;
+
+    //Alignment data
+    public int maxAlignments = 0;
+    private int alignments = 0;
+    private bool primaryMisalignmentChosen = false;
+    private bool finishedAligning = false;
 
     //Damager list to avoid null references and improve reaction speed
     private List<IDamager> currentDamagers = new List<IDamager>();
@@ -31,7 +36,10 @@ public class ResourceExtractor : PlayerBuilding, IUpgradeable
     public override float TakeDamage(float damage)
     {
         //Remove currently given income
-        GameManager.Instance.IncreaseIncome(-extractionRate * health * health / (baseHealth * baseHealth));
+        if (active)
+        {
+            GameManager.Instance.IncreaseIncome(-extractionRate * Mathf.Pow(health, damageEffectiveness) / Mathf.Pow(baseHealth, damageEffectiveness));
+        }
         healthBar.transform.localScale = new Vector3(health / baseHealth, 0.1f, 1);
         healthBar.transform.localPosition = new Vector3((-1 + health / baseHealth) * 0.5f, -0.55f, 0);
 
@@ -41,21 +49,13 @@ public class ResourceExtractor : PlayerBuilding, IUpgradeable
         //If out of health
         if(health <= 0)
         {
-            //Remove building
-            GameManager.Instance.playerBuildings.Remove(location);
-
-            //Tell all damagers to stop attacking this
-            foreach(IDamager damager in currentDamagers)
-            {
-                damager.cancelAttack();
-            }
-            //Destroy self
-            Destroy(transform.parent.gameObject);
+            //Call removal events
+            Remove();
         }
-        else
+        else if(active)
         {
             //Otherwise update income based on reduced rate from reduced health
-            GameManager.Instance.IncreaseIncome(extractionRate * health * health / (baseHealth * baseHealth));
+            GameManager.Instance.IncreaseIncome(extractionRate * Mathf.Pow(health, damageEffectiveness) / Mathf.Pow(baseHealth, damageEffectiveness));
         }
         //Return health for utility
         return health;
@@ -67,10 +67,14 @@ public class ResourceExtractor : PlayerBuilding, IUpgradeable
         //Modifies extraction rate and health based on difficulty modifiers
         extractionRate *= GameManager.Instance.playerIncome;
         baseHealth *= GameManager.Instance.playerPower;
+        damageEffectiveness /= GameManager.Instance.playerPower;
         health = baseHealth;
 
         //Applies income
         GameManager.Instance.IncreaseIncome(extractionRate);
+
+        //Figures out alignment config
+        finishedAligning = maxAlignments == 0;
     }
 
     // Update is called once per frame
@@ -79,8 +83,8 @@ public class ResourceExtractor : PlayerBuilding, IUpgradeable
         if(activate)
         {
             activate = false;
-            GameManager.Instance.IncreaseIncome(extractionRate);
-            GameManager.Instance.ChangeEnergyCap(energyRate);
+            GameManager.Instance.IncreaseIncome(extractionRate * Mathf.Pow(health, damageEffectiveness) / Mathf.Pow(baseHealth, damageEffectiveness));
+            GameManager.Instance.ChangeEnergyCap(energyRate * Mathf.Pow(health, damageEffectiveness) / Mathf.Pow(baseHealth, damageEffectiveness));
         }
     }
 
@@ -105,13 +109,20 @@ public class ResourceExtractor : PlayerBuilding, IUpgradeable
     //Heal self, capped to base health
     public override void Heal(float healing)
     {
-        health = Mathf.Min(baseHealth, health + healing);
+        if (active)
+        {
+            GameManager.Instance.IncreaseIncome(-extractionRate * Mathf.Pow(health, damageEffectiveness) / Mathf.Pow(baseHealth, damageEffectiveness));
+        }
         healthBar.transform.localScale = new Vector3(health / baseHealth, 0.1f, 1);
         healthBar.transform.localPosition = new Vector3((-1 + health / baseHealth) * 0.5f, -0.55f, 0);
+        health = Mathf.Min(baseHealth, health + healing);
+        if (active)
+        {
+            GameManager.Instance.IncreaseIncome(extractionRate * Mathf.Pow(health, damageEffectiveness) / Mathf.Pow(baseHealth, damageEffectiveness));
+        }
     }
 
     //Upgrade given stat
-    //TODO: Implement
     public void Upgrade(int type)
     {
         //Increase noted cost
@@ -129,29 +140,44 @@ public class ResourceExtractor : PlayerBuilding, IUpgradeable
             //Increase extraction rate
             case 0:
                 {
-                    GameManager.Instance.IncreaseIncome(-extractionRate);
+                    if (active)
+                    {
+                        GameManager.Instance.IncreaseIncome(-extractionRate);
+                    }
                     extractionRate *= upgradeEffects[type];
-                    GameManager.Instance.IncreaseIncome(extractionRate);
+                    if (active)
+                    {
+                        GameManager.Instance.IncreaseIncome(extractionRate);
+                    }
                     break;
                 }
             //Increase energy production
             case 1:
                 {
                     energyRate += upgradeEffects[type];
-                    GameManager.Instance.ChangeEnergyCap(upgradeEffects[type]);
+                    if (active)
+                    {
+                        GameManager.Instance.ChangeEnergyCap(upgradeEffects[type]);
+                    }
+                    else if(energyRate * Mathf.Pow(health, damageEffectiveness) / Mathf.Pow(baseHealth, damageEffectiveness) >= energyCost)
+                    {
+                        GameManager.Instance.energyDeficit += energyCost;
+                        Enable();
+                    }
                     break;
                 }
             //Increase protection
             case 2:
                 {
-                    damageEffectiveness *= upgradeEffects[type];
+                    damageEffectiveness *= upgradeEffects[type] / GameManager.Instance.playerPower;
+                    TakeDamage(0);
                     break;
                 }
             //Increase health
             case 3:
                 {
-                    baseHealth *= upgradeEffects[type];
-                    health *= upgradeEffects[type];
+                    baseHealth *= upgradeEffects[type] * GameManager.Instance.playerPower;
+                    health *= upgradeEffects[type] * GameManager.Instance.playerPower;
                     break;
                 }
             default:
@@ -159,19 +185,58 @@ public class ResourceExtractor : PlayerBuilding, IUpgradeable
                     break;
                 }
         }
+        //Skip energy updates if upgrading energy production
+        if (type != 1)
+        {
+            //Increase energy cost by proper amount for the upgrade
+            energyCost += GetUpgradeEnergy(type);
+
+            //If the building is not active update the energy deficit before notifying the manager of the energy usage increase
+            if (!active)
+            {
+                GameManager.Instance.energyDeficit -= GetUpgradeEnergy(type);
+            }
+            GameManager.Instance.ChangeEnergyUsage(GetUpgradeEnergy(type));
+        }
     }
 
     //Get cost to upgrade given stat
-    //TODO: Implement
     public float GetUpgradeCost(int type)
     {
         return 2 * Mathf.Pow(1 + 0.25f * expenseModifiers[type], upgradeLevels[type]) * expenseModifiers[type];
     }
 
     //Get potential effects of given upgrade
-    //TODO: Implement
     public string GetUpgradeEffects(int type)
     {
+        //Specify alignment informaiton if not done aligning
+        if(!finishedAligning)
+        {
+            //If 2 alignments and 2 major misalignments
+            if(maxAlignments == 2)
+            {
+                //If you have not selected this alignment already, mark it as a possibility
+                if(expenseModifiers[type] == 1.5f)
+                {
+                    return "Select as Alignment";
+                }
+                //Otherwise say you cannot choose it again
+                return "N/A";
+            }
+            //If you have not selected an alignment, mark all as possibilities
+            if(alignments == 0)
+            {
+                return "Select as Alignment";
+            }
+            //Mark as a possible misalignment
+            if (expenseModifiers[type] == 1.5f)
+            {
+                return "Select as Misalignment";
+            }
+            //Only remaining possibility is that you chose it for something, so mention that it is not an option
+            return "N/A";
+        }
+
         //Switch based on desired upgrade type
         switch (type)
         {
@@ -188,12 +253,12 @@ public class ResourceExtractor : PlayerBuilding, IUpgradeable
             //Increase damage protection
             case 2:
                 {
-                    return $"{damageEffectiveness:F2} > {damageEffectiveness * upgradeEffects[type]:F2}";
+                    return $"{damageEffectiveness:F2} > {damageEffectiveness * upgradeEffects[type] / GameManager.Instance.playerPower:F2}";
                 }
             //Increase health
             case 3:
                 {
-                    return $"{baseHealth:F2} > {baseHealth * upgradeEffects[type]:F2}";
+                    return $"{baseHealth:F2} > {baseHealth * upgradeEffects[type] * GameManager.Instance.playerPower:F2}";
                 }
             //Default
             default:
@@ -203,22 +268,19 @@ public class ResourceExtractor : PlayerBuilding, IUpgradeable
         }
     }
     //Get the description and location of the building
-    //TODO: Implement
     public string GetDescription()
     {
         return $"{basicDescription}\n({location.x}, {location.y})";
     }
 
+    //Remove building while giving a partial refund
     public override bool Sell()
     {
-        //Remove from building list
-        GameManager.Instance.playerBuildings.Remove(location);
-
         //Refund part of build cost
         GameManager.Instance.budget += cost * 0.5f * health / baseHealth;
 
-        //Kill building
-        Destroy(transform.parent.gameObject);
+        //Call removal events
+        Remove();
 
         //Ensures that it is known that building was successfully sold
         return true;
@@ -237,7 +299,8 @@ public class ResourceExtractor : PlayerBuilding, IUpgradeable
         if(energyRate < energyCost)
         {
             active = false;
-            GameManager.Instance.IncreaseIncome(-extractionRate);
+            spriteRenderer.color = Color.black;
+            GameManager.Instance.IncreaseIncome(-extractionRate * Mathf.Pow(health, damageEffectiveness) / Mathf.Pow(baseHealth, damageEffectiveness));
             GameManager.Instance.ChangeEnergyCap(-energyRate);
             return -energyCost;
         }
@@ -253,8 +316,77 @@ public class ResourceExtractor : PlayerBuilding, IUpgradeable
         {
             active = true;
             activate = true;
+            spriteRenderer.color = Color.white;
             return energyCost;
         }
         return 0;
+    }
+
+    //Events that are lways done when the building is removed
+    protected override void Remove()
+    {
+        //Remove building
+        GameManager.Instance.RemoveBuilding(this);
+
+        //Tell all damagers to stop attacking this
+        foreach (IDamager damager in currentDamagers)
+        {
+            damager.cancelAttack();
+        }
+        //Destroy self
+        Destroy(transform.parent.gameObject);
+    }
+
+    //Handles alignment
+    public void Align(int type)
+    {
+        //Ensure that you are aligning to a new alignment
+        if (expenseModifiers[type] == 1.5f)
+        {
+            //If setting an alignment
+            if(alignments < maxAlignments)
+            {
+                //Increase alignment count and set the alignment
+                alignments++;
+                expenseModifiers[type] = 1.3f;
+
+                //If this is a second alignment (max)
+                if(alignments == 2)
+                {
+                    //Sets the remaining alignments to extremely misaligned
+                    for(int i = 0; i < expenseModifiers.Length; i++)
+                    {
+                        if(expenseModifiers[i] == 1.5f)
+                        {
+                            expenseModifiers[i] = 4f;
+                        }
+                    }
+                    //Marks alignment as done
+                    finishedAligning = true;
+                }
+            }
+            //If you are not setting an alignment you are choosing a misalignment
+            else
+            {
+                //If you have already picked a primary misalignment, mark as secondary misalignment and finish alignment
+                if(primaryMisalignmentChosen)
+                {
+                    expenseModifiers[type] = 2.25f;
+                    finishedAligning = true;
+                }
+                //Otherwise set as primary alignment and mark that you have chosen it
+                else
+                {
+                    expenseModifiers[type] = 3f;
+                    primaryMisalignmentChosen = true;
+                }
+            }
+        }
+    }
+
+    //Allows ohers to check if it is done aligning itself
+    public bool IsAligned()
+    {
+        return finishedAligning;
     }
 }

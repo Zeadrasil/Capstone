@@ -13,9 +13,16 @@ public class Wall : PlayerBuilding, IUpgradeable
     [SerializeField] float healingEffectiveness = 1;
 
     //Upgrade data
-    [SerializeField] float[] expenseModifiers = new float[] { 1.25f, 1.25f };
-    [SerializeField] float[] upgradeEffects = new float[] { 1.25f, 1.25f };
+    [SerializeField] float[] expenseModifiers = new float[] { 1.5f, 1.5f };
+    [SerializeField] float[] upgradeEffects = new float[] { 1.2f, 1.2f };
     [SerializeField] int[] upgradeLevels = new int[] { 0, 0 };
+    [SerializeField] int baseUpgradeCost = 10;
+
+
+    //Alignment data
+    public int maxAlignments = 0;
+    private int alignments = 0;
+    private bool finishedAligning = false;
 
     //Add damager to damager list
     public override void AddDamager(IDamager damager)
@@ -38,7 +45,7 @@ public class Wall : PlayerBuilding, IUpgradeable
     //Get the cost of a specific stat upgrade
     public float GetUpgradeCost(int type)
     {
-        return 2 * Mathf.Pow(1 + 0.25f * expenseModifiers[type], upgradeLevels[type]) * expenseModifiers[type];
+        return baseUpgradeCost * Mathf.Pow(1 + 0.25f * expenseModifiers[type], upgradeLevels[type]) * expenseModifiers[type];
     }
 
     //Get the potential effects of upgrading a specific stat
@@ -50,12 +57,12 @@ public class Wall : PlayerBuilding, IUpgradeable
             //Health
             case 0:
                 {
-                    return $"{baseHealth:F2} > {health * upgradeEffects[type]:F2}";
+                    return finishedAligning ? $"{baseHealth:F2} > {health * upgradeEffects[type] * GameManager.Instance.playerPower:F2}" : "Select as Alignment";
                 }
             //Healing effectiveness
             case 1:
                 {
-                    return $"{healingEffectiveness:F2} > {healingEffectiveness * upgradeEffects[type]:F2}";
+                    return finishedAligning ? $"{healingEffectiveness:F2} > {healingEffectiveness * upgradeEffects[type] * GameManager.Instance.playerPower:F2}" : "Select as Alignment";
                 }
             //Default
             default:
@@ -82,14 +89,11 @@ public class Wall : PlayerBuilding, IUpgradeable
     //Sell building
     public override bool Sell()
     {
-        //Remove from building list
-        GameManager.Instance.playerBuildings.Remove(location);
-
         //Refund part of build cost
         GameManager.Instance.budget += cost * 0.5f * health / baseHealth;
 
-        //Kill building
-        Destroy(transform.parent.gameObject);
+        //Call remove events
+        Remove();
 
         //Ensures that it is known that building was successfully sold
         return true;
@@ -104,16 +108,7 @@ public class Wall : PlayerBuilding, IUpgradeable
         //If out of health
         if (health <= 0)
         {
-            //Remove from buildings
-            GameManager.Instance.playerBuildings.Remove(location);
-
-            //Tell all damagers t find something else to attack
-            foreach (IDamager damager in currentDamagers)
-            {
-                damager.cancelAttack();
-            }
-            //Destroy self
-            Destroy(transform.parent.gameObject);
+            
         }
         //Return health for utility
         return health;
@@ -136,14 +131,14 @@ public class Wall : PlayerBuilding, IUpgradeable
             //Health
             case 0:
                 {
-                    baseHealth *= upgradeEffects[0];
-                    health += upgradeEffects[0];
+                    baseHealth *= upgradeEffects[0] * GameManager.Instance.playerPower;
+                    health += upgradeEffects[0] * GameManager.Instance.playerPower;
                     break;
                 }
             //Healing effectiveness
             case 1:
                 {
-                    healingEffectiveness *= upgradeEffects[1];
+                    healingEffectiveness *= upgradeEffects[1] * GameManager.Instance.playerPower;
                     break;
                 }
         }
@@ -151,7 +146,9 @@ public class Wall : PlayerBuilding, IUpgradeable
 
     private void Start()
     {
+        baseHealth *= GameManager.Instance.playerPower;
         health = baseHealth;
+        healingEffectiveness *= GameManager.Instance.playerPower;
     }
 
     //Get energy required to upgrade stat
@@ -170,5 +167,39 @@ public class Wall : PlayerBuilding, IUpgradeable
     public override float Enable()
     {
         return 0;
+    }
+
+    //Events that are always done when the building is removed
+    protected override void Remove()
+    {
+        //Remove building
+        GameManager.Instance.RemoveBuilding(this);
+
+        //Tell all damagers to find something else to attack
+        foreach (IDamager damager in currentDamagers)
+        {
+            damager.cancelAttack();
+        }
+        //Destroy self
+        Destroy(transform.parent.gameObject);
+    }
+
+    //Handles alignment
+    public void Align(int type)
+    {
+        //Only has three different alignment options, which is none, health, or healing, so only needs to happen once
+        finishedAligning = true;
+
+        //Set the chosen alignment as primary
+        expenseModifiers[type] = 1.3f;
+
+        //Automatically pick the other as primary misalignment
+        expenseModifiers[(type + 1) % expenseModifiers.Length] = 2f;
+    }
+
+    //Call to get whether this has finished the alignment process
+    public bool IsAligned()
+    {
+        return finishedAligning;
     }
 }

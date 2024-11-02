@@ -38,17 +38,33 @@ public class MenuManager : Singleton<MenuManager>
     [SerializeField] Slider enemyDifficultySlider;
     [SerializeField] TMP_InputField playerPowerInput;
     [SerializeField] Slider playerPowerSlider;
+    [SerializeField] TMP_InputField playerEconomyInput;
+    [SerializeField] Slider playerEconomySlider;
     [SerializeField] TMP_InputField playerIncomeInput;
     [SerializeField] Slider playerIncomeSlider;
     [SerializeField] TMP_InputField playerCostsInput;
     [SerializeField] Slider playerCostsSlider;
 
+    private TMP_InputField[] inputFieldsFloatRange;
+    private TMP_InputField[] inputFieldsFullInt;
+    private Slider[] slidersFloatRange;
+    private Slider[] slidersFullInt;
+
     //Holder variables to avoid update loops
-    bool freshSimplifiedSeedUpdate = true;
-    bool freshEnemyDifficultyUpdate = true;
-    bool freshPlayerPowerUpdate = true;
-    bool freshPlayerIncomeUpdate = true;
-    bool freshPlayerCostsUpdate = true;
+    private bool[] freshesFloatRange = new bool[] { true, true, true, true, true };
+    private bool[] freshesFullInt = new bool[] { true };
+
+    //Holder variables to store creation settings before they are passed into the GameManager
+    int simplifiedSeed = 0;
+    float enemyDifficulty = 1;
+    float playerPower = 1;
+    float playerEconomy = 1;
+
+    float playerIncome = 1;
+    float playerCosts = 1;
+
+    //Allows GameManager initialization to be queued up in order to allow time for data t be passed into it
+    int queueInitialize = -1;
 
     //GameManager reference to reduce typing length
     private GameManager gameManager;
@@ -56,10 +72,24 @@ public class MenuManager : Singleton<MenuManager>
     //Controls which hotkey you are changing
     int controlToUpdate = -1;
 
+    //Storage for new game menu UIs
+    [SerializeField] Canvas basicSettings;
+    [SerializeField] Canvas advancedSettings;
+
     //Called just before first Update() call
     private void Start()
     {
+        //Create storage for hotkey labels
         hotkeyTexts = new TMP_Text[] {cameraForwardText, cameraBackText, cameraLeftText, cameraRightText, tierOneTurretText, null, null, tierOneRepairStationText,  null, tierOneWallText, null, tierOneExtractorText, null, null, nextWaveText, cancelText, confirmText, selectionUpText, selectionDownText, selectionLeftText, selectionRightText, sellText};
+
+        //Create storages for settings inputs
+        inputFieldsFloatRange = new TMP_InputField[] { enemyDifficultyInput, playerPowerInput, playerEconomyInput, playerIncomeInput, playerCostsInput };
+        inputFieldsFullInt = new TMP_InputField[] { simplifiedSeedInput };
+        
+        //Create storages for settings sliders
+        slidersFloatRange = new Slider[] { enemyDifficultySlider, playerPowerSlider, playerEconomySlider, playerIncomeSlider, playerCostsSlider };
+        slidersFullInt = new Slider[] { simplifiedSeedSlider };
+
         //Initializes manager reference
         gameManager = GameManager.Instance;
 
@@ -504,19 +534,33 @@ public class MenuManager : Singleton<MenuManager>
                 UpdateKey(21);
             }
         }
+        else if(queueInitialize > -1)
+        {
+            if(queueInitialize == 0)
+            {
+                //Initilize GameManager
+                GameManager.Instance.Initialize(simplifiedSeed, enemyDifficulty, playerPower, playerEconomy);
+
+                queueInitialize = -1;
+            }
+            else
+            {
+                queueInitialize--;
+            }
+        }
     }
 
-    //Finish deciding settings for new game so start creating it
+    //Finished deciding settings for new game so start creating it
     public void Play()
     {
         //Close the menu
         newGameMenu.enabled = false;
 
-        //Go to the scene with all of in game data
+        //Go to the scene with all of the in game data
         SceneManager.LoadScene("MainScene");
 
-        //Queue initialization of the GameManager in order to ensure there is time to populate data
-        GameManager.Instance.queueInitialize = 2;
+        //Queue up initialization of the game, allowing time for values to be passed into the GameManager
+        queueInitialize = 1;
     }
 
     //Exit the game
@@ -587,277 +631,173 @@ public class MenuManager : Singleton<MenuManager>
         optionsMenu.enabled = false;
         mainMenu.enabled = false;
         newGameMenu.enabled = true;
+        BasicSettings();
     }
 
-    //Changes the seed from the slider
-    public void UpdateSimplifiedSeedFromSlider()
+    //Full int generic update
+    private void fullIntUpdate(int setting)
+    {
+        //Switch depending on what you want to update
+        switch (setting)
+        {
+            //Simplified seed
+            case 0:
+                {
+                    simplifiedSeed = slidersFullInt[setting].value == (float)int.MinValue ? int.MinValue : slidersFullInt[setting].value == (float)int.MaxValue ? int.MaxValue : (int)slidersFullInt[setting].value;
+                    break;
+                }
+        }
+    }
+
+    //Update any setting using full int range using slider
+    public void UpdateFullIntFromSlider(int setting)
     {
         //If this was prompted by the text, skip everything
-        if(freshSimplifiedSeedUpdate)
+        if (freshesFullInt[setting])
         {
             //Mark as prompted by slider
-            freshSimplifiedSeedUpdate = false;
+            freshesFullInt[setting] = false;
 
-            //Update game manager
-            gameManager.simplifiedSeed = simplifiedSeedSlider.value == (float)int.MinValue ? int.MinValue : simplifiedSeedSlider.value == (float)int.MaxValue ? int.MaxValue : (int)simplifiedSeedSlider.value;
-            
-            //Update text input to match slider
-            simplifiedSeedInput.text = (simplifiedSeedSlider.value == (float)int.MinValue ? int.MinValue : simplifiedSeedSlider.value == (float)int.MaxValue ? int.MaxValue : (int)simplifiedSeedSlider.value).ToString();
-            
+            //Update relevant setting with new setting
+            fullIntUpdate(setting);
+
+            //Update text to match slider
+            inputFieldsFullInt[setting].text = (slidersFullInt[setting].value == (float)int.MinValue ? int.MinValue : slidersFullInt[setting].value == (float)int.MaxValue ? int.MaxValue : (int)slidersFullInt[setting].value).ToString();
+
             //Further updates were not prompted by this
-            freshSimplifiedSeedUpdate = true;
+            freshesFullInt[setting] = true;
         }
     }
 
-    //Changes the seed from the text
-    public void UpdateSimplifiedSeedFromInput()
+    //Update any setting using full in range using slider
+    public void UpdateFullIntFromText(int setting)
     {
         //If this was prompted by the slider or it is not a valid seed, skip everything
-        if(freshSimplifiedSeedUpdate && simplifiedSeedInput.text.Length > 0 && simplifiedSeedInput.text != "-" && simplifiedSeedInput.text != ".")
+        if (freshesFullInt[setting] && inputFieldsFullInt[setting].text.Length > 0 && inputFieldsFullInt[setting].text != "-" && inputFieldsFullInt[setting].text != ".")
         {
             //Mark as prompted by text
-            freshSimplifiedSeedUpdate = false;
+            freshesFullInt[setting] = false;
 
             //Update slider to match text
-            simplifiedSeedSlider.value = float.Parse(simplifiedSeedInput.text);
+            slidersFullInt[setting].value = float.Parse(inputFieldsFullInt[setting].text);
 
-            //Update game manager
-            gameManager.simplifiedSeed = simplifiedSeedSlider.value == (float)int.MinValue ? int.MinValue : simplifiedSeedSlider.value == (float)int.MaxValue ? int.MaxValue : (int)simplifiedSeedSlider.value;
-            
+            //Update relevant setting with new setting
+            fullIntUpdate(setting);
+
             //Further updates were not prompted by this
-            freshSimplifiedSeedUpdate = true;
+            freshesFullInt[setting] = true;
         }
     }
 
-    //Ensures that seed values outside of the acceptable range that are entered through the text are clamped
-    public void FinishUpdatingSimplifiedSeedFromInput()
+    //Ensures that full int range values outside of the acceptable range that are entered through the text are clamped
+    public void FinishUpdatingFullIntFromInput(int setting)
     {
-        //Mark as stale
-        freshSimplifiedSeedUpdate = false;
-        
         //If it is not a valid seed value, set it to the slider's value
-        if(simplifiedSeedInput.text.Length == 0 || simplifiedSeedInput.text == "-" || simplifiedSeedInput.text == "." || float.Parse(simplifiedSeedInput.text) > int.MaxValue || float.Parse(simplifiedSeedInput.text) < int.MinValue)
+        if (inputFieldsFullInt[setting].text.Length == 0 || inputFieldsFullInt[setting].text == "-" || inputFieldsFullInt[setting].text == "." || float.Parse(inputFieldsFullInt[setting].text) > int.MaxValue || float.Parse(inputFieldsFullInt[setting].text) < int.MinValue)
         {
-            simplifiedSeedInput.text = (simplifiedSeedSlider.value == (float)int.MinValue ? int.MinValue : simplifiedSeedSlider.value == (float)int.MaxValue ? int.MaxValue : (int)simplifiedSeedSlider.value).ToString();
+            inputFieldsFullInt[setting].text = (slidersFullInt[setting].value == (float)int.MinValue ? int.MinValue : slidersFullInt[setting].value == (float)int.MaxValue ? int.MaxValue : (int)slidersFullInt[setting].value).ToString();
         }
-        //Further updates are no longer stale
-        freshSimplifiedSeedUpdate = true;
     }
 
-    //Changes enemy difficulty from slider
-    public void UpdateEnemyDifficultyFromSlider()
+    //Float range generic update
+    private void floatRangeUpdate(int setting)
     {
-        //If it is prompted by text, skip everything
-        if (freshEnemyDifficultyUpdate)
+        //Switch depending on what you want to update
+        switch (setting)
+        {
+            //Enemy difficulty
+            case 0:
+                {
+                    enemyDifficulty = slidersFloatRange[setting].value;
+                    break;
+                }
+            //Player power
+            case 1:
+                {
+                    playerPower = slidersFloatRange[setting].value;
+                    break;
+                }
+            //Player economy
+            case 2:
+                {
+                    playerEconomy = slidersFloatRange[setting].value;
+                    break;
+                }
+            //Player income
+            case 3:
+                {
+                    playerIncome = slidersFloatRange[setting].value;
+                    break;
+                }
+            //Player costs
+            case 4:
+                {
+                    playerCosts = slidersFloatRange[setting].value;
+                    break;
+                }
+        }
+    }
+
+    //Update any setting using full int range using slider
+    public void UpdateFloatRangeFromSlider(int setting)
+    {
+        //If this was prompted by the text, skip everything
+        if (freshesFloatRange[setting])
         {
             //Mark as prompted by slider
-            freshEnemyDifficultyUpdate = false;
+            freshesFloatRange[setting] = false;
 
-            //Update game manager
-            gameManager.enemyDifficulty = enemyDifficultySlider.value;
-
-            //Update text to match slider
-            enemyDifficultyInput.text = enemyDifficultySlider.value.ToString();
-
-            //Further updates are not prompted by this
-            freshEnemyDifficultyUpdate = true;
-        }
-    }
-
-    //Changes enemy difficulty from text
-    public void UpdateEnemyDifficultyFromInput()
-    {
-        //If this was prompted by slider or it is not a valid difficulty, skip everything
-        if (freshEnemyDifficultyUpdate && enemyDifficultyInput.text.Length > 0 && enemyDifficultyInput.text != "-" && enemyDifficultyInput.text != ".")
-        {
-            //Mark as prompted by text
-            freshEnemyDifficultyUpdate = false;
-
-            //Update slider to match text
-            enemyDifficultySlider.value = float.Parse(enemyDifficultyInput.text);
-
-            //Update game manager
-            gameManager.enemyDifficulty = enemyDifficultySlider.value;
-
-            //Further updates are not prompted by this
-            freshEnemyDifficultyUpdate = true;
-        }
-    }
-
-    //Ensures that difficulty values outside of the acceptable range that are entered through text are clamps
-    public void FinishUpdatingEnemyDifficultyFromInput()
-    {
-        //Mark as stale
-        freshEnemyDifficultyUpdate = false;
-
-        //If it is not a valid difficulty, set it to the slider value
-        if (float.Parse(enemyDifficultyInput.text) < enemyDifficultySlider.minValue || float.Parse(enemyDifficultyInput.text) > enemyDifficultySlider.maxValue || enemyDifficultyInput.text.Length == 0 || enemyDifficultyInput.text == "-" || enemyDifficultyInput.text == ".")
-        {
-            enemyDifficultyInput.text = enemyDifficultySlider.value.ToString();
-        }
-        //Further updates are no longer stale
-        freshEnemyDifficultyUpdate = true;
-    }
-
-    //Changes player power from slider
-    public void UpdatePlayerPowerFromSlider()
-    {
-        //If it is prompted by text, skip everything
-        if (freshPlayerPowerUpdate)
-        {
-            //Mark as prompted by slider
-            freshPlayerPowerUpdate = false;
-
-            //Update game manager
-            gameManager.playerPower = playerPowerSlider.value;
+            //Update relevant setting with new setting
+            floatRangeUpdate(setting);
 
             //Update text to match slider
-            playerPowerInput.text = playerPowerSlider.value.ToString();
+            inputFieldsFloatRange[setting].text = slidersFloatRange[setting].value.ToString();
 
-            //Further updates are not prompted by this
-            freshPlayerPowerUpdate = true;
+            //Further updates were not prompted by this
+            freshesFloatRange[setting] = true;
         }
     }
 
-    //Changes enemy difficulty from text
-    public void UpdatePlayerPowerFromInput()
+    //Update any setting using full in range using slider
+    public void UpdateFloatRangeFromText(int setting)
     {
-        //If this was prompted by slider or it is not a valid difficulty, skip everything
-        if (freshPlayerPowerUpdate && playerPowerInput.text.Length > 0 && playerPowerInput.text != "-" && playerPowerInput.text != ".")
+        //If this was prompted by the slider or it is not a valid seed, skip everything
+        if (freshesFloatRange[setting] && inputFieldsFloatRange[setting].text.Length > 0 && inputFieldsFloatRange[setting].text != "-" && inputFieldsFloatRange[setting].text != ".")
         {
             //Mark as prompted by text
-            freshPlayerPowerUpdate = false;
+            freshesFloatRange[setting] = false;
 
             //Update slider to match text
-            playerPowerSlider.value = float.Parse(playerPowerInput.text);
+            slidersFloatRange[setting].value = float.Parse(inputFieldsFloatRange[setting].text);
 
-            //Update game manager
-            gameManager.playerPower = playerPowerSlider.value;
+            //Update relevant setting with new setting
+            floatRangeUpdate(setting);
 
-            //Further updates are not prompted by this
-            freshPlayerPowerUpdate = true;
+            //Further updates were not prompted by this
+            freshesFloatRange[setting] = true;
         }
     }
-    public void FinishUpdatingPlayerPowerFromInput()
-    {
-        //Mark as stale
-        freshPlayerPowerUpdate = false;
 
+    //Ensures that float range values outside of the acceptable range that are entered through text are clamped
+    public void FinishUpdatingFloatRangeFromInput(int setting)
+    {
         //If it is not a valid difficulty, set it to the slider value
-        if (float.Parse(playerPowerInput.text) < playerPowerSlider.minValue || float.Parse(playerPowerInput.text) > playerPowerSlider.maxValue || playerPowerInput.text.Length == 0 || playerPowerInput.text == "-" || playerPowerInput.text == ".")
+        if (float.Parse(inputFieldsFloatRange[setting].text) < slidersFloatRange[setting].minValue || float.Parse(inputFieldsFloatRange[setting].text) > slidersFloatRange[setting].maxValue || inputFieldsFloatRange[setting].text.Length == 0 || inputFieldsFloatRange[setting].text == "-" || inputFieldsFloatRange[setting].text == ".")
         {
-            playerPowerInput.text = playerPowerSlider.value.ToString();
-        }
-
-        //Further updates are no longer stale
-        freshPlayerPowerUpdate = true;
-    }
-
-    //Changes player income from slider
-    public void UpdatePlayerIncomeFromSlider()
-    {
-        //If it is prompted by text, skip everything
-        if (freshPlayerIncomeUpdate)
-        {
-            //Mark as prompted by slider
-            freshPlayerIncomeUpdate = false;
-
-            //Update game manager
-            gameManager.playerIncome = playerIncomeSlider.value;
-
-            //Update text to match slider
-            playerIncomeInput.text = playerIncomeSlider.value.ToString();
-
-            //Further updates are not prompted by this
-            freshPlayerIncomeUpdate = true;
+            inputFieldsFloatRange[setting].text = slidersFloatRange[setting].value.ToString();
         }
     }
+    
 
-    //Changes enemy difficulty from text
-    public void UpdatePlayerIncomeFromInput()
+    public void AdvancedSettings()
     {
-        //If this was prompted by slider or it is not a valid difficulty, skip everything
-        if (freshPlayerIncomeUpdate && playerIncomeInput.text.Length > 0 && playerIncomeInput.text != "-" && playerIncomeInput.text != ".")
-        {
-            //Mark as prompted by text
-            freshPlayerIncomeUpdate = false;
-
-            //Update slider to match text
-            playerIncomeSlider.value = float.Parse(playerIncomeInput.text);
-
-            //Update game manager
-            gameManager.playerIncome = playerIncomeSlider.value;
-
-            //Further updates are not prompted by this
-            freshPlayerIncomeUpdate = true;
-        }
-    }
-    public void FinishUpdatingPlayerIncomeFromInput()
-    {
-        //Mark as stale
-        freshPlayerIncomeUpdate = false;
-
-        //If it is not a valid difficulty, set it to the slider value
-        if (float.Parse(playerIncomeInput.text) < playerIncomeSlider.minValue || float.Parse(playerIncomeInput.text) > playerIncomeSlider.maxValue || playerIncomeInput.text.Length == 0 || playerIncomeInput.text == "-" || playerIncomeInput.text == ".")
-        {
-            playerIncomeInput.text = playerIncomeSlider.value.ToString();
-        }
-
-        //Further updates are no longer stale
-        freshPlayerIncomeUpdate = true;
+        advancedSettings.enabled = true;
+        basicSettings.enabled = false;
     }
 
-    //Changes player costs from slider
-    public void UpdatePlayerCostsFromSlider()
+    public void BasicSettings()
     {
-        //If it is prompted by text, skip everything
-        if (freshPlayerCostsUpdate)
-        {
-            //Mark as prompted by slider
-            freshPlayerCostsUpdate = false;
-
-            //Update game manager
-            gameManager.playerCosts = playerCostsSlider.value;
-
-            //Update text to match slider
-            playerCostsInput.text = playerCostsSlider.value.ToString();
-
-            //Further updates are not prompted by this
-            freshPlayerCostsUpdate = true;
-        }
-    }
-
-    //Changes enemy difficulty from text
-    public void UpdatePlayerCostsFromInput()
-    {
-        //If this was prompted by slider or it is not a valid difficulty, skip everything
-        if (freshPlayerCostsUpdate && playerCostsInput.text.Length > 0 && playerCostsInput.text != "-" && playerCostsInput.text != ".")
-        {
-            //Mark as prompted by text
-            freshPlayerCostsUpdate = false;
-
-            //Update slider to match text
-            playerCostsSlider.value = float.Parse(playerCostsInput.text);
-
-            //Update game manager
-            gameManager.playerCosts = playerCostsSlider.value;
-
-            //Further updates are not prompted by this
-            freshPlayerCostsUpdate = true;
-        }
-    }
-    public void FinishUpdatingPlayerCostsFromInput()
-    {
-        //Mark as stale
-        freshPlayerCostsUpdate = false;
-
-        //If it is not a valid difficulty, set it to the slider value
-        if (float.Parse(playerCostsInput.text) < playerCostsSlider.minValue || float.Parse(playerCostsInput.text) > playerCostsSlider.maxValue || playerCostsInput.text.Length == 0 || playerCostsInput.text == "-" || playerCostsInput.text == ".")
-        {
-            playerCostsInput.text = playerCostsSlider.value.ToString();
-        }
-
-        //Further updates are no longer stale
-        freshPlayerCostsUpdate = true;
+        basicSettings.enabled = true;
+        advancedSettings.enabled = false;
     }
 }

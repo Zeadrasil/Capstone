@@ -133,7 +133,7 @@ public class Enemy : MonoBehaviour, IDamageable, IDamager
                     if (turretData != null)
                     {
                         //If turret apply desire to destroy to prevent damage
-                        damagePreventionModifier = turretData.damage * turretData.firerate * turretData.range / (healthCost * 10);
+                        damagePreventionModifier = turretData.damage * turretData.firerate * turretData.range / (healthCost);
                     }
 
                     //Check if repair station
@@ -141,7 +141,7 @@ public class Enemy : MonoBehaviour, IDamageable, IDamager
                     if (repairData != null)
                     {
                         //If repair station apply desire to destroy to prevent it from repairing structures you want to destroy
-                        repairPreventionModifier = repairData.healing * repairData.range * 5 / healthCost;
+                        repairPreventionModifier = repairData.healing * repairData.range * 10 / healthCost;
                     }
 
                     //Check if resurce extractor
@@ -149,12 +149,12 @@ public class Enemy : MonoBehaviour, IDamageable, IDamager
                     if (extractorData != null)
                     {
                         //If resource extractor apply desire to destroy to prevent the player from getting resources
-                        resourceDenialModifier = (extractorData.extractionRate * 2 + extractorData.energyRate * 5) * extractorData.damageEffectiveness / healthCost;
+                        resourceDenialModifier = (extractorData.extractionRate * 40 + extractorData.energyRate * 100) * extractorData.damageEffectiveness / healthCost;
                     }
                 }
 
                 //Combine together weights to form overall weight
-                float cost = node.cost + healthCost - damagePreventionModifier - repairPreventionModifier - resourceDenialModifier;
+                float cost = node.cost + healthCost + distanceCost - damagePreventionModifier - repairPreventionModifier - resourceDenialModifier;
 
                 //If the adjacent node already has a cost, skip it unless this is a cheaper path
                 if (cost < adjacentNode.cost)

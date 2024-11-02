@@ -41,4 +41,7 @@ public abstract class PlayerBuilding : MonoBehaviour, IDamageable
     //Reeanable once energy allows, should return a positive number indicating the difference in energy usage
     public abstract float Enable();
 
+    //Remove the building for any reason, destroyed, sold, etc
+    protected abstract void Remove();
+
 }

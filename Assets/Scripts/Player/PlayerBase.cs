@@ -16,14 +16,22 @@ public class PlayerBase : PlayerBuilding
         currentDamagers.Add(damager);
     }
 
-    public override float Disable()
+    private void Start()
     {
-        throw new System.NotImplementedException();
+        baseHealth *= GameManager.Instance.playerPower;
+        health = baseHealth;
     }
 
+    //Cannot disable your base
+    public override float Disable()
+    {
+        return 0;
+    }
+
+    //Cannot enable your base
     public override float Enable()
     {
-        throw new System.NotImplementedException();
+        return 0;
     }
 
     //Send health to callers for them to use
@@ -53,21 +61,27 @@ public class PlayerBase : PlayerBuilding
     public override float TakeDamage(float damage)
     {
         health -= damage;
-        healthBar.transform.localScale = new Vector3(health / baseHealth, 0.1f, 1);
-        healthBar.transform.localPosition = new Vector3((-1 + health / baseHealth) * -0.5f, -0.4f, 0);
+        //healthBar.transform.localScale = new Vector3(health / baseHealth, 0.1f, 1);
+        //healthBar.transform.localPosition = new Vector3((-1 + health / baseHealth) * -0.5f, -0.4f, 0);
         //If sufficiently low
         if (health <= 0)
         {
-            //Go through all damagers and tell them to find something else to kill
-            foreach(IDamager damager in currentDamagers)
-            {
-                damager.cancelAttack();
-            }
-            //Destroy self
-            Destroy(transform.parent.gameObject);
+            //Run through kill events
+            Remove();
         }
         //Return health for utility use
         return health;
     }
 
+    //Only called on kill here for now
+    protected override void Remove()
+    {
+        //Go through all damagers and tell them to find something else to kill
+        foreach (IDamager damager in currentDamagers)
+        {
+            damager.cancelAttack();
+        }
+        //Destroy self
+        Destroy(transform.parent.gameObject);
+    }
 }

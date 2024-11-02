@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using static UnityEditor.Searcher.SearcherWindow;
 
 //Turrets are used to kill enemies
 public class Turret : PlayerBuilding, IDamager, IUpgradeable
@@ -29,6 +30,12 @@ public class Turret : PlayerBuilding, IDamager, IUpgradeable
     public float[] expenseModifiers = new float[] { -1, 1, 1, 1, 1 };
     public float[] upgradeEffects = new float[] { 1.25f, 1.25f, 1.25f, 1.25f, 1.25f };
 
+    //Alignment data
+    public int maxAlignments = 0;
+    private int alignments = 0;
+    private bool primaryMisalignmentChosen = false;
+    private bool finishedAligning = false;
+
     //Energy info
     public float[] energyCosts = new float[] { 0.1f, 0.1f, 0.1f, 0.1f, 0.1f };
     [SerializeField] SpriteRenderer spriteRenderer;
@@ -41,7 +48,9 @@ public class Turret : PlayerBuilding, IDamager, IUpgradeable
         baseHealth *= GameManager.Instance.playerPower;
         health = baseHealth;
         damage *= GameManager.Instance.playerPower;
-        cost = GameManager.Instance.budgetCosts[maxSpecializations];
+        range *= GameManager.Instance.playerPower;
+
+        finishedAligning = maxAlignments == 0;
     }
 
     //Upgrade given stat
@@ -61,73 +70,138 @@ public class Turret : PlayerBuilding, IDamager, IUpgradeable
             //Splash range
             case 0:
                 {
-                    splashRange *= upgradeEffects[0];
+                    splashRange *= upgradeEffects[0] * GameManager.Instance.playerPower;
                     break;
                 }
             //Turret range
             case 1:
                 {
-                    range *= upgradeEffects[1];
+                    range *= upgradeEffects[1] * GameManager.Instance.playerPower;
                     break;
                 }
             //Damage
             case 2:
                 {
-                    damage *= upgradeEffects[2];
+                    damage *= upgradeEffects[2] * GameManager.Instance.playerPower;
                     break;
                 }
             //Firerate
             case 3:
                 {
-                    firerate *= upgradeEffects[3];
+                    firerate *= upgradeEffects[3] * GameManager.Instance.playerPower;
                     break;
                 }
             //Building health
             case 4:
                 {
-                    baseHealth *= upgradeEffects[4];
-                    health += upgradeEffects[4];
+                    baseHealth *= upgradeEffects[4] * GameManager.Instance.playerPower;
+                    health += upgradeEffects[4] * GameManager.Instance.playerPower;
                     break;
                 }
         }
+        //Increase energy cost by proper amount for the upgrade
+        energyCost += GetUpgradeEnergy(type);
+
+        //If the building is not active update the energy deficit before notifying the manager of the energy usage increase
+        if (!active)
+        {
+            GameManager.Instance.energyDeficit -= GetUpgradeEnergy(type);
+        }
+        GameManager.Instance.ChangeEnergyUsage(GetUpgradeEnergy(type));
     }
 
     //Gets the cost of upgrading a specific stat
     public float GetUpgradeCost(int type)
     {
-        return 2 * Mathf.Pow(1 + 0.25f * expenseModifiers[type], upgradeLevels[type]) * expenseModifiers[type];
+        return 2 * Mathf.Pow(1 + 0.25f * expenseModifiers[type] * GameManager.Instance.playerCosts, upgradeLevels[type]) * expenseModifiers[type] * GameManager.Instance.playerCosts;
     }
 
     //Gets the potential effects of upgrading a specific stat
     public string GetUpgradeEffects(int type)
     {
+        //Specify alignment informaiton if not done aligning
+        if (!finishedAligning)
+        {
+            //If 2 alignments and 2 major misalignments
+            if (maxAlignments == 2)
+            {
+                //If you have not selected this alignment already, mark it as a possibility
+                if (expenseModifiers[type] == 1.5f || expenseModifiers[type] == -1)
+                {
+                    return "Select as Alignment";
+                }
+                //Otherwise say you cannot choose it again
+                return "N/A";
+            }
+            //If you have not selected an alignment, mark all as possibilities
+            if (alignments == 0)
+            {
+                return "Select as Alignment";
+            }
+            //Mark as a possible misalignment
+            if (expenseModifiers[type] == 1.5f)
+            {
+                return "Select as Misalignment";
+            }
+            //Only remaining possibilities are that you chose it for something or it is splash, so mention that it is not an option
+            return "N/A";
+        }
+
+        //Specify alignment informaiton if not done aligning
+        if (!finishedAligning)
+        {
+            //If 2 alignments and 2 major misalignments
+            if (maxAlignments == 2)
+            {
+                //If you have not selected this alignment already, mark it as a possibility
+                if (expenseModifiers[type] == 1.5f)
+                {
+                    return "Select as Alignment";
+                }
+                //Otherwise say you cannot choose it again
+                return "N/A";
+            }
+            //If you have not selected an alignment, mark all as possibilities
+            if (alignments == 0)
+            {
+                return "Select as Alignment";
+            }
+            //Mark as a possible misalignment
+            if (expenseModifiers[type] == 1.5f)
+            {
+                return "Select as Misalignment";
+            }
+            //Only remaining possible is that you chose it for something, so mention that it is no an option
+            return "N/A";
+        }
+
         //Switch based on desired upgrade
-        switch(type)
+        switch (type)
         {
             //Splash range
             case 0:
                 {
-                    return $"{splashRange:F2} > {splashRange * upgradeEffects[type]:F2}";
+                    return $"{splashRange:F2} > {splashRange * upgradeEffects[type] * GameManager.Instance.playerPower:F2}";
                 }
             //Turret range
             case 1:
                 {
-                    return $"{range:F2} > {range * upgradeEffects[type]:F2}";
+                    return $"{range:F2} > {range * upgradeEffects[type] * GameManager.Instance.playerPower:F2}";
                 }
             //Damage
             case 2:
                 {
-                    return $"{damage:F2} > {damage * upgradeEffects[type]:F2}";
+                    return $"{damage:F2} > {damage * upgradeEffects[type] * GameManager.Instance.playerPower:F2}";
                 }
             //Firerate
             case 3:
                 {
-                    return $"{firerate:F2} > {firerate * upgradeEffects[type]:F2}";
+                    return $"{firerate:F2} > {firerate * upgradeEffects[type] * GameManager.Instance.playerPower:F2}";
                 }
             //Building health
             case 4:
                 {
-                    return $"{baseHealth:F2} > {baseHealth * upgradeEffects[type]:F2}";
+                    return $"{baseHealth:F2} > {baseHealth * upgradeEffects[type] * GameManager.Instance.playerPower:F2}";
                 }
             //Default
             default:
@@ -176,23 +250,8 @@ public class Turret : PlayerBuilding, IDamager, IUpgradeable
         //If out of health
         if (health <= 0)
         {
-            //Mark dead, using indirect system as legacy because idr if I fixed the bug this solved in another way as well
-            killed = true;
-
-            //Remove from buildings
-            GameManager.Instance.playerBuildings.Remove(location);
-
-            //If there is a target remove self from target's damagers
-            if(target != null)
-            {
-                target.RemoveDamager(this);
-                target = null;
-            }
-            //Tell all damagers to find another target
-            foreach(IDamager damager in currentDamagers)
-            {
-                damager.cancelAttack();
-            }
+            //Call removal events
+            Remove();
         }
         //Return health for utility
         return health;
@@ -309,14 +368,11 @@ public class Turret : PlayerBuilding, IDamager, IUpgradeable
     //Sell building
     public override bool Sell()
     {
-        //Remove from building list
-        GameManager.Instance.playerBuildings.Remove(location);
+        //Call remove events
+        Remove();
 
         //Refund part of build cost
         GameManager.Instance.budget += cost * 0.5f * health / baseHealth;
-
-        //Kill building
-        Destroy(transform.parent.gameObject);
 
         //Ensures that it is known that building was successfully sold
         return true;
@@ -344,5 +400,80 @@ public class Turret : PlayerBuilding, IDamager, IUpgradeable
         active = true;
         spriteRenderer.color = Color.white;
         return energyCost;
+    }
+
+    //Events that are always done when the building is removed
+    protected override void Remove()
+    {
+        //Mark dead, using indirect system as legacy because idr if I fixed the bug this solved in another way as well
+        killed = true;
+
+        //Remove building
+        GameManager.Instance.RemoveBuilding(this);
+
+        //If there is a target remove self from target's damagers
+        if (target != null)
+        {
+            target.RemoveDamager(this);
+            target = null;
+        }
+        //Tell all damagers to find another target
+        foreach (IDamager damager in currentDamagers)
+        {
+            damager.cancelAttack();
+        }
+    }
+
+    //Handles alignment
+    public void Align(int type)
+    {
+        //Ensure that you are aligning to a new alignment
+        if (expenseModifiers[type] == 1.5f || expenseModifiers[type] == -1)
+        {
+            //If setting an alignment
+            if (alignments < maxAlignments)
+            {
+                //Increase alignment count and set the alignment
+                alignments++;
+                expenseModifiers[type] = 1.3f;
+
+                //If this is a second alignment (max)
+                if (alignments == 2)
+                {
+                    //Sets the remaining alignments to extremely misaligned
+                    for (int i = 0; i < expenseModifiers.Length; i++)
+                    {
+                        if (expenseModifiers[i] == 1.5f)
+                        {
+                            expenseModifiers[i] = 4f;
+                        }
+                    }
+                    //Marks alignment as done
+                    finishedAligning = true;
+                }
+            }
+            //If you are not setting an alignment you are choosing a misalignment, excluding splash
+            else if(expenseModifiers[type] != -1)
+            {
+                //If you have already picked a primary misalignment, mark as secondary misalignment and finish alignment
+                if (primaryMisalignmentChosen)
+                {
+                    expenseModifiers[type] = 2.25f;
+                    finishedAligning = true;
+                }
+                //Otherwise set as primary alignment and mark that you have chosen it
+                else
+                {
+                    expenseModifiers[type] = 3f;
+                    primaryMisalignmentChosen = true;
+                }
+            }
+        }
+    }
+
+    //Allows ohers to check if it is done aligning itself
+    public bool IsAligned()
+    {
+        return finishedAligning;
     }
 }
