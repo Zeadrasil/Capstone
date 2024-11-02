@@ -25,10 +25,8 @@ public class Turret : PlayerBuilding, IDamager, IUpgradeable
 
     //Upgrade data
     public int[] upgradeLevels = new int[] { 0, 0, 0, 0, 0 };
-    [SerializeField] int maxSpecializations;
-    public int specializations;
-    public float[] expenseModifiers = new float[] { -1, 1, 1, 1, 1 };
-    public float[] upgradeEffects = new float[] { 1.25f, 1.25f, 1.25f, 1.25f, 1.25f };
+    public float[] expenseModifiers = new float[] { float.NegativeInfinity, 0.5f, 0.5f, 0.5f, 0.5f };
+    public float[] upgradeEffects = new float[] { 1.2f, 1.2f, 1.2f, 1.2f, 1.2f };
 
     //Alignment data
     public int maxAlignments = 0;
@@ -39,6 +37,10 @@ public class Turret : PlayerBuilding, IDamager, IUpgradeable
     //Energy info
     public float[] energyCosts = new float[] { 0.1f, 0.1f, 0.1f, 0.1f, 0.1f };
     [SerializeField] SpriteRenderer spriteRenderer;
+
+    //Other
+    [SerializeField] Color activeColor = Color.white;
+    [SerializeField] int baseUpgradeCost = 10;
 
     // Start is called before the first frame update
     void Start()
@@ -113,7 +115,7 @@ public class Turret : PlayerBuilding, IDamager, IUpgradeable
     //Gets the cost of upgrading a specific stat
     public float GetUpgradeCost(int type)
     {
-        return 2 * Mathf.Pow(1 + 0.25f * expenseModifiers[type] * GameManager.Instance.playerCosts, upgradeLevels[type]) * expenseModifiers[type] * GameManager.Instance.playerCosts;
+        return baseUpgradeCost * Mathf.Pow(1 + expenseModifiers[type] * GameManager.Instance.playerCosts, upgradeLevels[type]) * (1 + expenseModifiers[type]) * GameManager.Instance.playerCosts;
     }
 
     //Gets the potential effects of upgrading a specific stat
@@ -126,7 +128,7 @@ public class Turret : PlayerBuilding, IDamager, IUpgradeable
             if (maxAlignments == 2)
             {
                 //If you have not selected this alignment already, mark it as a possibility
-                if (expenseModifiers[type] == 1.5f || expenseModifiers[type] == -1)
+                if (expenseModifiers[type] == 0.5f || expenseModifiers[type] == -1)
                 {
                     return "Select as Alignment";
                 }
@@ -139,42 +141,13 @@ public class Turret : PlayerBuilding, IDamager, IUpgradeable
                 return "Select as Alignment";
             }
             //Mark as a possible misalignment
-            if (expenseModifiers[type] == 1.5f)
+            if (expenseModifiers[type] == 0.5f)
             {
                 return "Select as Misalignment";
             }
             //Only remaining possibilities are that you chose it for something or it is splash, so mention that it is not an option
             return "N/A";
         }
-
-        //Specify alignment informaiton if not done aligning
-        if (!finishedAligning)
-        {
-            //If 2 alignments and 2 major misalignments
-            if (maxAlignments == 2)
-            {
-                //If you have not selected this alignment already, mark it as a possibility
-                if (expenseModifiers[type] == 1.5f)
-                {
-                    return "Select as Alignment";
-                }
-                //Otherwise say you cannot choose it again
-                return "N/A";
-            }
-            //If you have not selected an alignment, mark all as possibilities
-            if (alignments == 0)
-            {
-                return "Select as Alignment";
-            }
-            //Mark as a possible misalignment
-            if (expenseModifiers[type] == 1.5f)
-            {
-                return "Select as Misalignment";
-            }
-            //Only remaining possible is that you chose it for something, so mention that it is no an option
-            return "N/A";
-        }
-
         //Switch based on desired upgrade
         switch (type)
         {
@@ -398,7 +371,7 @@ public class Turret : PlayerBuilding, IDamager, IUpgradeable
     {
         target = null;
         active = true;
-        spriteRenderer.color = Color.white;
+        spriteRenderer.color = activeColor;
         return energyCost;
     }
 
@@ -428,14 +401,14 @@ public class Turret : PlayerBuilding, IDamager, IUpgradeable
     public void Align(int type)
     {
         //Ensure that you are aligning to a new alignment
-        if (expenseModifiers[type] == 1.5f || expenseModifiers[type] == -1)
+        if (expenseModifiers[type] == 0.5f || expenseModifiers[type] < 0)
         {
             //If setting an alignment
             if (alignments < maxAlignments)
             {
                 //Increase alignment count and set the alignment
                 alignments++;
-                expenseModifiers[type] = 1.3f;
+                expenseModifiers[type] = 0.3f;
 
                 //If this is a second alignment (max)
                 if (alignments == 2)
@@ -443,9 +416,9 @@ public class Turret : PlayerBuilding, IDamager, IUpgradeable
                     //Sets the remaining alignments to extremely misaligned
                     for (int i = 0; i < expenseModifiers.Length; i++)
                     {
-                        if (expenseModifiers[i] == 1.5f)
+                        if (expenseModifiers[i] == 0.5f)
                         {
-                            expenseModifiers[i] = 4f;
+                            expenseModifiers[i] = 3f;
                         }
                     }
                     //Marks alignment as done
@@ -453,18 +426,18 @@ public class Turret : PlayerBuilding, IDamager, IUpgradeable
                 }
             }
             //If you are not setting an alignment you are choosing a misalignment, excluding splash
-            else if(expenseModifiers[type] != -1)
+            else if(expenseModifiers[type] > 0)
             {
                 //If you have already picked a primary misalignment, mark as secondary misalignment and finish alignment
                 if (primaryMisalignmentChosen)
                 {
-                    expenseModifiers[type] = 2.25f;
+                    expenseModifiers[type] = 1.25f;
                     finishedAligning = true;
                 }
                 //Otherwise set as primary alignment and mark that you have chosen it
                 else
                 {
-                    expenseModifiers[type] = 3f;
+                    expenseModifiers[type] = 2f;
                     primaryMisalignmentChosen = true;
                 }
             }

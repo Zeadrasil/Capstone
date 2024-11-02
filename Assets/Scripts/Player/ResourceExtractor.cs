@@ -14,8 +14,8 @@ public class ResourceExtractor : PlayerBuilding, IUpgradeable
 
     //Upgrade data
     public int[] upgradeLevels = new int[] { 0, 0, 0, 0 };
-    public float[] expenseModifiers = new float[] { 1, 1, 1, 1 };
-    public float[] upgradeEffects = new float[] {1.25f, 0.25f, 0.9f, 1.25f };
+    public float[] expenseModifiers = new float[] { 0.5f, 0.5f, 0.5f, 0.5f };
+    public float[] upgradeEffects = new float[] {1.2f, 0.2f, 0.9f, 1.2f };
     [SerializeField] int baseUpgradeCost = 0;
 
     //Energy info
@@ -28,6 +28,9 @@ public class ResourceExtractor : PlayerBuilding, IUpgradeable
     private int alignments = 0;
     private bool primaryMisalignmentChosen = false;
     private bool finishedAligning = false;
+
+    //Other
+    [SerializeField] Color activeColor = Color.white;
 
     //Damager list to avoid null references and improve reaction speed
     private List<IDamager> currentDamagers = new List<IDamager>();
@@ -203,7 +206,7 @@ public class ResourceExtractor : PlayerBuilding, IUpgradeable
     //Get cost to upgrade given stat
     public float GetUpgradeCost(int type)
     {
-        return 2 * Mathf.Pow(1 + 0.25f * expenseModifiers[type], upgradeLevels[type]) * expenseModifiers[type];
+        return baseUpgradeCost * Mathf.Pow(1 + expenseModifiers[type] * GameManager.Instance.playerCosts, upgradeLevels[type]) * (1 + expenseModifiers[type]) * GameManager.Instance.playerCosts;
     }
 
     //Get potential effects of given upgrade
@@ -216,7 +219,7 @@ public class ResourceExtractor : PlayerBuilding, IUpgradeable
             if(maxAlignments == 2)
             {
                 //If you have not selected this alignment already, mark it as a possibility
-                if(expenseModifiers[type] == 1.5f)
+                if(expenseModifiers[type] == 0.5f)
                 {
                     return "Select as Alignment";
                 }
@@ -229,7 +232,7 @@ public class ResourceExtractor : PlayerBuilding, IUpgradeable
                 return "Select as Alignment";
             }
             //Mark as a possible misalignment
-            if (expenseModifiers[type] == 1.5f)
+            if (expenseModifiers[type] == 0.5f)
             {
                 return "Select as Misalignment";
             }
@@ -316,7 +319,7 @@ public class ResourceExtractor : PlayerBuilding, IUpgradeable
         {
             active = true;
             activate = true;
-            spriteRenderer.color = Color.white;
+            spriteRenderer.color = activeColor;
             return energyCost;
         }
         return 0;
@@ -341,14 +344,14 @@ public class ResourceExtractor : PlayerBuilding, IUpgradeable
     public void Align(int type)
     {
         //Ensure that you are aligning to a new alignment
-        if (expenseModifiers[type] == 1.5f)
+        if (expenseModifiers[type] == 0.5f)
         {
             //If setting an alignment
             if(alignments < maxAlignments)
             {
                 //Increase alignment count and set the alignment
                 alignments++;
-                expenseModifiers[type] = 1.3f;
+                expenseModifiers[type] = 0.3f;
 
                 //If this is a second alignment (max)
                 if(alignments == 2)
@@ -356,9 +359,9 @@ public class ResourceExtractor : PlayerBuilding, IUpgradeable
                     //Sets the remaining alignments to extremely misaligned
                     for(int i = 0; i < expenseModifiers.Length; i++)
                     {
-                        if(expenseModifiers[i] == 1.5f)
+                        if(expenseModifiers[i] == 0.5f)
                         {
-                            expenseModifiers[i] = 4f;
+                            expenseModifiers[i] = 3f;
                         }
                     }
                     //Marks alignment as done
@@ -371,13 +374,13 @@ public class ResourceExtractor : PlayerBuilding, IUpgradeable
                 //If you have already picked a primary misalignment, mark as secondary misalignment and finish alignment
                 if(primaryMisalignmentChosen)
                 {
-                    expenseModifiers[type] = 2.25f;
+                    expenseModifiers[type] = 1.25f;
                     finishedAligning = true;
                 }
                 //Otherwise set as primary alignment and mark that you have chosen it
                 else
                 {
-                    expenseModifiers[type] = 3f;
+                    expenseModifiers[type] = 2f;
                     primaryMisalignmentChosen = true;
                 }
             }

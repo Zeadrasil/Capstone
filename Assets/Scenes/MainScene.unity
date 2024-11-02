@@ -1019,14 +1019,14 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 0}
-        m_TargetAssemblyTypeName: GameManager, Assembly-CSharp
-        m_MethodName: clickTest
-        m_Mode: 1
+      - m_Target: {fileID: 816100090}
+        m_TargetAssemblyTypeName: LocalGameManager, Assembly-CSharp
+        m_MethodName: Build
+        m_Mode: 3
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
           m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
+          m_IntArgument: 2
           m_FloatArgument: 0
           m_StringArgument: 
           m_BoolArgument: 0
@@ -2489,14 +2489,14 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 0}
-        m_TargetAssemblyTypeName: GameManager, Assembly-CSharp
-        m_MethodName: clickTest
-        m_Mode: 1
+      - m_Target: {fileID: 816100090}
+        m_TargetAssemblyTypeName: LocalGameManager, Assembly-CSharp
+        m_MethodName: Build
+        m_Mode: 3
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
           m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
+          m_IntArgument: 4
           m_FloatArgument: 0
           m_StringArgument: 
           m_BoolArgument: 0
@@ -4128,14 +4128,14 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 0}
-        m_TargetAssemblyTypeName: GameManager, Assembly-CSharp
-        m_MethodName: clickTest
-        m_Mode: 1
+      - m_Target: {fileID: 816100090}
+        m_TargetAssemblyTypeName: LocalGameManager, Assembly-CSharp
+        m_MethodName: Build
+        m_Mode: 3
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
           m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
+          m_IntArgument: 9
           m_FloatArgument: 0
           m_StringArgument: 
           m_BoolArgument: 0
@@ -4604,14 +4604,14 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 0}
-        m_TargetAssemblyTypeName: GameManager, Assembly-CSharp
-        m_MethodName: clickTest
-        m_Mode: 1
+      - m_Target: {fileID: 816100090}
+        m_TargetAssemblyTypeName: LocalGameManager, Assembly-CSharp
+        m_MethodName: Build
+        m_Mode: 3
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
           m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
+          m_IntArgument: 6
           m_FloatArgument: 0
           m_StringArgument: 
           m_BoolArgument: 0
@@ -8343,9 +8343,15 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   nextWaveLabel: {fileID: 621729953}
   turretTierOne: {fileID: 6420610339889466709, guid: e95a5164306bc6948b05e1e7b919b5a5, type: 3}
-  repairTierOne: {fileID: 8016618778940119860, guid: 3176282f1096c894983b994b689bc876, type: 3}
-  wallTierOne: {fileID: 8016618778940119860, guid: 850084f788baf72429629f1cee29687c, type: 3}
-  extractorTierOne: {fileID: 8016618778940119860, guid: 627fe18eedb6358448cf5ea4327a4f45, type: 3}
+  turretTierTwo: {fileID: 6420610339889466709, guid: f0946a7bce053c3408c212e2d8d61e49, type: 3}
+  turretTierThree: {fileID: 6420610339889466709, guid: 72e3d25f98f6b67448be6762a18cda4a, type: 3}
+  repairTierOne: {fileID: 8016618778940119860, guid: c19738b007f2c0f4399a9de0d5b2a252, type: 3}
+  repairTierTwo: {fileID: 8016618778940119860, guid: 3176282f1096c894983b994b689bc876, type: 3}
+  wallTierOne: {fileID: 8016618778940119860, guid: c1a85f22f3009c44e81a563d081ae340, type: 3}
+  wallTierTwo: {fileID: 8016618778940119860, guid: 850084f788baf72429629f1cee29687c, type: 3}
+  extractorTierOne: {fileID: 8016618778940119860, guid: 1e50877cd749b944c855ea71ffe9f3a6, type: 3}
+  extractorTierTwo: {fileID: 8016618778940119860, guid: 2bc905a112531b548b2a3cb1a47f20a7, type: 3}
+  extractorTierThree: {fileID: 8016618778940119860, guid: 627fe18eedb6358448cf5ea4327a4f45, type: 3}
   enemyCheckpointPrefab: {fileID: 8856849199956707201, guid: a72f0cfc2d3c11c4490146f7542969a9, type: 3}
   baseEnemy: {fileID: 4756387668570662307, guid: 293c27808f492ab40afe184631338d18, type: 3}
   fastEnemy: {fileID: 4756387668570662307, guid: 6cfafe8b63e943c478aebed8b60170de, type: 3}
@@ -10602,14 +10608,14 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 0}
-        m_TargetAssemblyTypeName: GameManager, Assembly-CSharp
-        m_MethodName: clickTest
-        m_Mode: 1
+      - m_Target: {fileID: 816100090}
+        m_TargetAssemblyTypeName: LocalGameManager, Assembly-CSharp
+        m_MethodName: Build
+        m_Mode: 3
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
           m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
+          m_IntArgument: 8
           m_FloatArgument: 0
           m_StringArgument: 
           m_BoolArgument: 0
@@ -14483,14 +14489,14 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 0}
-        m_TargetAssemblyTypeName: GameManager, Assembly-CSharp
-        m_MethodName: clickTest
-        m_Mode: 1
+      - m_Target: {fileID: 816100090}
+        m_TargetAssemblyTypeName: LocalGameManager, Assembly-CSharp
+        m_MethodName: Build
+        m_Mode: 3
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
           m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
+          m_IntArgument: 1
           m_FloatArgument: 0
           m_StringArgument: 
           m_BoolArgument: 0

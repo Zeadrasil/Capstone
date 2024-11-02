@@ -16,7 +16,7 @@ public class RepairStation : PlayerBuilding, IDamageable, IUpgradeable
     public float range;
 
     //Upgrade details
-    [SerializeField] float[] expenseModifiers = new float[] { 1.5f, 1.5f, 1.5f };
+    [SerializeField] float[] expenseModifiers = new float[] { 0.5f, 0.5f, 0.5f };
     [SerializeField] float[] upgradeEffects = new float[] { 1.2f, 1.2f, 1.2f };
     [SerializeField] int[] upgradeLevels = new int[] { 0, 0, 0 };
     [SerializeField] int baseUpgradeCost = 10;
@@ -55,7 +55,7 @@ public class RepairStation : PlayerBuilding, IDamageable, IUpgradeable
     public float GetUpgradeCost(int type)
     {
         //Applies various modifiers to the expense to get the cost
-        return baseUpgradeCost * Mathf.Pow(1 + 0.25f * expenseModifiers[type] * GameManager.Instance.playerCosts, upgradeLevels[type]) * expenseModifiers[type] * GameManager.Instance.playerCosts;
+        return baseUpgradeCost * Mathf.Pow(1 + expenseModifiers[type] * GameManager.Instance.playerCosts, upgradeLevels[type]) * (1 + expenseModifiers[type]) * GameManager.Instance.playerCosts;
     }
 
     //Gets a string representing the potential changes of an upgrade
@@ -68,7 +68,7 @@ public class RepairStation : PlayerBuilding, IDamageable, IUpgradeable
             {
                 return "Select as Alignment";
             }
-            if (expenseModifiers[type] != 1.3f)
+            if (expenseModifiers[type] != 0.3f)
             {
                 return "Select as Primary Misalignment";
             }
@@ -272,21 +272,21 @@ public class RepairStation : PlayerBuilding, IDamageable, IUpgradeable
     public void Align(int type)
     {
         //Cannot select alignment twice
-        if (expenseModifiers[type] == 1.5f)
+        if (expenseModifiers[type] == 0.5f)
         {
             //If you are selecting a misalignment type
             if (maxAlignments == alignments)
             {
                 //Type passed in is primary misalignment
-                expenseModifiers[type] = 3;
+                expenseModifiers[type] = 2;
 
                 //Goes through all of the possibilities for misalignment in order to find the one that still has the default alignment
                 for (int i = 0; i < expenseModifiers.Length; i++)
                 {
-                    if (expenseModifiers[i] == 1.5f)
+                    if (expenseModifiers[i] == 0.5f)
                     {
                         //Sets as secondary misalignment
-                        expenseModifiers[i] = 2.25f;
+                        expenseModifiers[i] = 1.25f;
                         finishedAligning = true;
                         return;
                     }
@@ -296,7 +296,7 @@ public class RepairStation : PlayerBuilding, IDamageable, IUpgradeable
             {
                 //Select primary alignment
                 alignments++;
-                expenseModifiers[type] = 1.3f;
+                expenseModifiers[type] = 0.3f;
             }
         }
     }

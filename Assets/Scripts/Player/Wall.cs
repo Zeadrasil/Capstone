@@ -13,16 +13,19 @@ public class Wall : PlayerBuilding, IUpgradeable
     [SerializeField] float healingEffectiveness = 1;
 
     //Upgrade data
-    [SerializeField] float[] expenseModifiers = new float[] { 1.5f, 1.5f };
+    [SerializeField] float[] expenseModifiers = new float[] { 0.5f, 0.5f };
     [SerializeField] float[] upgradeEffects = new float[] { 1.2f, 1.2f };
     [SerializeField] int[] upgradeLevels = new int[] { 0, 0 };
     [SerializeField] int baseUpgradeCost = 10;
-
 
     //Alignment data
     public int maxAlignments = 0;
     private int alignments = 0;
     private bool finishedAligning = false;
+
+    //Other
+    [SerializeField] Color activeColor = Color.white;
+    [SerializeField] SpriteRenderer spriteRenderer;
 
     //Add damager to damager list
     public override void AddDamager(IDamager damager)
@@ -45,7 +48,7 @@ public class Wall : PlayerBuilding, IUpgradeable
     //Get the cost of a specific stat upgrade
     public float GetUpgradeCost(int type)
     {
-        return baseUpgradeCost * Mathf.Pow(1 + 0.25f * expenseModifiers[type], upgradeLevels[type]) * expenseModifiers[type];
+        return baseUpgradeCost * Mathf.Pow(1 + expenseModifiers[type] * GameManager.Instance.playerCosts, upgradeLevels[type]) * (1 + expenseModifiers[type]) * GameManager.Instance.playerCosts;
     }
 
     //Get the potential effects of upgrading a specific stat
@@ -146,9 +149,13 @@ public class Wall : PlayerBuilding, IUpgradeable
 
     private void Start()
     {
+        //Apply difficulty modifiers
         baseHealth *= GameManager.Instance.playerPower;
         health = baseHealth;
         healingEffectiveness *= GameManager.Instance.playerPower;
+
+        //Apply building color
+        spriteRenderer.color = activeColor;
     }
 
     //Get energy required to upgrade stat
@@ -191,10 +198,10 @@ public class Wall : PlayerBuilding, IUpgradeable
         finishedAligning = true;
 
         //Set the chosen alignment as primary
-        expenseModifiers[type] = 1.3f;
+        expenseModifiers[type] = 0.3f;
 
         //Automatically pick the other as primary misalignment
-        expenseModifiers[(type + 1) % expenseModifiers.Length] = 2f;
+        expenseModifiers[(type + 1) % expenseModifiers.Length] = 1f;
     }
 
     //Call to get whether this has finished the alignment process

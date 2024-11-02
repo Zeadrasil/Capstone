@@ -10,9 +10,15 @@ public class LocalGameManager : MonoBehaviour
 
     //Building prefabs
     [SerializeField] GameObject turretTierOne;
+    [SerializeField] GameObject turretTierTwo;
+    [SerializeField] GameObject turretTierThree;
     [SerializeField] GameObject repairTierOne;
+    [SerializeField] GameObject repairTierTwo;
     [SerializeField] GameObject wallTierOne;
+    [SerializeField] GameObject wallTierTwo;
     [SerializeField] GameObject extractorTierOne;
+    [SerializeField] GameObject extractorTierTwo;
+    [SerializeField] GameObject extractorTierThree;
 
     //Enemy prefabs
     [SerializeField] GameObject enemyCheckpointPrefab;
@@ -189,9 +195,15 @@ public class LocalGameManager : MonoBehaviour
 
         //Pass building prefabs
         GameManager.Instance.turretTierOne = turretTierOne;
+        GameManager.Instance.turretTierTwo = turretTierTwo;
+        GameManager.Instance.turretTierThree = turretTierThree;
         GameManager.Instance.repairTierOne = repairTierOne;
+        GameManager.Instance.repairTierTwo = repairTierTwo;
         GameManager.Instance.wallTierOne = wallTierOne;
+        GameManager.Instance.wallTierTwo = wallTierTwo;
         GameManager.Instance.extractorTierOne = extractorTierOne;
+        GameManager.Instance.extractorTierTwo = extractorTierTwo;
+        GameManager.Instance.extractorTierThree = extractorTierThree;
 
         //Pass enemy prefabs
         GameManager.Instance.baseEnemy = baseEnemy;

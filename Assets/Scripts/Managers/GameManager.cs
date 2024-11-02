@@ -24,7 +24,7 @@ public class GameManager : Singleton<GameManager>
     private int selectedConstructionIndex = -1;
 
     //Cost data for new buildings
-    public float[] budgetCosts = new float[] {10, -1, -1, 10, -1, 10, -1, 10, -1, -1 };
+    public float[] budgetCosts = new float[] {10, 15, 25, 10, 15, 10, 15, 10, 15, -25 };
 
     public Dictionary<Vector2Int, GameObject> playerBuildings = new Dictionary<Vector2Int, GameObject>();
 
@@ -83,9 +83,15 @@ public class GameManager : Singleton<GameManager>
 
     //Building prefabs
     public GameObject turretTierOne;
+    public GameObject turretTierTwo;
+    public GameObject turretTierThree;
     public GameObject repairTierOne;
+    public GameObject repairTierTwo;
     public GameObject wallTierOne;
+    public GameObject wallTierTwo;
     public GameObject extractorTierOne;
+    public GameObject extractorTierTwo;
+    public GameObject extractorTierThree;
 
     //Enemy prefabs
     public GameObject baseEnemy;
@@ -351,7 +357,7 @@ public class GameManager : Singleton<GameManager>
         nextWaveBackground.color = new Color(availableColor.x, availableColor.y, availableColor.z);
 
         //Sets the buildings array since the data has now been passed in
-        buildings = new GameObject[] { turretTierOne, null, null, repairTierOne, null, wallTierOne, null, extractorTierOne, null, null};
+        buildings = new GameObject[] { turretTierOne, turretTierTwo, turretTierThree, repairTierOne, repairTierTwo, wallTierOne, wallTierTwo, extractorTierOne, extractorTierTwo, extractorTierThree};
         
         //Initialize the tilemanager for the same reason that this needs to be initialized
         TileManager.Instance.Initialize();
@@ -629,14 +635,61 @@ public class GameManager : Singleton<GameManager>
         //Gets the building to upgrade
         IUpgradeable subject = selectedBuilding.GetComponentInChildren<IUpgradeable>();
 
-        //Ensures tht you can afford the upgrade
-        if (budget >= subject.GetUpgradeCost(upgrade))
+        //Ensure that alignment is finished processing
+        if (subject.IsAligned())
         {
-            //Upgrade the building with the desired upgrade
-            subject.Upgrade(upgrade);
+            //Ensures tht you can afford the upgrade
+            if (budget >= subject.GetUpgradeCost(upgrade))
+            {
+                //Upgrade the building with the desired upgrade
+                subject.Upgrade(upgrade);
 
-            //Update the panel to show the new data
-            updateUpgradeCost(type, upgrade);
+                //Update the panel to show the new data
+                updateUpgradeCost(type, upgrade);
+            }
+        }
+        //If it is not, then this is going to be where it gets aligned
+        else
+        {
+            //Identify how many upgrades you will need to update after alignment
+            int maxTypes = 0;
+            switch(type)
+            {
+                case 0:
+                    {
+                        maxTypes = 5;
+                        break;
+                    }
+                case 1:
+                    {
+                        maxTypes = 3;
+                        break;
+                    }
+                case 2:
+                    {
+                        maxTypes = 2;
+                        break;
+                    }
+                case 3:
+                    {
+                        maxTypes = 4;
+                        break;
+                    }
+                default:
+                    {
+                        maxTypes = 0;
+                        break;
+                    }
+
+            }
+            //Align the building
+            subject.Align(upgrade);
+
+            //Update upgrades
+            for(int i = 0; i < maxTypes; i++)
+            {
+                updateUpgradeCost(type, i);
+            }
         }
     }
 
@@ -646,27 +699,33 @@ public class GameManager : Singleton<GameManager>
         //Use a switch depending on type of building
         switch(selectedConstructionIndex)
         {
-            //Tier One Turret
+            //Turrets
             case 0:
+            case 1:
+            case 2:
                 {
                     return tileManager.Check(location) >= tileManager.traversableCutoff && tileManager.CheckResource(location) < tileManager.resourceCutoff && !playerBuildings.ContainsKey(location);
                 }
-            //Tier One Repair Station
+            //Repair Stations
             case 3:
+            case 4:
                 {
                     return tileManager.CheckResource(location) < tileManager.resourceCutoff && !playerBuildings.ContainsKey(location);
                 }
-            //Tier One Wall
+            //Walls
             case 5:
+            case 6:
                 {
                     return tileManager.Check(location) >= tileManager.traversableCutoff && tileManager.CheckResource(location) < tileManager.resourceCutoff && !playerBuildings.ContainsKey(location);
                 }
-            //Tier One Resource Extractor
+            //Resource Extractors
             case 7:
+            case 8:
+            case 9:
                 {
                     return tileManager.CheckResource(location) >= tileManager.resourceCutoff && !playerBuildings.ContainsKey(location);
                 }
-            //If none of these, it is not a valid building so you cannot place it anyways
+            //If none of these, it is not a valid building so you cannot place it
             default:
                 return false;
         }
@@ -687,10 +746,28 @@ public class GameManager : Singleton<GameManager>
                     go = Instantiate(turretTierOne, tileManager.TraversableTilemap.CellToWorld(new Vector3Int(hoveredTile.x, hoveredTile.y)), Quaternion.identity);
                     break;
                 }
+            //Tier Two Turret
+            case 1:
+                {
+                    go = Instantiate(turretTierTwo, tileManager.TraversableTilemap.CellToWorld(new Vector3Int(hoveredTile.x, hoveredTile.y)), Quaternion.identity);
+                    break;
+                }
+            //Tier Three Turret
+            case 2:
+                {
+                    go = Instantiate(turretTierThree, tileManager.TraversableTilemap.CellToWorld(new Vector3Int(hoveredTile.x, hoveredTile.y)), Quaternion.identity);
+                    break;
+                }
             //Tier One Repair Station
             case 3:
                 {
                     go = Instantiate(repairTierOne, tileManager.TraversableTilemap.CellToWorld(new Vector3Int(hoveredTile.x, hoveredTile.y)), Quaternion.identity);
+                    break;
+                }
+            //Tier Two Repair Station
+            case 4:
+                {
+                    go = Instantiate(repairTierTwo, tileManager.TraversableTilemap.CellToWorld(new Vector3Int(hoveredTile.x, hoveredTile.y)), Quaternion.identity);
                     break;
                 }
             //Tier One Wall
@@ -699,10 +776,28 @@ public class GameManager : Singleton<GameManager>
                     go = Instantiate(wallTierOne, tileManager.TraversableTilemap.CellToWorld(new Vector3Int(hoveredTile.x, hoveredTile.y)), Quaternion.identity);
                     break;
                 }
+            //Tier Two Wall
+            case 6:
+                {
+                    go = Instantiate(wallTierTwo, tileManager.TraversableTilemap.CellToWorld(new Vector3Int(hoveredTile.x, hoveredTile.y)), Quaternion.identity);
+                    break;
+                }
             //Tier One Resource Extractor
             case 7:
                 {
                     go = Instantiate(extractorTierOne, tileManager.TraversableTilemap.CellToWorld(new Vector3Int(hoveredTile.x, hoveredTile.y)), Quaternion.identity);
+                    break;
+                }
+            //Tier Two Resource Extractor
+            case 8:
+                {
+                    go = Instantiate(extractorTierTwo, tileManager.TraversableTilemap.CellToWorld(new Vector3Int(hoveredTile.x, hoveredTile.y)), Quaternion.identity);
+                    break;
+                }
+            //Tier Three Resource Extractor
+            case 9:
+                {
+                    go = Instantiate(extractorTierThree, tileManager.TraversableTilemap.CellToWorld(new Vector3Int(hoveredTile.x, hoveredTile.y)), Quaternion.identity);
                     break;
                 }
             //Not a valid building, so just skip the rest
@@ -726,9 +821,9 @@ public class GameManager : Singleton<GameManager>
         energyDeficit += pb.Disable();
         ChangeEnergyUsage(pb.energyCost);
 
-
         //Add to the tracked building dictionary
         playerBuildings.Add(hoveredTile, go);
+
     }
 
     //Changes the panel to reflect accurate building data
@@ -792,19 +887,19 @@ public class GameManager : Singleton<GameManager>
                         //Repair station range
                         case 0:
                             {
-                                repairRangeUpgradeText.text = repairStation.GetUpgradeCost(upgradeType) >= 0 ? $"Range Upgrade:\n{repairStation.GetUpgradeEffects(upgradeType)}\nCost:\n{repairStation.GetUpgradeCost(upgradeType):F2}" : "NOT\nAVAILABLE";
+                                repairRangeUpgradeText.text = repairStation.IsAligned() ? repairStation.GetUpgradeCost(upgradeType) >= 0 ? $"Range Upgrade:\n{repairStation.GetUpgradeEffects(upgradeType)}\nCost:\n{repairStation.GetUpgradeCost(upgradeType):F2}" : "NOT\nAVAILABLE" : $"Range:\n{repairStation.GetUpgradeEffects(upgradeType)}";
                                 break;
                             }
                         //Repair station healing
                         case 1:
                             {
-                                repairHealingUpgradeText.text = repairStation.GetUpgradeCost(upgradeType) >= 0 ? $"Healing Upgrade:\n{repairStation.GetUpgradeEffects(upgradeType)}\nCost:\n{repairStation.GetUpgradeCost(upgradeType):F2}" : "NOT\nAVAILABLE";
+                                repairHealingUpgradeText.text = repairStation.IsAligned() ? repairStation.GetUpgradeCost(upgradeType) >= 0 ? $"Healing Upgrade:\n{repairStation.GetUpgradeEffects(upgradeType)}\nCost:\n{repairStation.GetUpgradeCost(upgradeType):F2}" : "NOT\nAVAILABLE" : $"Healing:\n{repairStation.GetUpgradeEffects(upgradeType)}";
                                 break;
                             }
                         //Repair station health
                         case 2:
                             {
-                                repairHealthUpgradeText.text = repairStation.GetUpgradeCost(upgradeType) >= 0 ? $"Health Upgrade:\n{repairStation.GetUpgradeEffects(upgradeType)}\nCost:\n{repairStation.GetUpgradeCost(upgradeType):F2}" : "NOT\nAVAILABLE";
+                                repairHealthUpgradeText.text = repairStation.IsAligned() ? repairStation.GetUpgradeCost(upgradeType) >= 0 ? $"Health Upgrade:\n{repairStation.GetUpgradeEffects(upgradeType)}\nCost:\n{repairStation.GetUpgradeCost(upgradeType):F2}" : "NOT\nAVAILABLE" : $"Health:\n{repairStation.GetUpgradeEffects(upgradeType)}";
                                 break;
                             }
                     }
@@ -820,12 +915,12 @@ public class GameManager : Singleton<GameManager>
                     //Health
                     if(upgradeType == 0)
                     {
-                        wallHealthUpgradeText.text = wall.GetUpgradeCost(upgradeType) >= 0 ? $"Health Upgrade:\n{wall.GetUpgradeEffects(upgradeType)}\nCost:\n{wall.GetUpgradeCost(upgradeType):F2}" : "NOT\nAVAILABLE";
+                        wallHealthUpgradeText.text = wall.IsAligned() ? wall.GetUpgradeCost(upgradeType) >= 0 ? $"Health Upgrade:\n{wall.GetUpgradeEffects(upgradeType)}\nCost:\n{wall.GetUpgradeCost(upgradeType):F2}" : "NOT\nAVAILABLE" : $"Health:\n{wall.GetUpgradeEffects(upgradeType)}";
                     }
                     //Healing boost (makes it so that walls heal more from repair stations)
                     else
                     {
-                        wallHealingUpgradeText.text = wall.GetUpgradeCost(upgradeType) >= 0 ? $"Healing Upgrade:\n{wall.GetUpgradeEffects(upgradeType)}\nCost:\n{wall.GetUpgradeCost(upgradeType):F2}" : "NOT\nAVAILABLE";
+                        wallHealingUpgradeText.text = wall.IsAligned() ? wall.GetUpgradeCost(upgradeType) >= 0 ? $"Healing Upgrade:\n{wall.GetUpgradeEffects(upgradeType)}\nCost:\n{wall.GetUpgradeCost(upgradeType):F2}" : "NOT\nAVAILABLE" : $"Healing:\n{wall.GetUpgradeEffects(upgradeType)}";
                     }
                     break;
                 }
@@ -841,25 +936,25 @@ public class GameManager : Singleton<GameManager>
                         //Extractor range
                         case 0:
                             {
-                                extractorExtractionUpgradeText.text = extractor.GetUpgradeCost(upgradeType) >= 0 ? $"Extraction Upgrade:\n{extractor.GetUpgradeEffects(upgradeType)}\nCost:\n{extractor.GetUpgradeCost(upgradeType):F2}" : "NOT\nAVAILABLE";
+                                extractorExtractionUpgradeText.text = extractor.IsAligned() ? extractor.GetUpgradeCost(upgradeType) >= 0 ? $"Extraction Upgrade:\n{extractor.GetUpgradeEffects(upgradeType)}\nCost:\n{extractor.GetUpgradeCost(upgradeType):F2}" : "NOT\nAVAILABLE" : $"Extraction:\n{extractor.GetUpgradeEffects(upgradeType)}";
                                 break;
                             }
                         //Extractor healing
                         case 1:
                             {
-                                extractorEnergyUpgradeText.text = extractor.GetUpgradeCost(upgradeType) >= 0 ? $"Energy Upgrade:\n{extractor.GetUpgradeEffects(upgradeType)}\nCost:\n{extractor.GetUpgradeCost(upgradeType):F2}" : "NOT\nAVAILABLE";
+                                extractorEnergyUpgradeText.text = extractor.IsAligned() ? extractor.GetUpgradeCost(upgradeType) >= 0 ? $"Energy Upgrade:\n{extractor.GetUpgradeEffects(upgradeType)}\nCost:\n{extractor.GetUpgradeCost(upgradeType):F2}" : "NOT\nAVAILABLE" : $"Energy:\n{extractor.GetUpgradeEffects(upgradeType)}";
                                 break;
                             }
                         //Extractor protection
                         case 2:
                             {
-                                extractorProtectionUpgradeText.text = extractor.GetUpgradeCost(upgradeType) >= 0 ? $"Protection Upgrade:\n{extractor.GetUpgradeEffects(upgradeType)}\nCost:\n{extractor.GetUpgradeCost(upgradeType):F2}" : "NOT\nAVAILABLE";
+                                extractorProtectionUpgradeText.text = extractor.IsAligned() ? extractor.GetUpgradeCost(upgradeType) >= 0 ? $"Protection Upgrade:\n{extractor.GetUpgradeEffects(upgradeType)}\nCost:\n{extractor.GetUpgradeCost(upgradeType):F2}" : "NOT\nAVAILABLE" : $"Protection:\n{extractor.GetUpgradeEffects(upgradeType)}";
                                 break;
                             }
                         //Extractor health
                         case 3:
                             {
-                                extractorHealthUpgradeText.text = extractor.GetUpgradeCost(upgradeType) >= 0 ? $"Health Upgrade:\n{extractor.GetUpgradeEffects(upgradeType)}\nCost:\n{extractor.GetUpgradeCost(upgradeType):F2}" : "NOT\nAVAILABLE";
+                                extractorHealthUpgradeText.text = extractor.IsAligned() ? extractor.GetUpgradeCost(upgradeType) >= 0 ? $"Health Upgrade:\n{extractor.GetUpgradeEffects(upgradeType)}\nCost:\n{extractor.GetUpgradeCost(upgradeType):F2}" : "NOT\nAVAILABLE" : $"Health:\n{extractor.GetUpgradeEffects(upgradeType)}";
                                 break;
                             }
                     }
@@ -1076,29 +1171,6 @@ public class GameManager : Singleton<GameManager>
                 //Stores the tile that your mouse is above
                 Vector2Int hoveredTile = (Vector2Int)tileManager.TraversableTilemap.WorldToCell(Camera.ScreenToWorldPoint(Input.mousePosition));
 
-                //Do things if you either have left clicked or used the confirm button and you are not above the construction panel
-                if ((Input.GetMouseButtonDown(0) || Input.GetKeyDown(confirmKey)) && Input.mousePosition.y > 200 && betweenWaves)
-                {
-                    //Checks the place you are over to see if there is a building there, also ensures that you are not changing selections when upgrading with mouse
-                    if (playerBuildings.TryGetValue(hoveredTile, out GameObject building))
-                    {
-                        //Clears building data
-                        Build(-1);
-
-                        //Updates upgrade data
-                        selectedUpgrade = 0;
-                        selectedBuilding = building;
-                        standardUpgradeEvents();
-                        updateSelection();
-                    }
-                    //If you can place a building, do so
-                    else if (checkPlacement(hoveredTile))
-                    {
-                        placeBuilding(hoveredTile);
-                        budget -= budgetCosts[selectedConstructionIndex];
-                    }
-                }
-
                 //Actions for when you have a selected building
                 if (selectedBuilding != null)
                 {
@@ -1233,6 +1305,7 @@ public class GameManager : Singleton<GameManager>
                                     ResourceExtractor extractor = selectedBuilding.GetComponentInChildren<ResourceExtractor>();
                                     if(extractor != null)
                                     {
+                                        //Upgrade Extractor with selected upgrade
                                         UpgradeBuilding(3, selectedUpgrade);
                                     }
                                 }
@@ -1243,6 +1316,31 @@ public class GameManager : Singleton<GameManager>
                     if(Input.GetKeyDown(sellKey))
                     {
                         Sell();
+                    }
+                }
+                //Do things if you either have left clicked or used the confirm button and you are not above the construction panel
+                if ((Input.GetMouseButtonDown(0) || Input.GetKeyDown(confirmKey)) && Input.mousePosition.y > 200 && betweenWaves)
+                {
+                    //Checks the place you are over to see if there is a building there, also ensures that you are not changing selections when upgrading with mouse
+                    if (playerBuildings.TryGetValue(hoveredTile, out GameObject building))
+                    {
+                        //Clears building data
+                        Build(-1);
+
+                        //Updates upgrade data
+                        selectedUpgrade = 0;
+                        selectedBuilding = building;
+                        standardUpgradeEvents();
+                        updateSelection();
+                    }
+                    //If you can place a building, do so
+                    else if (checkPlacement(hoveredTile))
+                    {
+                        placeBuilding(hoveredTile);
+                        budget -= budgetCosts[selectedConstructionIndex];
+
+                        //Increases price of new building of that tier in order to encourage using a variety of tiers and upgrading things
+                        budgetCosts[selectedConstructionIndex] *= 1.2f;
                     }
                 }
                 //Allows you to cancel constructions using right click
@@ -1263,20 +1361,50 @@ public class GameManager : Singleton<GameManager>
                 {
                     Build(0);
                 }
+                //Select tier two turret with hotkey
+                if (Input.GetKeyDown(tierTwoTurretKey))
+                {
+                    Build(1);
+                }
+                //Select tier three turret with hotkey
+                if (Input.GetKeyDown(tierThreeTurretKey))
+                {
+                    Build(2);
+                }
                 //Select tier one repair station with hotkey
                 if (Input.GetKeyDown(tierOneRepairKey))
                 {
                     Build(3);
+                }
+                //Select tier two repair station with hotkey
+                if (Input.GetKeyDown(tierTwoRepairKey))
+                {
+                    Build(4);
                 }
                 //Select tier one wall with hotkey
                 if (Input.GetKeyDown(tierOneWallKey))
                 {
                     Build(5);
                 }
+                //Select tier two wall with hotkey
+                if (Input.GetKeyDown(tierTwoWallKey))
+                {
+                    Build(6);
+                }
                 //Select tier one resource extractor with hotkey
                 if (Input.GetKeyDown(tierOneExtractorKey))
                 {
                     Build(7);
+                }
+                //Select tier two resource extractor with hotkey
+                if (Input.GetKeyDown(tierTwoExtractorKey))
+                {
+                    Build(8);
+                }
+                //Select tier three resource extractor with hotkey
+                if (Input.GetKeyDown(tierThreeExtractorKey))
+                {
+                    Build(9);
                 }
             }
             //Only apply income if you are actively in a wave
@@ -1405,5 +1533,10 @@ public class GameManager : Singleton<GameManager>
         }
         //Remove from building tracker
         playerBuildings.Remove(building.location);
+    }
+
+    public GameData GetSaveData()
+    {
+        throw new NotImplementedException();
     }
 }
