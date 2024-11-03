@@ -2,7 +2,7 @@ using UnityEngine;
 using UnityEngine.Tilemaps;
 
 //TileManagerValueHolder holds values to be passed into the TileManager when loading into a scene
-public class TileManagerValueHolder : MonoBehaviour
+public class LocalTileManager : MonoBehaviour
 {
     //Tilemaps
     [SerializeField] Tilemap BlockerTilemap;

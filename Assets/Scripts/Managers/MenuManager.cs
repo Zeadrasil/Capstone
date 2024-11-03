@@ -12,6 +12,16 @@ public class MenuManager : Singleton<MenuManager>
     [SerializeField] Canvas optionsMenu;
     [SerializeField] Canvas newGameMenu;
 
+    //In-game data
+    public Canvas pauseMenu;
+    public Canvas turretMenu;
+    public Canvas repairMenu;
+    public Canvas wallMenu;
+    public Canvas resourceMenu;
+    public Canvas buildingMenu;
+    public Canvas sellPanel;
+    private int openMenu = -1;
+
     //Hotkey labels
     [SerializeField] TMP_Text cameraForwardText;
     [SerializeField] TMP_Text cameraBackText;
@@ -223,10 +233,8 @@ public class MenuManager : Singleton<MenuManager>
             playerCostsSlider.value = PlayerPrefs.GetFloat("previousPlayerCosts");
         }
 
-        mainMenu.enabled = false;
         newGameMenu.enabled = false;
         optionsMenu.enabled = false;
-        LoadData();
     }
 
     //Called every frame
@@ -849,10 +857,99 @@ public class MenuManager : Singleton<MenuManager>
         //Load from file
         loadedData = FileManager.Instance.Load();
 
-        //Specify to intialize as loaded game
-        initializationType = 3;
+        //Skip if no file was loaded
+        if (loadedData != null)
+        {
+            //Specify to intialize as loaded game
+            initializationType = 3;
 
-        //Begin initialization
-        Play();
+            //Close the main menu
+            mainMenu.enabled = false;
+
+            //Begin initialization
+            Play();
+        }
+    }
+
+    //Open the pause menu
+    public void Pause()
+    {
+        //Enable pause menu
+        pauseMenu.enabled = true;
+
+        //Disable those which always need to be
+        sellPanel.enabled = false;
+        buildingMenu.enabled = false;
+
+        //Identifies if any upgrade menu is open
+        if(turretMenu.enabled)
+        {
+            turretMenu.enabled = false;
+            openMenu = 0;
+        }
+        else if(repairMenu.enabled)
+        {
+            repairMenu.enabled = false;
+            openMenu = 1;
+        }
+        else if(wallMenu.enabled)
+        {
+            wallMenu.enabled = false;
+            openMenu = 2;
+        }
+        else if(resourceMenu.enabled)
+        {
+            resourceMenu.enabled = false;
+            openMenu = 3;
+        }
+        else
+        {
+            openMenu = -1;
+        }
+
+        //Tells the game manager to stop working so hard
+        gameManager.paused = true;
+    }
+
+    //Close the pause menu
+    public void UnPause()
+    {
+        //Disables pause menu
+        pauseMenu.enabled = false;
+
+        //Enables building menu
+        buildingMenu.enabled = true;
+        if(openMenu != -1)
+        {
+            //You always have the sell option if you have any upgrade window open
+            sellPanel.enabled = true;
+
+            //Use the variable stoed earlier to determine which upgrade menu needs to be enabled
+            switch(openMenu)
+            {
+                case 0:
+                    {
+                        turretMenu.enabled = true;
+                        break;
+                    }
+                case 1:
+                    {
+                        repairMenu.enabled = true;
+                        break;
+                    }
+                case 2:
+                    {
+                        wallMenu.enabled = true;
+                        break;
+                    }
+                case 3:
+                    {
+                        resourceMenu.enabled = true;
+                        break;
+                    }
+            }
+        }
+        //Tell the GameManager to stop slacking off
+        gameManager.paused = false;
     }
 }

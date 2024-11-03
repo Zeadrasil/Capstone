@@ -21,7 +21,7 @@ public class FileManager : Singleton<FileManager>
             Directory.CreateDirectory(defaultPath);
 
             //Gets the path that the user wishes to save their game at
-            string fullPath = EditorUtility.SaveFilePanel("Save Game", defaultPath, DateTime.Now.ToString(), ".json");
+            string fullPath = EditorUtility.SaveFilePanel("Save Game", defaultPath, $"{DateTime.Now.Year.ToString("0000")}-{DateTime.Now.Month.ToString("00")}-{DateTime.Now.Day.ToString("00")}-{DateTime.Now.Hour.ToString("00")}-{DateTime.Now.Minute.ToString("00")}-{DateTime.Now.Second.ToString("00")}", ".json");
 
             //If not canceled, save
             if (fullPath.Length > 0)

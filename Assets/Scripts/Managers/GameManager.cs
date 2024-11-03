@@ -19,6 +19,7 @@ public class GameManager : Singleton<GameManager>
     public PlayerBase PlayerBase;
     public GameObject EnemyCheckpointPrefab;
     public Camera Camera;
+    public bool paused = false;
 
     //Stores data for building new buildings
     private GameObject selectedConstruction;
@@ -432,6 +433,8 @@ public class GameManager : Singleton<GameManager>
 
         //Sets the player base as the first item that is affecting energy
         mostRecentEnergyDecrease = PlayerBase;
+        playerBuildings.Clear();
+        playerBuildings.Add(new Vector2Int(0, 0), PlayerBase.gameObject);
     }
 
     //Start a new wave
@@ -1182,297 +1185,312 @@ public class GameManager : Singleton<GameManager>
 
             if (betweenWaves)
             {
-                //Allows you to cancel construction
-                if (selectedConstruction != null && (Input.GetKeyDown(cancelKey) || budget < budgetCosts[selectedConstructionIndex]))
+                //Pause menu
+                if(Input.GetKeyDown(cancelKey) && selectedConstruction == null && selectedBuilding == null)
                 {
-                    //Ensure that all construction data is cleared
-                    selectedConstructionIndex = -1;
-                    Destroy(selectedConstruction);
-                    selectedConstruction = null;
-                }
-                //Allows you to close the upgrade window
-                if ((Input.GetKeyDown(cancelKey) || Input.GetMouseButtonDown(1)) && selectedBuilding != null)
-                {
-                    //Clear all of the selected building data
-                    selectedBuilding = null;
-                    standardUpgradeEvents();
-                }
-                //Allows you to start the next wave with hotkeys
-                if (Input.GetKeyDown(nextWaveKey) || (selectedConstructionIndex == 10 && Input.GetKeyDown(confirmKey)))
-                {
-                    NextWave();
-                }
-                //Move the selected construction one to the right
-                if (Input.GetKeyDown(moveSelectionRightKey))
-                {
-                    //Increase selected index
-                    selectedConstructionIndex++;
-
-                    //New wave is not construction, but on the bar so it has an index
-                    if (selectedConstructionIndex == 10)
+                    if(paused)
                     {
-                        //Next Wave stuff here later
+                        MenuManager.Instance.UnPause();
                     }
-                    //Loop back around to no selection
-                    else if (selectedConstructionIndex == 11)
+                    else
                     {
+                        MenuManager.Instance.Pause();
+                    }
+                }
+                if (!paused)
+                {
+                    //Allows you to cancel construction
+                    if (selectedConstruction != null && (Input.GetKeyDown(cancelKey) || budget < budgetCosts[selectedConstructionIndex]))
+                    {
+                        //Ensure that all construction data is cleared
                         selectedConstructionIndex = -1;
+                        Destroy(selectedConstruction);
+                        selectedConstruction = null;
                     }
-                    //Update selected construction data
-                    Build(selectedConstructionIndex);
-                }
-                //Move the selected construction one to the left
-                if (Input.GetKeyDown(moveSelectionLeftKey))
-                {
-                    //Decrease selected index
-                    selectedConstructionIndex--;
-
-                    //Loop back around to new wave
-                    if (selectedConstructionIndex == -2)
+                    //Allows you to close the upgrade window
+                    if ((Input.GetKeyDown(cancelKey) || Input.GetMouseButtonDown(1)) && selectedBuilding != null)
                     {
-                        //Next Wave stuff here later
-                        selectedConstructionIndex = 10;
+                        //Clear all of the selected building data
+                        selectedBuilding = null;
+                        standardUpgradeEvents();
                     }
-                    //Update selected construction data
-                    Build(selectedConstructionIndex);
-                }
-                //Stores the tile that your mouse is above
-                Vector2Int hoveredTile = (Vector2Int)tileManager.TraversableTilemap.WorldToCell(Camera.ScreenToWorldPoint(Input.mousePosition));
-
-                //Actions for when you have a selected building
-                if (selectedBuilding != null)
-                {
-                    //Moves selected upgrade down when you use your down navigation key
-                    if (Input.GetKeyDown(moveSelectionDownKey))
+                    //Allows you to start the next wave with hotkeys
+                    if (Input.GetKeyDown(nextWaveKey) || (selectedConstructionIndex == 10 && Input.GetKeyDown(confirmKey)))
                     {
-                        //Sets the number of different upgrades based on the type of building
-                        int cap = 0;
+                        NextWave();
+                    }
+                    //Move the selected construction one to the right
+                    if (Input.GetKeyDown(moveSelectionRightKey))
+                    {
+                        //Increase selected index
+                        selectedConstructionIndex++;
 
-                        //Turret has 5 upgrades, subtract one due to zero based index
-                        Turret turret = selectedBuilding.GetComponentInChildren<Turret>();
-                        if (turret != null)
+                        //New wave is not construction, but on the bar so it has an index
+                        if (selectedConstructionIndex == 10)
                         {
-                            cap = 5;
+                            //Next Wave stuff here later
                         }
-                        else
+                        //Loop back around to no selection
+                        else if (selectedConstructionIndex == 11)
                         {
-                            //Repair Station has 3 upgrade, subtract one due to zero based index
-                            RepairStation repair = selectedBuilding.GetComponentInChildren<RepairStation>();
-                            if (repair != null)
+                            selectedConstructionIndex = -1;
+                        }
+                        //Update selected construction data
+                        Build(selectedConstructionIndex);
+                    }
+                    //Move the selected construction one to the left
+                    if (Input.GetKeyDown(moveSelectionLeftKey))
+                    {
+                        //Decrease selected index
+                        selectedConstructionIndex--;
+
+                        //Loop back around to new wave
+                        if (selectedConstructionIndex == -2)
+                        {
+                            //Next Wave stuff here later
+                            selectedConstructionIndex = 10;
+                        }
+                        //Update selected construction data
+                        Build(selectedConstructionIndex);
+                    }
+                    //Stores the tile that your mouse is above
+                    Vector2Int hoveredTile = (Vector2Int)tileManager.TraversableTilemap.WorldToCell(Camera.ScreenToWorldPoint(Input.mousePosition));
+
+                    //Actions for when you have a selected building
+                    if (selectedBuilding != null)
+                    {
+                        //Moves selected upgrade down when you use your down navigation key
+                        if (Input.GetKeyDown(moveSelectionDownKey))
+                        {
+                            //Sets the number of different upgrades based on the type of building
+                            int cap = 0;
+
+                            //Turret has 5 upgrades, subtract one due to zero based index
+                            Turret turret = selectedBuilding.GetComponentInChildren<Turret>();
+                            if (turret != null)
                             {
-                                cap = 3;
+                                cap = 5;
                             }
                             else
                             {
-                                //Wall has 2 upgrades, subtract one due to zreo based index
-                                Wall wall = selectedBuilding.GetComponentInChildren<Wall>();
-                                if (wall != null)
+                                //Repair Station has 3 upgrade, subtract one due to zero based index
+                                RepairStation repair = selectedBuilding.GetComponentInChildren<RepairStation>();
+                                if (repair != null)
+                                {
+                                    cap = 3;
+                                }
+                                else
+                                {
+                                    //Wall has 2 upgrades, subtract one due to zreo based index
+                                    Wall wall = selectedBuilding.GetComponentInChildren<Wall>();
+                                    if (wall != null)
+                                    {
+                                        cap = 2;
+                                    }
+                                    else
+                                    {
+                                        //Resource Extractor has 4 upgrades, subtract one due to zero based index
+                                        ResourceExtractor extractor = selectedBuilding.GetComponentInChildren<ResourceExtractor>();
+                                        if (extractor != null)
+                                        {
+                                            cap = 4;
+                                        }
+                                    }
+                                }
+                            }
+                            //Increase the index of the selected upgrade
+                            selectedUpgrade++;
+
+                            //Wrap around based on the cap
+                            if (selectedUpgrade == cap)
+                            {
+                                selectedUpgrade = 0;
+                            }
+                            //Update the shown data to reflect new selection
+                            updateSelection();
+                        }
+                        //Moves selected upgrade up when you use your up navigation key
+                        if (Input.GetKeyDown(moveSelectionUpKey))
+                        {
+                            //Sets the number of different upgrades based on the type of building
+                            int cap = 0;
+
+                            //Turret has 5 upgrades, subtract one due to zero based index
+                            Turret turret = selectedBuilding.GetComponentInChildren<Turret>();
+                            if (turret != null)
+                            {
+                                cap = 4;
+                            }
+                            else
+                            {
+                                //Repair Station has 3 upgrade, subtract one due to zero based index
+                                RepairStation repair = selectedBuilding.GetComponentInChildren<RepairStation>();
+                                if (repair != null)
                                 {
                                     cap = 2;
                                 }
                                 else
                                 {
-                                    //Resource Extractor has 4 upgrades, subtract one due to zero based index
-                                    ResourceExtractor extractor = selectedBuilding.GetComponentInChildren<ResourceExtractor>();
-                                    if (extractor != null)
+                                    //Wall has 2 upgrades, subtract one due to zreo based index
+                                    Wall wall = selectedBuilding.GetComponentInChildren<Wall>();
+                                    if (wall != null)
                                     {
-                                        cap = 4;
+                                        cap = 1;
+                                    }
+                                    else
+                                    {
+                                        //Resource Extractor has 4 upgrades, subtract one due to zero based index
+                                        ResourceExtractor extractor = selectedBuilding.GetComponentInChildren<ResourceExtractor>();
+                                        if (extractor != null)
+                                        {
+                                            cap = 3;
+                                        }
+                                    }
+                                }
+                            }
+                            //Decrease the index of the selected upgrade
+                            selectedUpgrade--;
+
+                            //Wrap around based on the cap
+                            if (selectedUpgrade == -1)
+                            {
+                                selectedUpgrade = cap;
+                            }
+                            //Update the shown data to reflect new data
+                            updateSelection();
+                        }
+                        //Allows you to upgrade using hotkeys
+                        if (Input.GetKeyDown(confirmKey))
+                        {
+                            //Identify building type that you are trying to upgrade
+                            Turret turret = selectedBuilding.GetComponentInChildren<Turret>();
+                            if (turret != null)
+                            {
+                                //Upgrade turret with selected upgrade
+                                UpgradeBuilding(0, selectedUpgrade);
+                            }
+                            else
+                            {
+                                RepairStation repair = selectedBuilding.GetComponentInChildren<RepairStation>();
+                                if (repair != null)
+                                {
+                                    //upgrade repair station with selected upgrade
+                                    UpgradeBuilding(1, selectedUpgrade);
+                                }
+                                else
+                                {
+                                    Wall wall = selectedBuilding.GetComponentInChildren<Wall>();
+                                    if (wall != null)
+                                    {
+                                        //Upgrade wall with selected upgrade
+                                        UpgradeBuilding(2, selectedUpgrade);
+                                    }
+                                    else
+                                    {
+                                        ResourceExtractor extractor = selectedBuilding.GetComponentInChildren<ResourceExtractor>();
+                                        if (extractor != null)
+                                        {
+                                            //Upgrade Extractor with selected upgrade
+                                            UpgradeBuilding(3, selectedUpgrade);
+                                        }
                                     }
                                 }
                             }
                         }
-                        //Increase the index of the selected upgrade
-                        selectedUpgrade++;
-
-                        //Wrap around based on the cap
-                        if (selectedUpgrade == cap)
+                        //Allows you to sell buildings with hotkeys
+                        if (Input.GetKeyDown(sellKey))
                         {
+                            Sell();
+                        }
+                    }
+                    //Do things if you either have left clicked or used the confirm button and you are not above the construction panel
+                    if ((Input.GetMouseButtonDown(0) || Input.GetKeyDown(confirmKey)) && Input.mousePosition.y > 200 && betweenWaves)
+                    {
+                        //Checks the place you are over to see if there is a building there, also ensures that you are not changing selections when upgrading with mouse
+                        if (playerBuildings.TryGetValue(hoveredTile, out GameObject building))
+                        {
+                            //Clears building data
+                            Build(-1);
+
+                            //Updates upgrade data
                             selectedUpgrade = 0;
+                            selectedBuilding = building;
+                            standardUpgradeEvents();
+                            updateSelection();
                         }
-                        //Update the shown data to reflect new selection
-                        updateSelection();
-                    }
-                    //Moves selected upgrade up when you use your up navigation key
-                    if (Input.GetKeyDown(moveSelectionUpKey))
-                    {
-                        //Sets the number of different upgrades based on the type of building
-                        int cap = 0;
+                        //If you can place a building, do so
+                        else if (checkPlacement(hoveredTile))
+                        {
+                            placeBuilding(hoveredTile);
+                            budget -= budgetCosts[selectedConstructionIndex];
 
-                        //Turret has 5 upgrades, subtract one due to zero based index
-                        Turret turret = selectedBuilding.GetComponentInChildren<Turret>();
-                        if (turret != null)
-                        {
-                            cap = 4;
-                        }
-                        else
-                        {
-                            //Repair Station has 3 upgrade, subtract one due to zero based index
-                            RepairStation repair = selectedBuilding.GetComponentInChildren<RepairStation>();
-                            if (repair != null)
-                            {
-                                cap = 2;
-                            }
-                            else
-                            {
-                                //Wall has 2 upgrades, subtract one due to zreo based index
-                                Wall wall = selectedBuilding.GetComponentInChildren<Wall>();
-                                if (wall != null)
-                                {
-                                    cap = 1;
-                                }
-                                else
-                                {
-                                    //Resource Extractor has 4 upgrades, subtract one due to zero based index
-                                    ResourceExtractor extractor = selectedBuilding.GetComponentInChildren<ResourceExtractor>();
-                                    if(extractor != null)
-                                    {
-                                        cap = 3;
-                                    }
-                                }
-                            }
-                        }
-                        //Decrease the index of the selected upgrade
-                        selectedUpgrade--;
-
-                        //Wrap around based on the cap
-                        if (selectedUpgrade == -1)
-                        {
-                            selectedUpgrade = cap;
-                        }
-                        //Update the shown data to reflect new data
-                        updateSelection();
-                    }
-                    //Allows you to upgrade using hotkeys
-                    if (Input.GetKeyDown(confirmKey))
-                    {
-                        //Identify building type that you are trying to upgrade
-                        Turret turret = selectedBuilding.GetComponentInChildren<Turret>();
-                        if (turret != null)
-                        {
-                            //Upgrade turret with selected upgrade
-                            UpgradeBuilding(0, selectedUpgrade);
-                        }
-                        else
-                        {
-                            RepairStation repair = selectedBuilding.GetComponentInChildren<RepairStation>();
-                            if (repair != null)
-                            {
-                                //upgrade repair station with selected upgrade
-                                UpgradeBuilding(1, selectedUpgrade);
-                            }
-                            else
-                            {
-                                Wall wall = selectedBuilding.GetComponentInChildren<Wall>();
-                                if (wall != null)
-                                {
-                                    //Upgrade wall with selected upgrade
-                                    UpgradeBuilding(2, selectedUpgrade);
-                                }
-                                else
-                                {
-                                    ResourceExtractor extractor = selectedBuilding.GetComponentInChildren<ResourceExtractor>();
-                                    if(extractor != null)
-                                    {
-                                        //Upgrade Extractor with selected upgrade
-                                        UpgradeBuilding(3, selectedUpgrade);
-                                    }
-                                }
-                            }
+                            //Increases price of new building of that tier in order to encourage using a variety of tiers and upgrading things
+                            budgetCosts[selectedConstructionIndex] *= 1.2f;
                         }
                     }
-                    //Allows you to sell buildings with hotkeys
-                    if(Input.GetKeyDown(sellKey))
+                    //Allows you to cancel constructions using right click
+                    if (Input.GetMouseButtonDown(1))
                     {
-                        Sell();
-                    }
-                }
-                //Do things if you either have left clicked or used the confirm button and you are not above the construction panel
-                if ((Input.GetMouseButtonDown(0) || Input.GetKeyDown(confirmKey)) && Input.mousePosition.y > 200 && betweenWaves)
-                {
-                    //Checks the place you are over to see if there is a building there, also ensures that you are not changing selections when upgrading with mouse
-                    if (playerBuildings.TryGetValue(hoveredTile, out GameObject building))
-                    {
-                        //Clears building data
+                        //Clears all construction data
+                        selectedConstructionIndex = -1;
                         Build(-1);
-
-                        //Updates upgrade data
-                        selectedUpgrade = 0;
-                        selectedBuilding = building;
-                        standardUpgradeEvents();
-                        updateSelection();
                     }
-                    //If you can place a building, do so
-                    else if (checkPlacement(hoveredTile))
+                    //Makes the building preview follow the mouse if it exists
+                    if (selectedConstruction != null)
                     {
-                        placeBuilding(hoveredTile);
-                        budget -= budgetCosts[selectedConstructionIndex];
-
-                        //Increases price of new building of that tier in order to encourage using a variety of tiers and upgrading things
-                        budgetCosts[selectedConstructionIndex] *= 1.2f;
+                        //Snaps the position to be centered on the tilemap's hexagonal grid
+                        selectedConstruction.transform.position = tileManager.TraversableTilemap.CellToWorld(new Vector3Int(hoveredTile.x, hoveredTile.y));
                     }
-                }
-                //Allows you to cancel constructions using right click
-                if (Input.GetMouseButtonDown(1))
-                {
-                    //Clears all construction data
-                    selectedConstructionIndex = -1;
-                    Build(-1);
-                }
-                //Makes the building preview follow the mouse if it exists
-                if (selectedConstruction != null)
-                {
-                    //Snaps the position to be centered on the tilemap's hexagonal grid
-                    selectedConstruction.transform.position = tileManager.TraversableTilemap.CellToWorld(new Vector3Int(hoveredTile.x, hoveredTile.y));
-                }
-                //Select tier one turret with hotkey
-                if (Input.GetKeyDown(tierOneTurretKey))
-                {
-                    Build(0);
-                }
-                //Select tier two turret with hotkey
-                if (Input.GetKeyDown(tierTwoTurretKey))
-                {
-                    Build(1);
-                }
-                //Select tier three turret with hotkey
-                if (Input.GetKeyDown(tierThreeTurretKey))
-                {
-                    Build(2);
-                }
-                //Select tier one repair station with hotkey
-                if (Input.GetKeyDown(tierOneRepairKey))
-                {
-                    Build(3);
-                }
-                //Select tier two repair station with hotkey
-                if (Input.GetKeyDown(tierTwoRepairKey))
-                {
-                    Build(4);
-                }
-                //Select tier one wall with hotkey
-                if (Input.GetKeyDown(tierOneWallKey))
-                {
-                    Build(5);
-                }
-                //Select tier two wall with hotkey
-                if (Input.GetKeyDown(tierTwoWallKey))
-                {
-                    Build(6);
-                }
-                //Select tier one resource extractor with hotkey
-                if (Input.GetKeyDown(tierOneExtractorKey))
-                {
-                    Build(7);
-                }
-                //Select tier two resource extractor with hotkey
-                if (Input.GetKeyDown(tierTwoExtractorKey))
-                {
-                    Build(8);
-                }
-                //Select tier three resource extractor with hotkey
-                if (Input.GetKeyDown(tierThreeExtractorKey))
-                {
-                    Build(9);
+                    //Select tier one turret with hotkey
+                    if (Input.GetKeyDown(tierOneTurretKey))
+                    {
+                        Build(0);
+                    }
+                    //Select tier two turret with hotkey
+                    if (Input.GetKeyDown(tierTwoTurretKey))
+                    {
+                        Build(1);
+                    }
+                    //Select tier three turret with hotkey
+                    if (Input.GetKeyDown(tierThreeTurretKey))
+                    {
+                        Build(2);
+                    }
+                    //Select tier one repair station with hotkey
+                    if (Input.GetKeyDown(tierOneRepairKey))
+                    {
+                        Build(3);
+                    }
+                    //Select tier two repair station with hotkey
+                    if (Input.GetKeyDown(tierTwoRepairKey))
+                    {
+                        Build(4);
+                    }
+                    //Select tier one wall with hotkey
+                    if (Input.GetKeyDown(tierOneWallKey))
+                    {
+                        Build(5);
+                    }
+                    //Select tier two wall with hotkey
+                    if (Input.GetKeyDown(tierTwoWallKey))
+                    {
+                        Build(6);
+                    }
+                    //Select tier one resource extractor with hotkey
+                    if (Input.GetKeyDown(tierOneExtractorKey))
+                    {
+                        Build(7);
+                    }
+                    //Select tier two resource extractor with hotkey
+                    if (Input.GetKeyDown(tierTwoExtractorKey))
+                    {
+                        Build(8);
+                    }
+                    //Select tier three resource extractor with hotkey
+                    if (Input.GetKeyDown(tierThreeExtractorKey))
+                    {
+                        Build(9);
+                    }
                 }
             }
             //Only apply income if you are actively in a wave
@@ -1501,10 +1519,6 @@ public class GameManager : Singleton<GameManager>
         //Checks to see if the wave is over
         betweenWaves = currentEnemies.Count == 0;
 
-        if(betweenWaves && wave % 5 == 0)
-        {
-            FileManager.Instance.Save();
-        }
 
         //Sets the wave background to show what the remaining enemy status is
         nextWaveBackground.color = new Color(Mathf.Lerp(unavailableColor.x, availableColor.x, 1 - Mathf.Clamp(currentEnemies.Count / (float)maxEnemiesThisWave, 0, 1)), Mathf.Lerp(unavailableColor.y, availableColor.y, 1 - Mathf.Clamp(currentEnemies.Count / (float)maxEnemiesThisWave, 0, 1)), Mathf.Lerp(unavailableColor.z, availableColor.z, 1 - Mathf.Clamp(currentEnemies.Count / (float)maxEnemiesThisWave, 0, 1)));
@@ -1646,4 +1660,5 @@ public class GameManager : Singleton<GameManager>
         }
         return data;
     }
+
 }
