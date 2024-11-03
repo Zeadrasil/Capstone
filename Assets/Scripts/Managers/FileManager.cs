@@ -1,3 +1,4 @@
+using SFB;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -21,7 +22,7 @@ public class FileManager : Singleton<FileManager>
             Directory.CreateDirectory(defaultPath);
 
             //Gets the path that the user wishes to save their game at
-            string fullPath = EditorUtility.SaveFilePanel("Save Game", defaultPath, $"{DateTime.Now.Year.ToString("0000")}-{DateTime.Now.Month.ToString("00")}-{DateTime.Now.Day.ToString("00")}-{DateTime.Now.Hour.ToString("00")}-{DateTime.Now.Minute.ToString("00")}-{DateTime.Now.Second.ToString("00")}", ".json");
+            string fullPath = StandaloneFileBrowser.SaveFilePanel("Save Game", defaultPath, $"{DateTime.Now.Year.ToString("0000")}-{DateTime.Now.Month.ToString("00")}-{DateTime.Now.Day.ToString("00")}-{DateTime.Now.Hour.ToString("00")}-{DateTime.Now.Minute.ToString("00")}-{DateTime.Now.Second.ToString("00")}", ".json");
 
             //If not canceled, save
             if (fullPath.Length > 0)
@@ -62,13 +63,13 @@ public class FileManager : Singleton<FileManager>
             Directory.CreateDirectory(defaultPath);
 
             //Get the actual path to the save that you are loading
-            string fullPath = EditorUtility.OpenFilePanel("Load Save", defaultPath, ".json");
+            string[] paths = StandaloneFileBrowser.OpenFilePanel("Load Save", defaultPath, ".json", false);
 
             //If not canceled, load
-            if (fullPath.Length > 0)
+            if (paths.Length > 0)
             {
                 //Creates a reader to read the data
-                StreamReader sr = new StreamReader(new FileStream(fullPath, FileMode.Open));
+                StreamReader sr = new StreamReader(new FileStream(paths[0], FileMode.Open));
 
                 //Reads the data
                 string data = sr.ReadToEnd();

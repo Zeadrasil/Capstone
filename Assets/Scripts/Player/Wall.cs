@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using UnityEngine;
-using static UnityEditor.Searcher.SearcherWindow;
 
 //Walls literally just stand in the way of enemies, and they are very good at that, especially with how easy they are to repair
 public class Wall : PlayerBuilding, IUpgradeable

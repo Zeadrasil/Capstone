@@ -393,10 +393,24 @@ public class GameManager : Singleton<GameManager>
         energyProduction = data.energyProduction;
         energyConsumption = data.energyConsumption;
 
+        //Default values
+        energy = 10;
+        maxEnemiesThisWave = 1;
+        usedEnergy = 0;
+        income = 0;
+        energyDeficit = 0;
+        mostRecentEnergyDecrease = null;
+        playerBuildings.Clear();
+        paused = false;
+        selectedUpgrade = 0;
+        selectedConstructionIndex = -1;
+        selectedBuilding = null;
+        selectedConstruction = null;
 
         //Load economic data
         budget = data.budget;
         budgetCosts = data.budgetCosts;
+        energyCosts = data.energyCosts;
 
         //Initiate RNG and move it to the appropriate RNG stream position
         BasicUtils.WrappedInitState(simplifiedSeed);
@@ -1716,6 +1730,7 @@ public class GameManager : Singleton<GameManager>
         //Economy info
         data.budgetCosts = budgetCosts;
         data.budget = budget;
+        data.energyCosts = energyCosts;
 
         //Other
         data.wave = wave;

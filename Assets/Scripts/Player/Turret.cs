@@ -1,7 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using static UnityEditor.Searcher.SearcherWindow;
 
 //Turrets are used to kill enemies
 public class Turret : PlayerBuilding, IDamager, IUpgradeable
