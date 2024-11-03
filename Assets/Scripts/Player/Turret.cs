@@ -45,14 +45,19 @@ public class Turret : PlayerBuilding, IDamager, IUpgradeable
     // Start is called before the first frame update
     void Start()
     {
-        //Applies difficulty modifiers to stats
-        firerate *= GameManager.Instance.playerPower;
-        baseHealth *= GameManager.Instance.playerPower;
-        health = baseHealth;
-        damage *= GameManager.Instance.playerPower;
-        range *= GameManager.Instance.playerPower;
+        //Skip aplying difficulty modifiers if already applied due to loading
+        if (needsDifficultyModifiers)
+        {
+            //Applies difficulty modifiers to stats
+            firerate *= GameManager.Instance.playerStrength;
+            baseHealth *= GameManager.Instance.playerHealth;
+            health = baseHealth;
+            damage *= GameManager.Instance.playerStrength;
+            range *= GameManager.Instance.playerStrength;
 
-        finishedAligning = maxAlignments == 0;
+            //Alignment handling
+            finishedAligning = maxAlignments == alignments;
+        }
     }
 
     //Upgrade given stat
@@ -72,44 +77,44 @@ public class Turret : PlayerBuilding, IDamager, IUpgradeable
             //Splash range
             case 0:
                 {
-                    splashRange *= upgradeEffects[0] * GameManager.Instance.playerPower;
+                    splashRange *= upgradeEffects[0] * GameManager.Instance.playerStrength;
                     break;
                 }
             //Turret range
             case 1:
                 {
-                    range *= upgradeEffects[1] * GameManager.Instance.playerPower;
+                    range *= upgradeEffects[1] * GameManager.Instance.playerStrength;
                     break;
                 }
             //Damage
             case 2:
                 {
-                    damage *= upgradeEffects[2] * GameManager.Instance.playerPower;
+                    damage *= upgradeEffects[2] * GameManager.Instance.playerStrength;
                     break;
                 }
             //Firerate
             case 3:
                 {
-                    firerate *= upgradeEffects[3] * GameManager.Instance.playerPower;
+                    firerate *= upgradeEffects[3] * GameManager.Instance.playerStrength;
                     break;
                 }
             //Building health
             case 4:
                 {
-                    baseHealth *= upgradeEffects[4] * GameManager.Instance.playerPower;
-                    health += upgradeEffects[4] * GameManager.Instance.playerPower;
+                    baseHealth *= upgradeEffects[4] * GameManager.Instance.playerHealth;
+                    health += upgradeEffects[4] * GameManager.Instance.playerHealth;
                     break;
                 }
         }
         //Increase energy cost by proper amount for the upgrade
-        energyCost += GetUpgradeEnergy(type);
+        energyCost += GetUpgradeEnergy(type) * GameManager.Instance.energyConsumption;
 
         //If the building is not active update the energy deficit before notifying the manager of the energy usage increase
         if (!active)
         {
-            GameManager.Instance.energyDeficit -= GetUpgradeEnergy(type);
+            GameManager.Instance.energyDeficit -= GetUpgradeEnergy(type) * GameManager.Instance.energyConsumption;
         }
-        GameManager.Instance.ChangeEnergyUsage(GetUpgradeEnergy(type));
+        GameManager.Instance.ChangeEnergyUsage(GetUpgradeEnergy(type) * GameManager.Instance.energyConsumption);
     }
 
     //Gets the cost of upgrading a specific stat
@@ -154,27 +159,27 @@ public class Turret : PlayerBuilding, IDamager, IUpgradeable
             //Splash range
             case 0:
                 {
-                    return $"{splashRange:F2} > {splashRange * upgradeEffects[type] * GameManager.Instance.playerPower:F2}";
+                    return $"{splashRange:F2} > {splashRange * upgradeEffects[type] * GameManager.Instance.playerStrength:F2}";
                 }
             //Turret range
             case 1:
                 {
-                    return $"{range:F2} > {range * upgradeEffects[type] * GameManager.Instance.playerPower:F2}";
+                    return $"{range:F2} > {range * upgradeEffects[type] * GameManager.Instance.playerStrength:F2}";
                 }
             //Damage
             case 2:
                 {
-                    return $"{damage:F2} > {damage * upgradeEffects[type] * GameManager.Instance.playerPower:F2}";
+                    return $"{damage:F2} > {damage * upgradeEffects[type] * GameManager.Instance.playerStrength:F2}";
                 }
             //Firerate
             case 3:
                 {
-                    return $"{firerate:F2} > {firerate * upgradeEffects[type] * GameManager.Instance.playerPower:F2}";
+                    return $"{firerate:F2} > {firerate * upgradeEffects[type] * GameManager.Instance.playerStrength:F2}";
                 }
             //Building health
             case 4:
                 {
-                    return $"{baseHealth:F2} > {baseHealth * upgradeEffects[type] * GameManager.Instance.playerPower:F2}";
+                    return $"{baseHealth:F2} > {baseHealth * upgradeEffects[type] * GameManager.Instance.playerHealth:F2}";
                 }
             //Default
             default:
@@ -501,6 +506,7 @@ public class Turret : PlayerBuilding, IDamager, IUpgradeable
         cost = data.cost;
         location = data.location;
         range = data.range;
+        needsDifficultyModifiers = false;
 
         //Upgrade data
         expenseModifiers = data.expenseModifiers;

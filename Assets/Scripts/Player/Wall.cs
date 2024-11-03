@@ -60,12 +60,12 @@ public class Wall : PlayerBuilding, IUpgradeable
             //Health
             case 0:
                 {
-                    return finishedAligning ? $"{baseHealth:F2} > {health * upgradeEffects[type] * GameManager.Instance.playerPower:F2}" : "Select as Alignment";
+                    return finishedAligning ? $"{baseHealth:F2} > {health * upgradeEffects[type] * GameManager.Instance.playerHealth:F2}" : "Select as Alignment";
                 }
             //Healing effectiveness
             case 1:
                 {
-                    return finishedAligning ? $"{healingEffectiveness:F2} > {healingEffectiveness * upgradeEffects[type] * GameManager.Instance.playerPower:F2}" : "Select as Alignment";
+                    return finishedAligning ? $"{healingEffectiveness:F2} > {healingEffectiveness * upgradeEffects[type] * GameManager.Instance.playerStrength:F2}" : "Select as Alignment";
                 }
             //Default
             default:
@@ -134,14 +134,14 @@ public class Wall : PlayerBuilding, IUpgradeable
             //Health
             case 0:
                 {
-                    baseHealth *= upgradeEffects[0] * GameManager.Instance.playerPower;
-                    health += upgradeEffects[0] * GameManager.Instance.playerPower;
+                    baseHealth *= upgradeEffects[0] * GameManager.Instance.playerHealth;
+                    health += upgradeEffects[0] * GameManager.Instance.playerHealth;
                     break;
                 }
             //Healing effectiveness
             case 1:
                 {
-                    healingEffectiveness *= upgradeEffects[1] * GameManager.Instance.playerPower;
+                    healingEffectiveness *= upgradeEffects[1] * GameManager.Instance.playerStrength;
                     break;
                 }
         }
@@ -149,13 +149,16 @@ public class Wall : PlayerBuilding, IUpgradeable
 
     private void Start()
     {
-        //Apply difficulty modifiers
-        baseHealth *= GameManager.Instance.playerPower;
-        health = baseHealth;
-        healingEffectiveness *= GameManager.Instance.playerPower;
+        if (needsDifficultyModifiers)
+        {
+            //Apply difficulty modifiers
+            baseHealth *= GameManager.Instance.playerHealth;
+            health = baseHealth;
+            healingEffectiveness *= GameManager.Instance.playerStrength;
 
-        //Apply building color
-        spriteRenderer.color = activeColor;
+            //Alignment handling
+            finishedAligning = maxAlignments == 0;
+        }
     }
 
     //Get energy required to upgrade stat
@@ -249,6 +252,7 @@ public class Wall : PlayerBuilding, IUpgradeable
         baseHealth = data.baseHealth;
         cost = data.cost;
         location = data.location;
+        needsDifficultyModifiers = false;
 
         //Upgrade data
         expenseModifiers = data.expenseModifiers;

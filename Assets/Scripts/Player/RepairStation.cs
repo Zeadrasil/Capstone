@@ -81,17 +81,17 @@ public class RepairStation : PlayerBuilding, IDamageable, IUpgradeable
             //Range
             case 0:
                 {
-                    return $"{range:F2} > {range * upgradeEffects[type] * GameManager.Instance.playerPower:F2}";
+                    return $"{range:F2} > {range * upgradeEffects[type] * GameManager.Instance.playerStrength:F2}";
                 }
             //Healing power
             case 1:
                 {
-                    return $"{healing:F2} > {healing * upgradeEffects[type] * GameManager.Instance.playerPower:F2}";
+                    return $"{healing:F2} > {healing * upgradeEffects[type] * GameManager.Instance.playerStrength:F2}";
                 }
             //Building health
             case 2:
                 {
-                    return $"{baseHealth:F2} > {baseHealth * upgradeEffects[type] * GameManager.Instance.playerPower:F2}";
+                    return $"{baseHealth:F2} > {baseHealth * upgradeEffects[type] * GameManager.Instance.playerHealth:F2}";
                 }
             default:
                 {
@@ -147,20 +147,20 @@ public class RepairStation : PlayerBuilding, IDamageable, IUpgradeable
             //Range
             case 0:
                 {
-                    range *= upgradeEffects[0] * GameManager.Instance.playerPower;
+                    range *= upgradeEffects[0] * GameManager.Instance.playerStrength;
                     break;
                 }
             //Healing power
             case 1:
                 {
-                    healing *= upgradeEffects[1] * GameManager.Instance.playerPower;
+                    healing *= upgradeEffects[1] * GameManager.Instance.playerStrength;
                     break;
                 }
             //Building Health
             case 2:
                 {
-                    baseHealth *= upgradeEffects[2] * GameManager.Instance.playerPower;
-                    health += upgradeEffects[2] * GameManager.Instance.playerPower;
+                    baseHealth *= upgradeEffects[2] * GameManager.Instance.playerHealth;
+                    health += upgradeEffects[2] * GameManager.Instance.playerHealth;
                     break;
                 }
         }
@@ -178,13 +178,17 @@ public class RepairStation : PlayerBuilding, IDamageable, IUpgradeable
     // Start is called before the first frame update
     void Start()
     {
-        baseHealth *= GameManager.Instance.playerPower;
-        healing *= GameManager.Instance.playerPower;
-        range *= GameManager.Instance.playerPower;
-        health = baseHealth;
+        //Skip applying difficulty modifiers if they were already applied due to load
+        if (needsDifficultyModifiers)
+        {
+            baseHealth *= GameManager.Instance.playerHealth;
+            healing *= GameManager.Instance.playerStrength;
+            range *= GameManager.Instance.playerStrength;
+            health = baseHealth;
 
-        //If you are unable to specialize, you are finished specializing
-        finishedAligning = maxAlignments == 0;
+            //If you are unable to specialize, you are finished specializing
+            finishedAligning = maxAlignments == 0;
+        }
     }
 
     // Update is called once per frame
@@ -356,6 +360,7 @@ public class RepairStation : PlayerBuilding, IDamageable, IUpgradeable
         cost = data.cost;
         location = data.location;
         range = data.range;
+        needsDifficultyModifiers = false;
 
         //Upgrade data
         expenseModifiers = data.expenseModifiers;

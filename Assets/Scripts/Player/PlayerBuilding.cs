@@ -14,6 +14,9 @@ public abstract class PlayerBuilding : MonoBehaviour, IDamageable
     public PlayerBuilding previousChanged;
     public PlayerBuilding nextChanged;
 
+    //Other data
+    protected bool needsDifficultyModifiers = true;
+
     //Basic description for upgradeables
     [SerializeField] protected string basicDescription;
 

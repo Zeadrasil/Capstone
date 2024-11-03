@@ -182,10 +182,15 @@ public class GameManager : Singleton<GameManager>
 
     //Settings data
     public int simplifiedSeed;
-    public float enemyDifficulty = 1;
-    public float playerPower = 1;
+
+    public float enemyQuantity = 1;
+    public float enemyStrength = 1;
+    public float playerStrength = 1;
+    public float playerHealth = 1;
     public float playerIncome = 1;
     public float playerCosts = 1;
+    public float energyProduction = 1;
+    public float energyConsumption = 1;
 
     //Prevents exceptions due to data for in-game updates not being passed in yet
     private bool active = false;
@@ -289,11 +294,21 @@ public class GameManager : Singleton<GameManager>
     {
         //Sets the passed in data
         this.simplifiedSeed = simplifiedSeed;
-        this.enemyDifficulty = enemyDifficulty;
-        this.playerPower = playerPower;
+        enemyQuantity = enemyDifficulty;
+        enemyStrength = enemyDifficulty;
+        playerStrength = playerPower;
+        playerHealth = playerPower;
         playerIncome = playerEconomy;
         playerCosts = 1 / playerEconomy;
+        energyConsumption = 1 / playerEconomy;
+        energyProduction = playerEconomy;
 
+        //Further events are identical between advanced and basic, so pass to another function
+        midInit();
+    }
+
+    private void midInit()
+    {
         //Sets the RNG seed so that you can generate the same map every time if you use the same seed
         BasicUtils.WrappedInitState(simplifiedSeed);
 
@@ -305,8 +320,9 @@ public class GameManager : Singleton<GameManager>
         tileManager.seedE = ((uint)BasicUtils.WrappedRandomRange(int.MinValue, int.MaxValue)) + int.MaxValue;
         tileManager.seedF = ((uint)BasicUtils.WrappedRandomRange(int.MinValue, int.MaxValue)) + int.MaxValue;
 
-        //Modifies starting budget by the difficulty modifier
+        //Modifies starting values by the difficulty modifiers
         budget *= playerIncome;
+        energy *= energyProduction;
 
         //Modifies building costs by difficulty modifier
         for (int i = 0; i < budgetCosts.Length; i++)
@@ -318,9 +334,21 @@ public class GameManager : Singleton<GameManager>
         Initialize();
     }
 
-    public void Initialize(int simplifiedSeed, uint seedA, uint seedB, uint seedC, uint seedD, uint seedE, uint seedF, float enemyDifficulty, float playerPower, float playerCosts, float playerIncome)
+    public void Initialize(int simplifiedSeed, float enemyQuantity, float enemyStrength, float playerStrength, float playerHealth, float playerCosts, float playerIncome, float energyProduction, float energyConsumption)
     {
+        //Sets the passed in data
+        this.simplifiedSeed = simplifiedSeed;
+        this.enemyQuantity = enemyQuantity;
+        this.enemyStrength = enemyStrength;
+        this.playerStrength = playerStrength;
+        this.playerHealth = playerHealth;
+        this.playerIncome = playerIncome;
+        this.playerCosts = playerCosts;
+        this.energyConsumption = energyConsumption;
+        this.energyProduction = energyProduction;
 
+        //Further events are identical between advanced and basic, so pass to another function
+        midInit();
     }
 
     public void InitializeFromLoad(GameData data)
@@ -335,10 +363,14 @@ public class GameManager : Singleton<GameManager>
         tileManager.seedF = data.seedF;
 
         //Load difficulty settings
-        enemyDifficulty = data.enemyDifficulty;
-        playerPower = data.playerPower;
+        enemyQuantity = data.enemyQuantity;
+        enemyStrength = data.enemyStrength;
+        playerStrength = data.playerStrength;
+        playerHealth = data.playerHealth;
         playerCosts = data.playerCosts;
         playerIncome = data.playerIncome;
+        energyProduction = data.energyProduction;
+        energyConsumption = data.energyConsumption;
 
         //Load other data
         wave = data.wave;
@@ -467,7 +499,7 @@ public class GameManager : Singleton<GameManager>
             List<Enemy> enemySpawns = new List<Enemy>();
 
             //Creates the correct amount of tier zero enemies for the wave
-            int tierZeroEnemyCount = (int)(2 * Mathf.Max(Mathf.Pow(wave, 1 + (0.25f * enemyDifficulty)) - Mathf.Max(Mathf.Pow(wave, 1 + (0.3f * enemyDifficulty)) - 8.10328298346f, 0), 0) * enemyDifficulty);
+            int tierZeroEnemyCount = (int)(2 * Mathf.Max(Mathf.Pow(wave, 1 + (0.25f * enemyQuantity)) - Mathf.Max(Mathf.Pow(wave, 1 + (0.3f * enemyQuantity)) - 8.10328298346f, 0), 0) * enemyQuantity);
             for (int i = 0; i < tierZeroEnemyCount; i++)
             {
                 int at = BasicUtils.WrappedRandomRange(0, TileManager.Instance.potentialSpawnpoints.Count);
@@ -475,7 +507,7 @@ public class GameManager : Singleton<GameManager>
                 enemySpawns.Add(createdEnemy);
             }
             //Creates the correct amount of tier one enemies for the wave
-            int tierOneEnemyCount = (int)(2 * Mathf.Max(Mathf.Pow(wave - 6, 1 + (0.21f * enemyDifficulty)) - Mathf.Max(Mathf.Pow(wave - 6, 1 + (0.25f * enemyDifficulty)) - 17.7827941004f, 0), 0) * enemyDifficulty);
+            int tierOneEnemyCount = (int)(2 * Mathf.Max(Mathf.Pow(wave - 6, 1 + (0.21f * enemyQuantity)) - Mathf.Max(Mathf.Pow(wave - 6, 1 + (0.25f * enemyQuantity)) - 17.7827941004f, 0), 0) * enemyQuantity);
             for (int i = 0; i < tierOneEnemyCount; i++)
             {
                 int at = BasicUtils.WrappedRandomRange(0, TileManager.Instance.potentialSpawnpoints.Count);
@@ -483,7 +515,7 @@ public class GameManager : Singleton<GameManager>
                 enemySpawns.Add(createdEnemy);
             }
             //Creates the correct amount of tier two enemies for the wave
-            int tierTwoEnemyCount = (int)(2 * Mathf.Max(Mathf.Pow(wave - 16, 1 + (0.17f * enemyDifficulty)) - Mathf.Max(Mathf.Pow(wave - 16, 1 + (0.2f * enemyDifficulty)) - 36.4112840605f, 0), 0) * enemyDifficulty);
+            int tierTwoEnemyCount = (int)(2 * Mathf.Max(Mathf.Pow(wave - 16, 1 + (0.17f * enemyQuantity)) - Mathf.Max(Mathf.Pow(wave - 16, 1 + (0.2f * enemyQuantity)) - 36.4112840605f, 0), 0) * enemyQuantity);
             for (int i = 0; i < tierTwoEnemyCount; i++)
             {
                 int at = BasicUtils.WrappedRandomRange(0, TileManager.Instance.potentialSpawnpoints.Count);
@@ -491,7 +523,7 @@ public class GameManager : Singleton<GameManager>
                 enemySpawns.Add(createdEnemy);
             }
             //Creates the correct amount of tier three enemies for the wave
-            int tierThreeEnemyCount = (int)(2 * Mathf.Max(Mathf.Pow(wave - 36, 1 + (0.13f * enemyDifficulty)) - Mathf.Max(Mathf.Pow(wave - 36, 1 + (0.15f * enemyDifficulty)) - 69.5615082681f, 0), 0) * enemyDifficulty);
+            int tierThreeEnemyCount = (int)(2 * Mathf.Max(Mathf.Pow(wave - 36, 1 + (0.13f * enemyQuantity)) - Mathf.Max(Mathf.Pow(wave - 36, 1 + (0.15f * enemyQuantity)) - 69.5615082681f, 0), 0) * enemyQuantity);
             for (int i = 0; i < tierThreeEnemyCount; i++)
             {
                 int at = BasicUtils.WrappedRandomRange(0, TileManager.Instance.potentialSpawnpoints.Count);
@@ -499,7 +531,7 @@ public class GameManager : Singleton<GameManager>
                 enemySpawns.Add(createdEnemy);
             }
             //Creates the correct amount of tier four enemies for the wave
-            int tierFourEnemyCount = (int)(2 * Mathf.Max(Mathf.Pow(wave - 76, 1 + (0.09f * enemyDifficulty)) - Mathf.Max(Mathf.Pow(wave - 76, 1 + (0.1f * enemyDifficulty)) - 123.993519004f, 0), 0) * enemyDifficulty);
+            int tierFourEnemyCount = (int)(2 * Mathf.Max(Mathf.Pow(wave - 76, 1 + (0.09f * enemyQuantity)) - Mathf.Max(Mathf.Pow(wave - 76, 1 + (0.1f * enemyQuantity)) - 123.993519004f, 0), 0) * enemyQuantity);
             for (int i = 0; i < tierThreeEnemyCount; i++)
             {
                 int at = BasicUtils.WrappedRandomRange(0, TileManager.Instance.potentialSpawnpoints.Count);
@@ -507,7 +539,7 @@ public class GameManager : Singleton<GameManager>
                 enemySpawns.Add(createdEnemy);
             }
             //Creates the correct amount of tier five enemies for the wave
-            int tierFiveEnemyCount = (int)(2 * Mathf.Max(Mathf.Pow(wave - 156, 1 + (0.05f * enemyDifficulty)) - Mathf.Max(Mathf.Pow(wave - 156, 1 + (0.06f * enemyDifficulty)) - 216.953760189f, 0), 0) * enemyDifficulty);
+            int tierFiveEnemyCount = (int)(2 * Mathf.Max(Mathf.Pow(wave - 156, 1 + (0.05f * enemyQuantity)) - Mathf.Max(Mathf.Pow(wave - 156, 1 + (0.06f * enemyQuantity)) - 216.953760189f, 0), 0) * enemyQuantity);
             for (int i = 0; i < tierThreeEnemyCount; i++)
             {
                 int at = BasicUtils.WrappedRandomRange(0, TileManager.Instance.potentialSpawnpoints.Count);
@@ -889,6 +921,7 @@ public class GameManager : Singleton<GameManager>
         pb.previousChanged = holder;
 
         //Energy management
+        pb.energyCost = playerBuildings.Count * energyConsumption;
         energyDeficit += pb.Disable();
         ChangeEnergyUsage(pb.energyCost);
 
@@ -1620,6 +1653,14 @@ public class GameManager : Singleton<GameManager>
         }
         //Remove from building tracker
         playerBuildings.Remove(building.location);
+
+        //Reduce energy costs of connected buildings after it is gone to ensure that they take the appropriate amount
+        while(building.nextChanged != null)
+        {
+            building.energyCost -= energyConsumption;
+            ChangeEnergyUsage(-energyConsumption);
+            building = building.nextChanged;
+        }
     }
 
     //Gets the data so that it can be saved
@@ -1646,10 +1687,14 @@ public class GameManager : Singleton<GameManager>
         data.swappedTiles = tileManager.subbedTiles.ToArray();
 
         //Difficulty
-        data.enemyDifficulty = enemyDifficulty;
-        data.playerPower = playerPower;
+        data.enemyQuantity = enemyQuantity;
+        data.enemyStrength = enemyStrength;
+        data.playerStrength = playerStrength;
+        data.playerHealth = playerHealth;
         data.playerIncome = playerIncome;
         data.playerCosts = playerCosts;
+        data.energyProduction = energyProduction;
+        data.energyConsumption = energyConsumption;
 
         //Buildings
         data.buildings = new BuildingData[playerBuildings.Count - 1];

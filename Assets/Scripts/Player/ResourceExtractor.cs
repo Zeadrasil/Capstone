@@ -67,17 +67,22 @@ public class ResourceExtractor : PlayerBuilding, IUpgradeable
     // Start is called before the first frame update
     void Start()
     {
-        //Modifies extraction rate and health based on difficulty modifiers
-        extractionRate *= GameManager.Instance.playerIncome;
-        baseHealth *= GameManager.Instance.playerPower;
-        damageEffectiveness /= GameManager.Instance.playerPower;
-        health = baseHealth;
+        //Skip applying difficulty modifiers if they have alread been applied due to loading
+        if (needsDifficultyModifiers)
+        {
+            //Modifies extraction rate and health based on difficulty modifiers
+            extractionRate *= GameManager.Instance.playerIncome;
+            baseHealth *= GameManager.Instance.playerHealth;
+            damageEffectiveness /= GameManager.Instance.playerHealth;
+            health = baseHealth;
 
-        //Applies income
-        GameManager.Instance.IncreaseIncome(extractionRate);
+            //Applies income
+            GameManager.Instance.IncreaseIncome(extractionRate);
 
-        //Figures out alignment config
-        finishedAligning = maxAlignments == 0;
+            //Figures out alignment config
+            finishedAligning = maxAlignments == alignments;
+        }
+
     }
 
     // Update is called once per frame
@@ -180,15 +185,15 @@ public class ResourceExtractor : PlayerBuilding, IUpgradeable
             //Increase protection
             case 2:
                 {
-                    damageEffectiveness *= upgradeEffects[type] / GameManager.Instance.playerPower;
+                    damageEffectiveness *= upgradeEffects[type] / GameManager.Instance.playerHealth;
                     TakeDamage(0);
                     break;
                 }
             //Increase health
             case 3:
                 {
-                    baseHealth *= upgradeEffects[type] * GameManager.Instance.playerPower;
-                    health *= upgradeEffects[type] * GameManager.Instance.playerPower;
+                    baseHealth *= upgradeEffects[type] * GameManager.Instance.playerHealth;
+                    health *= upgradeEffects[type] * GameManager.Instance.playerHealth;
                     break;
                 }
             default:
@@ -264,12 +269,12 @@ public class ResourceExtractor : PlayerBuilding, IUpgradeable
             //Increase damage protection
             case 2:
                 {
-                    return $"{damageEffectiveness:F2} > {damageEffectiveness * upgradeEffects[type] / GameManager.Instance.playerPower:F2}";
+                    return $"{damageEffectiveness:F2} > {damageEffectiveness * upgradeEffects[type] / GameManager.Instance.playerHealth:F2}";
                 }
             //Increase health
             case 3:
                 {
-                    return $"{baseHealth:F2} > {baseHealth * upgradeEffects[type] * GameManager.Instance.playerPower:F2}";
+                    return $"{baseHealth:F2} > {baseHealth * upgradeEffects[type] * GameManager.Instance.playerHealth:F2}";
                 }
             //Default
             default:
@@ -447,6 +452,7 @@ public class ResourceExtractor : PlayerBuilding, IUpgradeable
         energyCost = data.energyCost;
         cost = data.cost;
         location = data.location;
+        needsDifficultyModifiers = false;
 
         //Upgrade data
         expenseModifiers = data.expenseModifiers;

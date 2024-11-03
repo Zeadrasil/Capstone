@@ -41,7 +41,7 @@ public class MenuManager : Singleton<MenuManager>
     [SerializeField] TMP_Text sellText;
     private TMP_Text[] hotkeyTexts;
 
-    //New game settings controls
+    //New game basic settings controls
     [SerializeField] TMP_InputField simplifiedSeedInput;
     [SerializeField] Slider simplifiedSeedSlider;
     [SerializeField] TMP_InputField enemyDifficultyInput;
@@ -50,18 +50,33 @@ public class MenuManager : Singleton<MenuManager>
     [SerializeField] Slider playerPowerSlider;
     [SerializeField] TMP_InputField playerEconomyInput;
     [SerializeField] Slider playerEconomySlider;
+
+    //New game advanced settings controls
+    [SerializeField] TMP_InputField enemyQuantityInput;
+    [SerializeField] Slider enemyQuantitySlider;
+    [SerializeField] TMP_InputField enemyStrengthInput;
+    [SerializeField] Slider enemyStrengthSlider;
+    [SerializeField] TMP_InputField playerStrengthInput;
+    [SerializeField] Slider playerStrengthSlider;
+    [SerializeField] TMP_InputField playerHealthInput;
+    [SerializeField] Slider playerHealthSlider;
     [SerializeField] TMP_InputField playerIncomeInput;
     [SerializeField] Slider playerIncomeSlider;
     [SerializeField] TMP_InputField playerCostsInput;
     [SerializeField] Slider playerCostsSlider;
+    [SerializeField] TMP_InputField playerEnergyProductionInput;
+    [SerializeField] Slider playerEnergyProductionSlider;
+    [SerializeField] TMP_InputField playerEnergyUsageInput;
+    [SerializeField] Slider playerEnergyUsageSlider;
 
+    //Arrays for sliders and text fields
     private TMP_InputField[] inputFieldsFloatRange;
     private TMP_InputField[] inputFieldsFullInt;
     private Slider[] slidersFloatRange;
     private Slider[] slidersFullInt;
 
     //Holder variables to avoid update loops
-    private bool[] freshesFloatRange = new bool[] { true, true, true, true, true };
+    private bool[] freshesFloatRange = new bool[] { true, true, true, true, true, true, true, true, true, true, true };
     private bool[] freshesFullInt = new bool[] { true };
 
     //Holder variables to store creation settings before they are passed into the GameManager
@@ -72,12 +87,19 @@ public class MenuManager : Singleton<MenuManager>
     uint seedD = 0;
     uint seedE = 0;
     uint seedF = 0;
+
     float enemyDifficulty = 1;
     float playerPower = 1;
     float playerEconomy = 1;
 
+    float enemyQuantity = 1;
+    float enemyStrength = 1;
+    float playerStrength = 1;
+    float playerHealth = 1;
     float playerIncome = 1;
     float playerCosts = 1;
+    float energyProduction = 1;
+    float energyConsumption = 1;
 
     //Allows GameManager initialization to be queued up in order to allow time for data to be passed into it
     int queueInitialize = -1;
@@ -103,11 +125,11 @@ public class MenuManager : Singleton<MenuManager>
         hotkeyTexts = new TMP_Text[] {cameraForwardText, cameraBackText, cameraLeftText, cameraRightText, tierOneTurretText, null, null, tierOneRepairStationText,  null, tierOneWallText, null, tierOneExtractorText, null, null, nextWaveText, cancelText, confirmText, selectionUpText, selectionDownText, selectionLeftText, selectionRightText, sellText};
 
         //Create storages for settings inputs
-        inputFieldsFloatRange = new TMP_InputField[] { enemyDifficultyInput, playerPowerInput, playerEconomyInput, playerIncomeInput, playerCostsInput };
+        inputFieldsFloatRange = new TMP_InputField[] { enemyDifficultyInput, playerPowerInput, playerEconomyInput, enemyQuantityInput, enemyStrengthInput, playerStrengthInput, playerHealthInput, playerIncomeInput, playerCostsInput, playerEnergyProductionInput, playerEnergyUsageInput };
         inputFieldsFullInt = new TMP_InputField[] { simplifiedSeedInput };
         
         //Create storages for settings sliders
-        slidersFloatRange = new Slider[] { enemyDifficultySlider, playerPowerSlider, playerEconomySlider, playerIncomeSlider, playerCostsSlider };
+        slidersFloatRange = new Slider[] { enemyDifficultySlider, playerPowerSlider, playerEconomySlider, enemyQuantitySlider, enemyStrengthSlider, playerStrengthSlider, playerHealthSlider, playerIncomeSlider, playerCostsSlider, playerEnergyProductionSlider, playerEnergyUsageSlider };
         slidersFullInt = new Slider[] { simplifiedSeedSlider };
 
         //Initializes manager reference
@@ -235,6 +257,8 @@ public class MenuManager : Singleton<MenuManager>
 
         newGameMenu.enabled = false;
         optionsMenu.enabled = false;
+        basicSettings.enabled = true;
+        advancedSettings.enabled = false;
     }
 
     //Called every frame
@@ -573,7 +597,7 @@ public class MenuManager : Singleton<MenuManager>
                     //Advanced settings
                     case 1:
                         {
-                            GameManager.Instance.Initialize(simplifiedSeed, seedA, seedB, seedC, seedD, seedE, seedF, enemyDifficulty, playerPower, playerCosts, playerIncome);
+                            GameManager.Instance.Initialize(simplifiedSeed, enemyQuantity, enemyStrength, playerStrength, playerHealth, playerCosts, playerIncome, energyProduction, energyConsumption);
                             break;
                         }
                     //Custom settings
@@ -602,6 +626,18 @@ public class MenuManager : Singleton<MenuManager>
     {
         //Close the menu
         newGameMenu.enabled = false;
+
+        if (initializationType == -1)
+        {
+            if (basicSettings.enabled)
+            {
+                initializationType = 0;
+            }
+            else if (advancedSettings.enabled)
+            {
+                initializationType = 1;
+            }
+        }
 
         //Go to the scene with all of the in game data
         SceneManager.LoadScene("MainScene");
@@ -770,16 +806,52 @@ public class MenuManager : Singleton<MenuManager>
                     playerEconomy = slidersFloatRange[setting].value;
                     break;
                 }
-            //Player income
+            //Enemy quantity
             case 3:
+                {
+                    enemyQuantity = slidersFloatRange[setting].value;
+                    break;
+                }
+            //Enemy strength
+            case 4:
+                {
+                    enemyStrength = slidersFloatRange[setting].value;
+                    break;
+                }
+            //Player strength
+            case 5:
+                {
+                    playerStrength = slidersFloatRange[setting].value;
+                    break;
+                }
+            //Player health
+            case 6:
+                {
+                    playerHealth = slidersFloatRange[setting].value;
+                    break;
+                }
+            //Player income
+            case 7:
                 {
                     playerIncome = slidersFloatRange[setting].value;
                     break;
                 }
             //Player costs
-            case 4:
+            case 8:
                 {
                     playerCosts = slidersFloatRange[setting].value;
+                    break;
+                }
+            //Energy production
+            case 9:
+                {
+                    energyProduction = slidersFloatRange[setting].value;
+                    break;
+                }
+            //Energy consumption
+            case 10:
+                {
+                    energyConsumption = slidersFloatRange[setting].value;
                     break;
                 }
         }

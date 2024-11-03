@@ -34,11 +34,11 @@ public class Enemy : MonoBehaviour, IDamageable, IDamager
         transform.rotation = currentGuide.transform.rotation;
 
         //Apply diffculty scaling to enemy
-        baseHealth *= GameManager.Instance.enemyDifficulty;
+        baseHealth *= GameManager.Instance.enemyStrength;
         health = baseHealth;
-        damage *= GameManager.Instance.enemyDifficulty;
-        movementSpeed *= GameManager.Instance.enemyDifficulty;
-        firerate *= GameManager.Instance.enemyDifficulty;
+        damage *= GameManager.Instance.enemyStrength;
+        movementSpeed *= GameManager.Instance.enemyStrength;
+        firerate *= GameManager.Instance.enemyStrength;
     }
 
     void Update()

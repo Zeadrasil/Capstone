@@ -18,7 +18,7 @@ public class PlayerBase : PlayerBuilding
 
     private void Start()
     {
-        baseHealth *= GameManager.Instance.playerPower;
+        baseHealth *= GameManager.Instance.playerHealth;
         health = baseHealth;
     }
 

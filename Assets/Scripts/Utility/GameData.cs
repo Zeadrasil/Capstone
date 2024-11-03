@@ -18,7 +18,7 @@ public class GameData
     public int wave;
 
     //Difficulty settings
-    public float enemyDifficulty, playerPower, playerIncome, playerCosts;
+    public float enemyQuantity = 1, enemyStrength = 1, playerStrength = 1, playerHealth = 1, playerIncome = 1, playerCosts = 1, energyProduction = 1, energyConsumption = 1;
     public BuildingData[] buildings;
 
     //Other info
