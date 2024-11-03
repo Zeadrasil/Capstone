@@ -375,4 +375,9 @@ public class RepairStation : PlayerBuilding, IDamageable, IUpgradeable
         GameManager.Instance.energyDeficit += Disable();
         GameManager.Instance.ChangeEnergyUsage(energyCost);
     }
+
+    public override int GetBuildingType()
+    {
+        return 3 + maxAlignments;
+    }
 }

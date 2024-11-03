@@ -12,6 +12,7 @@ public class GameData
 
     //Economy info
     public float[] budgetCosts;
+    public float[] energyCosts = { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
     public float budget;
 
     //Wave info

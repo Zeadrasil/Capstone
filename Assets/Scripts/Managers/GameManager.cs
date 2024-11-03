@@ -9,7 +9,7 @@ using UnityEngine.UI;
 public class GameManager : Singleton<GameManager>
 {
     //Keeps track of upgrade related data
-    private int selectedUpgrade = 0;
+    private int selectedUpgrade;
     private GameObject selectedBuilding;
 
     //Building array, null because prefabs are not yet passed in when this is created so it need to be done in Initialize()
@@ -19,27 +19,28 @@ public class GameManager : Singleton<GameManager>
     public PlayerBase PlayerBase;
     public GameObject EnemyCheckpointPrefab;
     public Camera Camera;
-    public bool paused = false;
+    public bool paused;
 
     //Stores data for building new buildings
     private GameObject selectedConstruction;
-    private int selectedConstructionIndex = -1;
+    private int selectedConstructionIndex;
 
     //Cost data for new buildings
-    public float[] budgetCosts = new float[] { 10, 15, 25, 10, 15, 10, 15, 10, 15, 25 };
+    public float[] budgetCosts;
+    public float[] energyCosts;
 
     public Dictionary<Vector2Int, GameObject> playerBuildings = new Dictionary<Vector2Int, GameObject>();
 
     //Economy data
-    public float budget = 100;
-    private float income = 0;
-    public float energy { get; private set; } = 10;
-    public float usedEnergy { get; private set; } = 0;
-    public float energyDeficit = 0;
-    public PlayerBuilding mostRecentEnergyDecrease = null;
+    public float budget;
+    private float income;
+    public float energy { get; private set; }
+    public float usedEnergy { get; private set; }
+    public float energyDeficit;
+    public PlayerBuilding mostRecentEnergyDecrease;
 
     //Stores which wave you are on
-    public int wave = 0;
+    public int wave;
 
     //Stores enemies so that it is known when you have killed them all
     private List<Enemy> currentEnemies = new List<Enemy>();
@@ -52,7 +53,7 @@ public class GameManager : Singleton<GameManager>
     private TileManager tileManager;
 
     //Stores max enemies so that progress towards completion can be stored
-    int maxEnemiesThisWave = 1;
+    int maxEnemiesThisWave;
 
     //Camera movement keys
     public KeyCode forwardKey = KeyCode.W;
@@ -312,6 +313,25 @@ public class GameManager : Singleton<GameManager>
         //Sets the RNG seed so that you can generate the same map every time if you use the same seed
         BasicUtils.WrappedInitState(simplifiedSeed);
 
+        //Sets defaults
+        wave = 0;
+        budgetCosts = new float[] { 10, 15, 25, 10, 15, 10, 15, 10, 15, 25 };
+        energyCosts = new float[] { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
+        energy = 10;
+        maxEnemiesThisWave = 1;
+        usedEnergy = 0;
+        income = 0;
+        energyDeficit = 0;
+        mostRecentEnergyDecrease = null;
+        playerBuildings.Clear();
+        paused = false;
+        selectedUpgrade = 0;
+        selectedConstructionIndex = -1;
+        selectedBuilding = null;
+        selectedConstruction = null;
+        budget = 100;
+
+
         //Generates the map seeds
         tileManager.seedA = ((uint)BasicUtils.WrappedRandomRange(int.MinValue, int.MaxValue)) + int.MaxValue;
         tileManager.seedB = ((uint)BasicUtils.WrappedRandomRange(int.MinValue, int.MaxValue)) + int.MaxValue;
@@ -328,6 +348,7 @@ public class GameManager : Singleton<GameManager>
         for (int i = 0; i < budgetCosts.Length; i++)
         {
             budgetCosts[i] *= playerCosts;
+            energyCosts[i] *= energyConsumption;
         }
 
         //Calls common initialization events
@@ -372,9 +393,6 @@ public class GameManager : Singleton<GameManager>
         energyProduction = data.energyProduction;
         energyConsumption = data.energyConsumption;
 
-        //Load other data
-        wave = data.wave;
-        tileManager.subbedTiles = new List<Vector2Int>(data.swappedTiles);
 
         //Load economic data
         budget = data.budget;
@@ -387,8 +405,12 @@ public class GameManager : Singleton<GameManager>
         //Main initilization phase
         Initialize();
 
+        //Load other data
+        wave = data.wave;
+        tileManager.subbedTiles = new List<Vector2Int>(data.swappedTiles);
+
         //Go through all of the loaded buildings in order to place them on the map
-        foreach(BuildingData buildingData in data.buildings)
+        foreach (BuildingData buildingData in data.buildings)
         {
             //Create the gameObject and get the building from it
             GameObject go = Instantiate(buildings[buildingData.type + buildingData.maxAlignments], tileManager.TraversableTilemap.CellToWorld(new Vector3Int(buildingData.location.x, buildingData.location.y)), Quaternion.identity);
@@ -448,9 +470,15 @@ public class GameManager : Singleton<GameManager>
 
         //Set hotkey text
         tierOneTurretLabel.text = BasicUtils.TranslateKey(tierOneTurretKey);
+        tierTwoTurretLabel.text = BasicUtils.TranslateKey(tierTwoTurretKey);
+        tierThreeTurretLabel.text = BasicUtils.TranslateKey(tierThreeTurretKey);
         tierOneRepairLabel.text = BasicUtils.TranslateKey(tierOneRepairKey);
+        tierTwoRepairLabel.text = BasicUtils.TranslateKey(tierTwoRepairKey);
         tierOneWallLabel.text = BasicUtils.TranslateKey(tierOneWallKey);
+        tierTwoWallLabel.text = BasicUtils.TranslateKey(tierTwoWallKey);
         tierOneExtractorLabel.text = BasicUtils.TranslateKey(tierOneExtractorKey);
+        tierTwoExtractorLabel.text = BasicUtils.TranslateKey(tierTwoExtractorKey);
+        tierThreeExtractorLabel.text = BasicUtils.TranslateKey(tierThreeExtractorKey);
         nextWaveLabel.text = BasicUtils.TranslateKey(nextWaveKey);
         sellText.text = $"Sell ({BasicUtils.TranslateKey(sellKey)})";
 
@@ -921,7 +949,8 @@ public class GameManager : Singleton<GameManager>
         pb.previousChanged = holder;
 
         //Energy management
-        pb.energyCost = playerBuildings.Count * energyConsumption;
+        pb.energyCost = energyCosts[pb.GetBuildingType()];
+        energyCosts[pb.GetBuildingType()] += energyConsumption * 0.5f;
         energyDeficit += pb.Disable();
         ChangeEnergyUsage(pb.energyCost);
 
@@ -1627,7 +1656,6 @@ public class GameManager : Singleton<GameManager>
     //Events for building removal
     public void RemoveBuilding(PlayerBuilding building)
     {
-
         //Ensures that the previous changed building does not lose its next link
         if (building.previousChanged != null)
         {
@@ -1645,21 +1673,29 @@ public class GameManager : Singleton<GameManager>
             ChangeEnergyUsage(-building.energyCost);
 
             //Ensure that all economy data from extractors is cleared
-            if(building.gameObject.TryGetComponent(out ResourceExtractor extractor))
+            if(building.GetBuildingType() >= 7)
             {
+                ResourceExtractor extractor = building.gameObject.GetComponentInChildren<ResourceExtractor>();
                 IncreaseIncome(-extractor.extractionRate);
                 ChangeEnergyCap(-extractor.energyRate);
             }
         }
         //Remove from building tracker
         playerBuildings.Remove(building.location);
+        int type = building.GetBuildingType();
+
+        //Reduce construction energy cost due to the building being destroyed
+        energyCosts[type] -= energyConsumption * 0.5f;
 
         //Reduce energy costs of connected buildings after it is gone to ensure that they take the appropriate amount
-        while(building.nextChanged != null)
+        while (building.nextChanged != null)
         {
-            building.energyCost -= energyConsumption;
-            ChangeEnergyUsage(-energyConsumption);
             building = building.nextChanged;
+            if (type == building.GetBuildingType())
+            {
+                building.energyCost -= energyConsumption * 0.5f;
+                ChangeEnergyUsage(-energyConsumption * 0.5f);
+            }
         }
     }
 
@@ -1706,4 +1742,10 @@ public class GameManager : Singleton<GameManager>
         return data;
     }
 
+    //Deactivate the manager in order to make a new map
+    public void Deactivate()
+    {
+        active = false;
+        TileManager.Instance.Deactivate();
+    }
 }

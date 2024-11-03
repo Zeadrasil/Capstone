@@ -94,4 +94,9 @@ public class PlayerBase : PlayerBuilding
     {
         throw new System.NotImplementedException();
     }
+
+    public override int GetBuildingType()
+    {
+        return -1;
+    }
 }

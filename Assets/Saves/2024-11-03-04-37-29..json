@@ -1,0 +1,88 @@
+{
+    "seedA": 1249120814,
+    "seedB": 3882140163,
+    "seedC": 1255002010,
+    "seedD": 2413213521,
+    "seedE": 1708730860,
+    "seedF": 2758587311,
+    "simplifiedSeed": -2109277184,
+    "budgetCosts": [
+        5.0,
+        7.5,
+        15.000000953674317,
+        5.0,
+        7.5,
+        5.0,
+        7.5,
+        5.0,
+        7.5,
+        12.5
+    ],
+    "energyCosts": [
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0
+    ],
+    "budget": 406.658447265625,
+    "wave": 1,
+    "enemyQuantity": 1.0,
+    "enemyStrength": 1.0,
+    "playerStrength": 1.0,
+    "playerHealth": 1.0,
+    "playerIncome": 2.0,
+    "playerCosts": 0.5,
+    "energyProduction": 2.0,
+    "energyConsumption": 0.5,
+    "buildings": [
+        {
+            "type": 0,
+            "firerate": 22.29026222229004,
+            "damage": 17.280000686645509,
+            "splashRange": 0.10000000149011612,
+            "splash": false,
+            "cooldown": 0,
+            "baseCooldown": 0,
+            "healing": 0.0,
+            "healingEffectiveness": 0.0,
+            "extractionRate": 0.0,
+            "energyRate": 0.0,
+            "damageEffectiveness": 0.0,
+            "range": 10.0,
+            "health": 20.0,
+            "baseHealth": 20.0,
+            "energyCost": 1.1999999284744263,
+            "cost": 180.84153747558595,
+            "location": {
+                "x": 1,
+                "y": 0
+            },
+            "expenseModifiers": [
+                -Infinity,
+                3.0,
+                0.30000001192092898,
+                0.30000001192092898,
+                3.0
+            ],
+            "upgradeLevels": [
+                0,
+                0,
+                3,
+                11,
+                0
+            ],
+            "maxAlignments": 2,
+            "alignments": 2,
+            "primaryMisalignmentChosen": false,
+            "finishedAligning": true
+        }
+    ],
+    "generatedNumbers": 12,
+    "swappedTiles": []
+}

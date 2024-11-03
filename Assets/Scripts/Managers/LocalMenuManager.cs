@@ -1,5 +1,6 @@
 using System;
 using TMPro;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
@@ -33,15 +34,23 @@ public class LocalMenuManager : MonoBehaviour
         FileManager.Instance.Save();
     }
 
-    //Relay for buttons in main scene to quit the game
+    //Relay for buttons in main scene to quit the map
     public void Quit()
     {
-        MenuManager.Instance.Exit();
+        Save();
+        MenuManager.Instance.Return();
     }
 
     //Relay for buttons in main scene to unpause
     public void UnPause()
     {
         MenuManager.Instance.UnPause();
+    }
+
+    //Relay for buttons in main scene to load a new map after leaving, not finished yet cause its weird
+    public void Load()
+    {
+        Quit();
+        //MenuManager.Instance.LoadData();
     }
 }

@@ -522,4 +522,9 @@ public class Turret : PlayerBuilding, IDamager, IUpgradeable
         GameManager.Instance.energyDeficit += Disable();
         GameManager.Instance.ChangeEnergyUsage(energyCost);
     }
+
+    public override int GetBuildingType()
+    {
+        return maxAlignments;
+    }
 }

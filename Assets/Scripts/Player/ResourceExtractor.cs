@@ -472,4 +472,9 @@ public class ResourceExtractor : PlayerBuilding, IUpgradeable
             Enable();
         }
     }
+
+    public override int GetBuildingType()
+    {
+        return 7 + maxAlignments;
+    }
 }

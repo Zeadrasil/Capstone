@@ -265,4 +265,9 @@ public class Wall : PlayerBuilding, IUpgradeable
         //Energy management
         GameManager.Instance.ChangeEnergyUsage(energyCost);
     }
+
+    public override int GetBuildingType()
+    {
+        return 5 + maxAlignments;
+    }
 }

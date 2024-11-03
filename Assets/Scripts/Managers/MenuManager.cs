@@ -28,9 +28,15 @@ public class MenuManager : Singleton<MenuManager>
     [SerializeField] TMP_Text cameraLeftText;
     [SerializeField] TMP_Text cameraRightText;
     [SerializeField] TMP_Text tierOneTurretText;
+    [SerializeField] TMP_Text tierTwoTurretText;
+    [SerializeField] TMP_Text tierThreeTurretText;
     [SerializeField] TMP_Text tierOneRepairStationText;
+    [SerializeField] TMP_Text tierTwoRepairStationText;
     [SerializeField] TMP_Text tierOneWallText;
+    [SerializeField] TMP_Text tierTwoWallText;
     [SerializeField] TMP_Text tierOneExtractorText;
+    [SerializeField] TMP_Text tierTwoExtractorText;
+    [SerializeField] TMP_Text tierThreeExtractorText;
     [SerializeField] TMP_Text nextWaveText;
     [SerializeField] TMP_Text cancelText;
     [SerializeField] TMP_Text confirmText;
@@ -122,7 +128,7 @@ public class MenuManager : Singleton<MenuManager>
     private void Start()
     {
         //Create storage for hotkey labels
-        hotkeyTexts = new TMP_Text[] {cameraForwardText, cameraBackText, cameraLeftText, cameraRightText, tierOneTurretText, null, null, tierOneRepairStationText,  null, tierOneWallText, null, tierOneExtractorText, null, null, nextWaveText, cancelText, confirmText, selectionUpText, selectionDownText, selectionLeftText, selectionRightText, sellText};
+        hotkeyTexts = new TMP_Text[] {cameraForwardText, cameraBackText, cameraLeftText, cameraRightText, tierOneTurretText, tierTwoTurretText, tierThreeTurretText, tierOneRepairStationText,  tierTwoRepairStationText, tierOneWallText, tierTwoWallText, tierOneExtractorText, tierTwoExtractorText, tierThreeExtractorText, nextWaveText, cancelText, confirmText, selectionUpText, selectionDownText, selectionLeftText, selectionRightText, sellText};
 
         //Create storages for settings inputs
         inputFieldsFloatRange = new TMP_InputField[] { enemyDifficultyInput, playerPowerInput, playerEconomyInput, enemyQuantityInput, enemyStrengthInput, playerStrengthInput, playerHealthInput, playerIncomeInput, playerCostsInput, playerEnergyProductionInput, playerEnergyUsageInput };
@@ -168,11 +174,29 @@ public class MenuManager : Singleton<MenuManager>
         {
             gameManager.tierOneTurretKey = KeyCode.Alpha1;
         }
+        //Load preferred tier two turret hotkey
+        gameManager.tierThreeTurretKey = (KeyCode)PlayerPrefs.GetInt("tierTwoTurretKey");
+        if (gameManager.tierTwoTurretKey == KeyCode.None)
+        {
+            gameManager.tierTwoTurretKey = KeyCode.Alpha2;
+        }
+        //Load preferred tier three turret hotkey
+        gameManager.tierThreeTurretKey = (KeyCode)PlayerPrefs.GetInt("tierThreeTurretKey");
+        if (gameManager.tierThreeTurretKey == KeyCode.None)
+        {
+            gameManager.tierThreeTurretKey = KeyCode.Alpha3;
+        }
         //Load preferred tier one repair station hotkey
         gameManager.tierOneRepairKey = (KeyCode)PlayerPrefs.GetInt("tierOneRepairKey");
         if (gameManager.tierOneRepairKey == KeyCode.None)
         {
             gameManager.tierOneRepairKey = KeyCode.Alpha4;
+        }
+        //Load preferred tier two repair station hotkey
+        gameManager.tierTwoRepairKey = (KeyCode)PlayerPrefs.GetInt("tierTwoRepairKey");
+        if (gameManager.tierTwoRepairKey == KeyCode.None)
+        {
+            gameManager.tierTwoRepairKey = KeyCode.Alpha5;
         }
         //Load preferred tier one wall hotkey
         gameManager.tierOneWallKey = (KeyCode)PlayerPrefs.GetInt("tierOneWallKey");
@@ -180,11 +204,29 @@ public class MenuManager : Singleton<MenuManager>
         {
             gameManager.tierOneWallKey = KeyCode.Alpha6;
         }
+        //Load preferred tier two wall hotkey
+        gameManager.tierTwoWallKey = (KeyCode)PlayerPrefs.GetInt("tierTwoWallKey");
+        if (gameManager.tierTwoWallKey == KeyCode.None)
+        {
+            gameManager.tierTwoWallKey = KeyCode.Alpha7;
+        }
         //Load preferred tier one extractor hotkey
         gameManager.tierOneExtractorKey = (KeyCode)PlayerPrefs.GetInt("tierOneExtractorKey");
         if (gameManager.tierOneExtractorKey == KeyCode.None)
         {
             gameManager.tierOneExtractorKey = KeyCode.Alpha8;
+        }
+        //Load preferred tier two extractor hotkey
+        gameManager.tierTwoExtractorKey = (KeyCode)PlayerPrefs.GetInt("tierTwoExtractorKey");
+        if (gameManager.tierTwoExtractorKey == KeyCode.None)
+        {
+            gameManager.tierTwoExtractorKey = KeyCode.Alpha9;
+        }
+        //Load preferred tier three extractor hotkey
+        gameManager.tierThreeExtractorKey = (KeyCode)PlayerPrefs.GetInt("tierThreeExtractorKey");
+        if (gameManager.tierThreeExtractorKey == KeyCode.None)
+        {
+            gameManager.tierThreeExtractorKey = KeyCode.Alpha0;
         }
         //Load preferred next wave hotkey
         gameManager.nextWaveKey = (KeyCode)PlayerPrefs.GetInt("nextWaveKey");
@@ -234,30 +276,33 @@ public class MenuManager : Singleton<MenuManager>
         {
             gameManager.sellKey = KeyCode.Backspace;
         }
-        //Load saved enemy difficulty
-        if (PlayerPrefs.HasKey("previousEnemyDifficulty"))
-        {
-            enemyDifficultySlider.value = PlayerPrefs.GetFloat("previousEnemyDifficulty");
-        }
-        //Load saved player power
-        if(PlayerPrefs.HasKey("previousPlayerPower"))
-        {
-            playerPowerSlider.value = PlayerPrefs.GetFloat("previousPlayerPower");
-        }
-        //Load saved player income
-        if(PlayerPrefs.HasKey("previousPlayerIncome"))
-        {
-            playerIncomeSlider.value = PlayerPrefs.GetFloat("previousPlayerIncome");
-        }
-        //Load saved player costs
-        if(PlayerPrefs.HasKey("previousPlayerCosts"))
-        {
-            playerCostsSlider.value = PlayerPrefs.GetFloat("previousPlayerCosts");
-        }
+
+        //Might end up dropping this
+
+        ////Load saved enemy difficulty
+        //if (PlayerPrefs.HasKey("previousEnemyDifficulty"))
+        //{
+        //    enemyDifficultySlider.value = PlayerPrefs.GetFloat("previousEnemyDifficulty");
+        //}
+        ////Load saved player power
+        //if(PlayerPrefs.HasKey("previousPlayerPower"))
+        //{
+        //    playerPowerSlider.value = PlayerPrefs.GetFloat("previousPlayerPower");
+        //}
+        ////Load saved player income
+        //if(PlayerPrefs.HasKey("previousPlayerIncome"))
+        //{
+        //    playerIncomeSlider.value = PlayerPrefs.GetFloat("previousPlayerIncome");
+        //}
+        ////Load saved player costs
+        //if(PlayerPrefs.HasKey("previousPlayerCosts"))
+        //{
+        //    playerCostsSlider.value = PlayerPrefs.GetFloat("previousPlayerCosts");
+        //}
 
         newGameMenu.enabled = false;
         optionsMenu.enabled = false;
-        basicSettings.enabled = true;
+        basicSettings.enabled = false;
         advancedSettings.enabled = false;
     }
 
@@ -341,6 +386,32 @@ public class MenuManager : Singleton<MenuManager>
                                 tierOneTurretText.text = BasicUtils.TranslateKey(key);
                                 break;
                             }
+                        //Tier two turret
+                        case 5:
+                            {
+                                //Sets the key in the GameManager
+                                gameManager.tierTwoTurretKey = key;
+
+                                //Saves the key between game launches
+                                PlayerPrefs.SetInt("tierTwoTurretKey", (int)key);
+
+                                //Updates the text to display the new key
+                                tierTwoTurretText.text = BasicUtils.TranslateKey(key);
+                                break;
+                            }
+                        //Tier three turret
+                        case 6:
+                            {
+                                //Sets the key in the GameManager
+                                gameManager.tierThreeTurretKey = key;
+
+                                //Saves the key between game launches
+                                PlayerPrefs.SetInt("tierThreeTurretKey", (int)key);
+
+                                //Updates the text to display the new key
+                                tierThreeTurretText.text = BasicUtils.TranslateKey(key);
+                                break;
+                            }
                         //Tier one repair station
                         case 7:
                             {
@@ -352,6 +423,19 @@ public class MenuManager : Singleton<MenuManager>
 
                                 //Updates the text to display the new key
                                 tierOneRepairStationText.text = BasicUtils.TranslateKey(key);
+                                break;
+                            }
+                        //Tier two repair station
+                        case 8:
+                            {
+                                //Sets the key in the GameManager
+                                gameManager.tierTwoRepairKey = key;
+
+                                //Saves the key between game launches
+                                PlayerPrefs.SetInt("tierTwoRepairKey", (int)key);
+
+                                //Updates the text to display the new key
+                                tierTwoRepairStationText.text = BasicUtils.TranslateKey(key);
                                 break;
                             }
                         //Tier one wall
@@ -367,6 +451,19 @@ public class MenuManager : Singleton<MenuManager>
                                 tierOneWallText.text = BasicUtils.TranslateKey(key);
                                 break;
                             }
+                        //Tier two wall
+                        case 10:
+                            {
+                                //Sets the key in the GameManager
+                                gameManager.tierTwoWallKey = key;
+
+                                //Saves the key between game launches
+                                PlayerPrefs.SetInt("tierTwoWallKey", (int)key);
+
+                                //Updates the text to display the new key
+                                tierTwoWallText.text = BasicUtils.TranslateKey(key);
+                                break;
+                            }
                         //Tier one extractor
                         case 11:
                             {
@@ -378,6 +475,32 @@ public class MenuManager : Singleton<MenuManager>
 
                                 //Updates the text to display the new key
                                 tierOneExtractorText.text = BasicUtils.TranslateKey(key);
+                                break;
+                            }
+                        //Tier two extractor
+                        case 12:
+                            {
+                                //Sets the key in the GameManager
+                                gameManager.tierTwoExtractorKey = key;
+
+                                //Saves the key between game launches
+                                PlayerPrefs.SetInt("tierTwoExtractorKey", (int)key);
+
+                                //Updates the text to display the new key
+                                tierTwoExtractorText.text = BasicUtils.TranslateKey(key);
+                                break;
+                            }
+                        //Tier three extractor
+                        case 13:
+                            {
+                                //Sets the key in the GameManager
+                                gameManager.tierThreeExtractorKey = key;
+
+                                //Saves the key between game launches
+                                PlayerPrefs.SetInt("tierThreeExtractorKey", (int)key);
+
+                                //Updates the text to display the new key
+                                tierThreeExtractorText.text = BasicUtils.TranslateKey(key);
                                 break;
                             }
                         //Next wave
@@ -521,25 +644,51 @@ public class MenuManager : Singleton<MenuManager>
             {
                 UpdateKey(4);
             }
-            //Space for tier two and three turrets left in the keyIds
+            //Tier two turret
+            else if (Input.GetKeyDown(gameManager.tierTwoTurretKey))
+            {
+                UpdateKey(5);
+            }
+            //Tier three turret
+            else if (Input.GetKeyDown(gameManager.tierThreeTurretKey))
+            {
+                UpdateKey(6);
+            }
             //Tier one repair station
             else if (Input.GetKeyDown(gameManager.tierOneRepairKey))
             {
                 UpdateKey(7);
             }
-            //Space for tier two repair stations left in the keyIds
+            //Tier two repair station
+            else if (Input.GetKeyDown(gameManager.tierTwoRepairKey))
+            {
+                UpdateKey(8);
+            }
             //Tier one wall
             else if (Input.GetKeyDown(gameManager.tierOneWallKey))
             {
                 UpdateKey(9);
             }
-            //Space for tier two walls left in the keyIds
+            //Tier two wall
+            else if (Input.GetKeyDown(gameManager.tierOneWallKey))
+            {
+                UpdateKey(10);
+            }
             //Tier one extractor
             else if (Input.GetKeyDown(gameManager.tierOneExtractorKey))
             {
                 UpdateKey(11);
             }
-            //Space for tier two and three extractors left in the keyIds
+            //Tier two extractor
+            else if (Input.GetKeyDown(gameManager.tierTwoExtractorKey))
+            {
+                UpdateKey(12);
+            }
+            //Tier three extractor
+            else if (Input.GetKeyDown(gameManager.tierThreeExtractorKey))
+            {
+                UpdateKey(13);
+            }
             //Next wave
             else if (Input.GetKeyDown(gameManager.nextWaveKey))
             {
@@ -627,17 +776,28 @@ public class MenuManager : Singleton<MenuManager>
         //Close the menu
         newGameMenu.enabled = false;
 
-        if (initializationType == -1)
+        //Ensures that all settings inputs are disabled in an attempt to get it to stop having them randomly selected during the map
+        foreach(Slider slider in slidersFloatRange)
         {
-            if (basicSettings.enabled)
-            {
-                initializationType = 0;
-            }
-            else if (advancedSettings.enabled)
-            {
-                initializationType = 1;
-            }
+            slider.enabled = false;
         }
+        foreach(Slider slider in slidersFullInt)
+        {
+            slider.enabled = false;
+        }
+        foreach(TMP_InputField field in inputFieldsFloatRange)
+        {
+            field.enabled = false;
+        }
+        foreach(TMP_InputField field in inputFieldsFullInt)
+        {
+            field.enabled = false;
+        }
+
+        //Disable irrelevant menus
+        basicSettings.enabled = false;
+        advancedSettings.enabled = false;
+        optionsMenu.enabled = false;
 
         //Go to the scene with all of the in game data
         SceneManager.LoadScene("MainScene");
@@ -666,9 +826,15 @@ public class MenuManager : Singleton<MenuManager>
         cameraLeftText.text = BasicUtils.TranslateKey(gameManager.leftKey);
         cameraRightText.text = BasicUtils.TranslateKey(gameManager.rightKey);
         tierOneTurretText.text = BasicUtils.TranslateKey(gameManager.tierOneTurretKey);
+        tierTwoTurretText.text = BasicUtils.TranslateKey(gameManager.tierTwoTurretKey);
+        tierThreeTurretText.text = BasicUtils.TranslateKey(gameManager.tierThreeTurretKey);
         tierOneRepairStationText.text = BasicUtils.TranslateKey(gameManager.tierOneRepairKey);
+        tierTwoRepairStationText.text = BasicUtils.TranslateKey(gameManager.tierTwoRepairKey);
         tierOneWallText.text = BasicUtils.TranslateKey(gameManager.tierOneWallKey);
+        tierTwoWallText.text = BasicUtils.TranslateKey(gameManager.tierTwoWallKey);
         tierOneExtractorText.text = BasicUtils.TranslateKey(gameManager.tierOneExtractorKey);
+        tierTwoExtractorText.text = BasicUtils.TranslateKey(gameManager.tierTwoExtractorKey);
+        tierThreeExtractorText.text = BasicUtils.TranslateKey(gameManager.tierThreeExtractorKey);
         nextWaveText.text = BasicUtils.TranslateKey(gameManager.nextWaveKey);
         cancelText.text = BasicUtils.TranslateKey(gameManager.cancelKey);
         confirmText.text = BasicUtils.TranslateKey(gameManager.confirmKey);
@@ -703,6 +869,7 @@ public class MenuManager : Singleton<MenuManager>
     {
         //Ensure only the relevant menu is visible
         optionsMenu.enabled = false;
+        basicSettings.enabled = false;
         mainMenu.enabled = true;
         newGameMenu.enabled = false;
     }
@@ -1023,5 +1190,48 @@ public class MenuManager : Singleton<MenuManager>
         }
         //Tell the GameManager to stop slacking off
         gameManager.paused = false;
+    }
+
+    //Go back to main menu
+    public void Return()
+    {
+        //Clear out the building references to avoid memory leaks
+        while (GameManager.Instance.mostRecentEnergyDecrease.nextChanged != null)
+        {
+            GameManager.Instance.mostRecentEnergyDecrease = GameManager.Instance.mostRecentEnergyDecrease.nextChanged;
+        }
+        while (GameManager.Instance.mostRecentEnergyDecrease.previousChanged != null)
+        {
+            Destroy(GameManager.Instance.mostRecentEnergyDecrease.transform.parent.gameObject);
+            GameManager.Instance.mostRecentEnergyDecrease = GameManager.Instance.mostRecentEnergyDecrease.previousChanged;
+        }
+        //Deactivate GameManager while in menu
+        GameManager.Instance.Deactivate();
+
+        //Load the menu again
+        SceneManager.LoadScene("MenuScene");
+        mainMenu.enabled = true;
+        basicSettings.enabled = false;
+        advancedSettings.enabled = false;
+        optionsMenu.enabled = false;
+        newGameMenu.enabled = false;
+
+        //Ensures that all settings inputs are reenabled after leaving the map
+        foreach (Slider slider in slidersFloatRange)
+        {
+            slider.enabled = true;
+        }
+        foreach (Slider slider in slidersFullInt)
+        {
+            slider.enabled = true;
+        }
+        foreach (TMP_InputField field in inputFieldsFloatRange)
+        {
+            field.enabled = true;
+        }
+        foreach (TMP_InputField field in inputFieldsFullInt)
+        {
+            field.enabled = true;
+        }
     }
 }

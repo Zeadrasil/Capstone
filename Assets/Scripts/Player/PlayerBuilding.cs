@@ -53,4 +53,7 @@ public abstract class PlayerBuilding : MonoBehaviour, IDamageable
     //Take the data from a save file to recreate a copy of the saved building using the prefabs
     public abstract void LoadData(BuildingData data);
 
+    //Shortcut for identifying building type
+    public abstract int GetBuildingType();
+
 }

@@ -99,17 +99,21 @@ public class TileManager : Singleton<TileManager>
     //Get the manager ready to run after allowing data to be passed in
     public void Initialize()
     {
+        //Clear out data
+        BlockerTilemap.ClearAllTiles();
+        TraversableTilemap.ClearAllTiles();
+        subbedTiles.Clear();
+        nextExpansion.Clear();
+        nextExpansion.Add(new Vector2Int(0, 0));
+        BlockerTiles.Clear();
+        Adjacencies.Clear();
+        potentialSpawnpoints.Clear();
+
         //Generate 14 tiles out from the center
         for (int i = 0; i < 15; i++)
         {
             Next();
         }
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        
     }
 
     //Generates a new layer of the map
@@ -482,5 +486,10 @@ public class TileManager : Singleton<TileManager>
     {
         //Calls the specific version
         return CheckResource(coords.x, coords.y);
+    }
+
+    public void Deactivate()
+    {
+        Destroy(BlockerTilemap.transform.parent.gameObject);
     }
 }

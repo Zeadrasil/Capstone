@@ -154,7 +154,7 @@ public class Enemy : MonoBehaviour, IDamageable, IDamager
                 }
 
                 //Combine together weights to form overall weight
-                float cost = node.cost + healthCost + distanceCost - damagePreventionModifier - repairPreventionModifier - resourceDenialModifier;
+                float cost = Mathf.Max(node.cost + healthCost + distanceCost - damagePreventionModifier - repairPreventionModifier - resourceDenialModifier, 0);
 
                 //If the adjacent node already has a cost, skip it unless this is a cheaper path
                 if (cost < adjacentNode.cost)
