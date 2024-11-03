@@ -324,6 +324,7 @@ public class RepairStation : PlayerBuilding, IDamageable, IUpgradeable
         //Sets generic data
         data.health = health;
         data.baseHealth = baseHealth;
+        data.energyCost = energyCost;
         data.cost = cost;
         data.location = location;
         data.range = range;
@@ -341,9 +342,32 @@ public class RepairStation : PlayerBuilding, IDamageable, IUpgradeable
     }
 
     //Loads data from a BuildingData object into the repair station
-    //TODO - Implement
     public override void LoadData(BuildingData data)
     {
-        throw new System.NotImplementedException();
+        //Repair station data
+        healing = data.healing;
+        baseCooldown = data.baseCooldown;
+        cooldown = data.cooldown;
+
+        //Generic data
+        health = data.health;
+        baseHealth = data.baseHealth;
+        energyCost = data.energyCost;
+        cost = data.cost;
+        location = data.location;
+        range = data.range;
+
+        //Upgrade data
+        expenseModifiers = data.expenseModifiers;
+        upgradeLevels = data.upgradeLevels;
+
+        //Alignment data
+        maxAlignments = data.maxAlignments;
+        alignments = data.alignments;
+        finishedAligning = data.finishedAligning;
+
+        //Energy management
+        GameManager.Instance.energyDeficit += Disable();
+        GameManager.Instance.ChangeEnergyUsage(energyCost);
     }
 }

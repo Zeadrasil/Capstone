@@ -239,9 +239,26 @@ public class Wall : PlayerBuilding, IUpgradeable
     }
 
     //Loads data from a BuildingData object into the wall
-    //TODO - Implement
     public override void LoadData(BuildingData data)
     {
-        throw new System.NotImplementedException();
+        //Wall data
+        healingEffectiveness = data.healingEffectiveness;
+
+        //Generic data
+        health = data.health;
+        baseHealth = data.baseHealth;
+        cost = data.cost;
+        location = data.location;
+
+        //Upgrade data
+        expenseModifiers = data.expenseModifiers;
+        upgradeLevels = data.upgradeLevels;
+
+        //Alignment data
+        maxAlignments = data.maxAlignments;
+        finishedAligning = data.finishedAligning;
+
+        //Energy management
+        GameManager.Instance.ChangeEnergyUsage(energyCost);
     }
 }

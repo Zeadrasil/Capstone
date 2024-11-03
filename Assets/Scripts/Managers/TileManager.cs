@@ -74,7 +74,7 @@ public class TileManager : Singleton<TileManager>
     private List<Vector2Int> nextExpansion = new List<Vector2Int> { new Vector2Int(0, 0) };
 
     //Tiles that used to be blockers but have been replaced with traversable tiles in order to get a path to the base
-    private List<Vector2Int> subbedTiles = new List<Vector2Int>();
+    public List<Vector2Int> subbedTiles = new List<Vector2Int>();
 
     //Tiles that are traversable that were just spawned
     public List<Vector2Int> potentialSpawnpoints = new List<Vector2Int>();
@@ -99,24 +99,6 @@ public class TileManager : Singleton<TileManager>
     //Get the manager ready to run after allowing data to be passed in
     public void Initialize()
     {
-        //If the complex seeds are not being overriden, generate them based off of the simple seed
-        if (!customSeeds)
-        {
-            seedA = ((uint)UnityEngine.Random.Range(int.MinValue, int.MaxValue)) + int.MaxValue;
-            seedB = ((uint)UnityEngine.Random.Range(int.MinValue, int.MaxValue)) + int.MaxValue;
-            seedC = ((uint)UnityEngine.Random.Range(int.MinValue, int.MaxValue)) + int.MaxValue;
-            seedD = ((uint)UnityEngine.Random.Range(int.MinValue, int.MaxValue)) + int.MaxValue;
-            seedE = ((uint)UnityEngine.Random.Range(int.MinValue, int.MaxValue)) + int.MaxValue;
-            seedF = ((uint)UnityEngine.Random.Range(int.MinValue, int.MaxValue)) + int.MaxValue;
-
-            //Print out the seeds, temporary debug feature
-            Debug.Log("Seed A: " + seedA);
-            Debug.Log("Seed B: " + seedB);
-            Debug.Log("Seed C: " + seedC);
-            Debug.Log("Seed D: " + seedD);
-            Debug.Log("Seed E: " + seedE);
-            Debug.Log("Seed F: " + seedF);
-        }
         //Generate 14 tiles out from the center
         for (int i = 0; i < 15; i++)
         {

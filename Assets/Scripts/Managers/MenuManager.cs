@@ -56,6 +56,12 @@ public class MenuManager : Singleton<MenuManager>
 
     //Holder variables to store creation settings before they are passed into the GameManager
     int simplifiedSeed = 0;
+    uint seedA = 0;
+    uint seedB = 0;
+    uint seedC = 0;
+    uint seedD = 0;
+    uint seedE = 0;
+    uint seedF = 0;
     float enemyDifficulty = 1;
     float playerPower = 1;
     float playerEconomy = 1;
@@ -63,8 +69,9 @@ public class MenuManager : Singleton<MenuManager>
     float playerIncome = 1;
     float playerCosts = 1;
 
-    //Allows GameManager initialization to be queued up in order to allow time for data t be passed into it
+    //Allows GameManager initialization to be queued up in order to allow time for data to be passed into it
     int queueInitialize = -1;
+    int initializationType = -1;
 
     //GameManager reference to reduce typing length
     private GameManager gameManager;
@@ -75,6 +82,9 @@ public class MenuManager : Singleton<MenuManager>
     //Storage for new game menu UIs
     [SerializeField] Canvas basicSettings;
     [SerializeField] Canvas advancedSettings;
+
+    //Loaded data storage
+    GameData loadedData;
 
     //Called just before first Update() call
     private void Start()
@@ -212,6 +222,11 @@ public class MenuManager : Singleton<MenuManager>
         {
             playerCostsSlider.value = PlayerPrefs.GetFloat("previousPlayerCosts");
         }
+
+        mainMenu.enabled = false;
+        newGameMenu.enabled = false;
+        optionsMenu.enabled = false;
+        LoadData();
     }
 
     //Called every frame
@@ -536,11 +551,35 @@ public class MenuManager : Singleton<MenuManager>
         }
         else if(queueInitialize > -1)
         {
-            if(queueInitialize == 0)
+            if (queueInitialize == 0)
             {
-                //Initilize GameManager
-                GameManager.Instance.Initialize(simplifiedSeed, enemyDifficulty, playerPower, playerEconomy);
-
+                //Initialize GameManager depending on chosen settings
+                switch (initializationType)
+                {
+                    //Basic settings
+                    case 0:
+                        {
+                            GameManager.Instance.Initialize(simplifiedSeed, enemyDifficulty, playerPower, playerEconomy);
+                            break;
+                        }
+                    //Advanced settings
+                    case 1:
+                        {
+                            GameManager.Instance.Initialize(simplifiedSeed, seedA, seedB, seedC, seedD, seedE, seedF, enemyDifficulty, playerPower, playerCosts, playerIncome);
+                            break;
+                        }
+                    //Custom settings
+                    case 2:
+                        {
+                            break;
+                        }
+                    //Loaded Save
+                    case 3:
+                        {
+                            GameManager.Instance.InitializeFromLoad(loadedData);
+                            break;
+                        }
+                }
                 queueInitialize = -1;
             }
             else
@@ -788,16 +827,32 @@ public class MenuManager : Singleton<MenuManager>
         }
     }
     
-
+    //Go to advanced new game settings
     public void AdvancedSettings()
     {
         advancedSettings.enabled = true;
         basicSettings.enabled = false;
+        initializationType = 1;
     }
 
+    //Go to basic new game settings
     public void BasicSettings()
     {
         basicSettings.enabled = true;
         advancedSettings.enabled = false;
+        initializationType = 0;
+    }
+
+    //Load data from save
+    public void LoadData()
+    {
+        //Load from file
+        loadedData = FileManager.Instance.Load();
+
+        //Specify to intialize as loaded game
+        initializationType = 3;
+
+        //Begin initialization
+        Play();
     }
 }

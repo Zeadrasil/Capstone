@@ -86,8 +86,15 @@ public class ResourceExtractor : PlayerBuilding, IUpgradeable
         if(activate)
         {
             activate = false;
-            GameManager.Instance.IncreaseIncome(extractionRate * Mathf.Pow(health, damageEffectiveness) / Mathf.Pow(baseHealth, damageEffectiveness));
-            GameManager.Instance.ChangeEnergyCap(energyRate * Mathf.Pow(health, damageEffectiveness) / Mathf.Pow(baseHealth, damageEffectiveness));
+            if (active)
+            {
+                GameManager.Instance.IncreaseIncome(extractionRate * Mathf.Pow(health, damageEffectiveness) / Mathf.Pow(baseHealth, damageEffectiveness));
+                GameManager.Instance.ChangeEnergyCap(energyRate * Mathf.Pow(health, damageEffectiveness) / Mathf.Pow(baseHealth, damageEffectiveness));
+            }
+            else
+            {
+                GameManager.Instance.ChangeEnergyCap(-energyRate * Mathf.Pow(health, damageEffectiveness) / Mathf.Pow(baseHealth, damageEffectiveness));
+            }
         }
     }
 
@@ -162,9 +169,10 @@ public class ResourceExtractor : PlayerBuilding, IUpgradeable
                     {
                         GameManager.Instance.ChangeEnergyCap(upgradeEffects[type]);
                     }
-                    else if(energyRate * Mathf.Pow(health, damageEffectiveness) / Mathf.Pow(baseHealth, damageEffectiveness) >= energyCost)
+                    else if(energyRate * Mathf.Pow(health, damageEffectiveness) / Mathf.Pow(baseHealth, damageEffectiveness) >= GameManager.Instance.usedEnergy - GameManager.Instance.energy + GameManager.Instance.energyDeficit)
                     {
                         GameManager.Instance.energyDeficit += energyCost;
+                        GameManager.Instance.mostRecentEnergyDecrease = GameManager.Instance.mostRecentEnergyDecrease.nextChanged;
                         Enable();
                     }
                     break;
@@ -302,9 +310,9 @@ public class ResourceExtractor : PlayerBuilding, IUpgradeable
         if(energyRate < energyCost)
         {
             active = false;
+            activate = true;
             spriteRenderer.color = Color.black;
             GameManager.Instance.IncreaseIncome(-extractionRate * Mathf.Pow(health, damageEffectiveness) / Mathf.Pow(baseHealth, damageEffectiveness));
-            GameManager.Instance.ChangeEnergyCap(-energyRate);
             return -energyCost;
         }
         return 0;
@@ -426,9 +434,36 @@ public class ResourceExtractor : PlayerBuilding, IUpgradeable
     }
 
     //Loads data from a BuildingData object into the extractor
-    //TODO - Implement
     public override void LoadData(BuildingData data)
     {
-        throw new System.NotImplementedException();
+        //Extractor date
+        extractionRate = data.extractionRate;
+        energyRate = data.energyRate;
+        damageEffectiveness = data.damageEffectiveness;
+
+        //Generic data
+        health = data.health;
+        baseHealth = data.baseHealth;
+        energyCost = data.energyCost;
+        cost = data.cost;
+        location = data.location;
+
+        //Upgrade data
+        expenseModifiers = data.expenseModifiers;
+        upgradeLevels = data.upgradeLevels;
+
+        //Alignment data
+        maxAlignments = data.maxAlignments;
+        alignments = data.alignments;
+        finishedAligning = data.finishedAligning;
+
+        //Energy management
+        GameManager.Instance.energyDeficit += Disable();
+        GameManager.Instance.ChangeEnergyUsage(energyCost);
+        GameManager.Instance.ChangeEnergyCap(energyRate);
+        if (energyRate >= energyCost)
+        {
+            Enable();
+        }
     }
 }

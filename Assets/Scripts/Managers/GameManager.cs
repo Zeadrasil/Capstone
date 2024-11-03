@@ -25,17 +25,17 @@ public class GameManager : Singleton<GameManager>
     private int selectedConstructionIndex = -1;
 
     //Cost data for new buildings
-    public float[] budgetCosts = new float[] {10, 15, 25, 10, 15, 10, 15, 10, 15, -25 };
+    public float[] budgetCosts = new float[] { 10, 15, 25, 10, 15, 10, 15, 10, 15, 25 };
 
     public Dictionary<Vector2Int, GameObject> playerBuildings = new Dictionary<Vector2Int, GameObject>();
 
     //Economy data
     public float budget = 100;
     private float income = 0;
-    private float energy = 10;
-    private float usedEnergy = 0;
+    public float energy { get; private set; } = 10;
+    public float usedEnergy { get; private set; } = 0;
     public float energyDeficit = 0;
-    private PlayerBuilding mostRecentEnergyDecrease = null;
+    public PlayerBuilding mostRecentEnergyDecrease = null;
 
     //Stores which wave you are on
     public int wave = 0;
@@ -292,10 +292,17 @@ public class GameManager : Singleton<GameManager>
         this.playerPower = playerPower;
         playerIncome = playerEconomy;
         playerCosts = 1 / playerEconomy;
-        TileManager.Instance.customSeeds = false;
 
         //Sets the RNG seed so that you can generate the same map every time if you use the same seed
-        UnityEngine.Random.InitState(simplifiedSeed);
+        BasicUtils.WrappedInitState(simplifiedSeed);
+
+        //Generates the map seeds
+        tileManager.seedA = ((uint)BasicUtils.WrappedRandomRange(int.MinValue, int.MaxValue)) + int.MaxValue;
+        tileManager.seedB = ((uint)BasicUtils.WrappedRandomRange(int.MinValue, int.MaxValue)) + int.MaxValue;
+        tileManager.seedC = ((uint)BasicUtils.WrappedRandomRange(int.MinValue, int.MaxValue)) + int.MaxValue;
+        tileManager.seedD = ((uint)BasicUtils.WrappedRandomRange(int.MinValue, int.MaxValue)) + int.MaxValue;
+        tileManager.seedE = ((uint)BasicUtils.WrappedRandomRange(int.MinValue, int.MaxValue)) + int.MaxValue;
+        tileManager.seedF = ((uint)BasicUtils.WrappedRandomRange(int.MinValue, int.MaxValue)) + int.MaxValue;
 
         //Modifies starting budget by the difficulty modifier
         budget *= playerIncome;
@@ -310,6 +317,66 @@ public class GameManager : Singleton<GameManager>
         Initialize();
     }
 
+    public void Initialize(int simplifiedSeed, uint seedA, uint seedB, uint seedC, uint seedD, uint seedE, uint seedF, float enemyDifficulty, float playerPower, float playerCosts, float playerIncome)
+    {
+
+    }
+
+    public void InitializeFromLoad(GameData data)
+    {
+        //Load seed data
+        simplifiedSeed = data.simplifiedSeed;
+        tileManager.seedA = data.seedA;
+        tileManager.seedB = data.seedB;
+        tileManager.seedC = data.seedC;
+        tileManager.seedD = data.seedD;
+        tileManager.seedE = data.seedE;
+        tileManager.seedF = data.seedF;
+
+        //Load difficulty settings
+        enemyDifficulty = data.enemyDifficulty;
+        playerPower = data.playerPower;
+        playerCosts = data.playerCosts;
+        playerIncome = data.playerIncome;
+
+        //Load other data
+        wave = data.wave;
+        tileManager.subbedTiles = new List<Vector2Int>(data.swappedTiles);
+
+        //Load economic data
+        budget = data.budget;
+        budgetCosts = data.budgetCosts;
+
+        //Initiate RNG and move it to the appropriate RNG stream position
+        BasicUtils.WrappedInitState(simplifiedSeed);
+        BasicUtils.SpamRNGUntil(data.generatedNumbers);
+
+        //Main initilization phase
+        Initialize();
+
+        //Go through all of the loaded buildings in order to place them on the map
+        foreach(BuildingData buildingData in data.buildings)
+        {
+            //Create the gameObject and get the building from it
+            GameObject go = Instantiate(buildings[buildingData.type + buildingData.maxAlignments], tileManager.TraversableTilemap.CellToWorld(new Vector3Int(buildingData.location.x, buildingData.location.y)), Quaternion.identity);
+            PlayerBuilding pb = go.GetComponentInChildren<PlayerBuilding>();
+
+            //Add to the very end of enabling queue
+            PlayerBuilding holder = mostRecentEnergyDecrease;
+            while (holder.nextChanged != null)
+            {
+                holder = holder.nextChanged;
+            }
+            holder.nextChanged = pb;
+            pb.previousChanged = holder;
+
+            //Load saved data
+            pb.LoadData(buildingData);
+
+            //Add to the tracked building dictionary
+            playerBuildings.Add(buildingData.location, go);
+        }
+    }
 
     //Initialize the manager since you cannot pass in most of the data until you open the main scene
     public void Initialize()
@@ -400,56 +467,56 @@ public class GameManager : Singleton<GameManager>
             int tierZeroEnemyCount = (int)(2 * Mathf.Max(Mathf.Pow(wave, 1 + (0.25f * enemyDifficulty)) - Mathf.Max(Mathf.Pow(wave, 1 + (0.3f * enemyDifficulty)) - 8.10328298346f, 0), 0) * enemyDifficulty);
             for (int i = 0; i < tierZeroEnemyCount; i++)
             {
-                int at = UnityEngine.Random.Range(0, TileManager.Instance.potentialSpawnpoints.Count);
-                Enemy createdEnemy = Instantiate(baseEnemy, TileManager.Instance.TraversableTilemap.CellToWorld(new Vector3Int(TileManager.Instance.potentialSpawnpoints[at].x, TileManager.Instance.potentialSpawnpoints[at].y)) + new Vector3(UnityEngine.Random.Range(-0.2f, 0.2f), UnityEngine.Random.Range(-0.2f, 0.2f)), Quaternion.identity).GetComponentInChildren<Enemy>();
+                int at = BasicUtils.WrappedRandomRange(0, TileManager.Instance.potentialSpawnpoints.Count);
+                Enemy createdEnemy = Instantiate(baseEnemy, TileManager.Instance.TraversableTilemap.CellToWorld(new Vector3Int(TileManager.Instance.potentialSpawnpoints[at].x, TileManager.Instance.potentialSpawnpoints[at].y)) + new Vector3(BasicUtils.WrappedRandomRange(-0.2f, 0.2f), BasicUtils.WrappedRandomRange(-0.2f, 0.2f)), Quaternion.identity).GetComponentInChildren<Enemy>();
                 enemySpawns.Add(createdEnemy);
             }
             //Creates the correct amount of tier one enemies for the wave
             int tierOneEnemyCount = (int)(2 * Mathf.Max(Mathf.Pow(wave - 6, 1 + (0.21f * enemyDifficulty)) - Mathf.Max(Mathf.Pow(wave - 6, 1 + (0.25f * enemyDifficulty)) - 17.7827941004f, 0), 0) * enemyDifficulty);
             for (int i = 0; i < tierOneEnemyCount; i++)
             {
-                int at = UnityEngine.Random.Range(0, TileManager.Instance.potentialSpawnpoints.Count);
-                Enemy createdEnemy = Instantiate(tierOneEnemies[UnityEngine.Random.Range(0, tierOneEnemies.Length)], TileManager.Instance.TraversableTilemap.CellToWorld(new Vector3Int(TileManager.Instance.potentialSpawnpoints[at].x, TileManager.Instance.potentialSpawnpoints[at].y)) + new Vector3(UnityEngine.Random.Range(-0.2f, 0.2f), UnityEngine.Random.Range(-0.2f, 0.2f)), Quaternion.identity).GetComponentInChildren<Enemy>();
+                int at = BasicUtils.WrappedRandomRange(0, TileManager.Instance.potentialSpawnpoints.Count);
+                Enemy createdEnemy = Instantiate(tierOneEnemies[BasicUtils.WrappedRandomRange(0, tierOneEnemies.Length)], TileManager.Instance.TraversableTilemap.CellToWorld(new Vector3Int(TileManager.Instance.potentialSpawnpoints[at].x, TileManager.Instance.potentialSpawnpoints[at].y)) + new Vector3(BasicUtils.WrappedRandomRange(-0.2f, 0.2f), BasicUtils.WrappedRandomRange(-0.2f, 0.2f)), Quaternion.identity).GetComponentInChildren<Enemy>();
                 enemySpawns.Add(createdEnemy);
             }
             //Creates the correct amount of tier two enemies for the wave
             int tierTwoEnemyCount = (int)(2 * Mathf.Max(Mathf.Pow(wave - 16, 1 + (0.17f * enemyDifficulty)) - Mathf.Max(Mathf.Pow(wave - 16, 1 + (0.2f * enemyDifficulty)) - 36.4112840605f, 0), 0) * enemyDifficulty);
             for (int i = 0; i < tierTwoEnemyCount; i++)
             {
-                int at = UnityEngine.Random.Range(0, TileManager.Instance.potentialSpawnpoints.Count);
-                Enemy createdEnemy = Instantiate(tierTwoEnemies[UnityEngine.Random.Range(0, tierTwoEnemies.Length)], TileManager.Instance.TraversableTilemap.CellToWorld(new Vector3Int(TileManager.Instance.potentialSpawnpoints[at].x, TileManager.Instance.potentialSpawnpoints[at].y)) + new Vector3(UnityEngine.Random.Range(-0.2f, 0.2f), UnityEngine.Random.Range(-0.2f, 0.2f)), Quaternion.identity).GetComponentInChildren<Enemy>();
+                int at = BasicUtils.WrappedRandomRange(0, TileManager.Instance.potentialSpawnpoints.Count);
+                Enemy createdEnemy = Instantiate(tierTwoEnemies[BasicUtils.WrappedRandomRange(0, tierTwoEnemies.Length)], TileManager.Instance.TraversableTilemap.CellToWorld(new Vector3Int(TileManager.Instance.potentialSpawnpoints[at].x, TileManager.Instance.potentialSpawnpoints[at].y)) + new Vector3(BasicUtils.WrappedRandomRange(-0.2f, 0.2f), BasicUtils.WrappedRandomRange(-0.2f, 0.2f)), Quaternion.identity).GetComponentInChildren<Enemy>();
                 enemySpawns.Add(createdEnemy);
             }
             //Creates the correct amount of tier three enemies for the wave
             int tierThreeEnemyCount = (int)(2 * Mathf.Max(Mathf.Pow(wave - 36, 1 + (0.13f * enemyDifficulty)) - Mathf.Max(Mathf.Pow(wave - 36, 1 + (0.15f * enemyDifficulty)) - 69.5615082681f, 0), 0) * enemyDifficulty);
             for (int i = 0; i < tierThreeEnemyCount; i++)
             {
-                int at = UnityEngine.Random.Range(0, TileManager.Instance.potentialSpawnpoints.Count);
-                Enemy createdEnemy = Instantiate(tierThreeEnemies[UnityEngine.Random.Range(0, tierThreeEnemies.Length)], TileManager.Instance.TraversableTilemap.CellToWorld(new Vector3Int(TileManager.Instance.potentialSpawnpoints[at].x, TileManager.Instance.potentialSpawnpoints[at].y)) + new Vector3(UnityEngine.Random.Range(-0.2f, 0.2f), UnityEngine.Random.Range(-0.2f, 0.2f)), Quaternion.identity).GetComponentInChildren<Enemy>();
+                int at = BasicUtils.WrappedRandomRange(0, TileManager.Instance.potentialSpawnpoints.Count);
+                Enemy createdEnemy = Instantiate(tierThreeEnemies[BasicUtils.WrappedRandomRange(0, tierThreeEnemies.Length)], TileManager.Instance.TraversableTilemap.CellToWorld(new Vector3Int(TileManager.Instance.potentialSpawnpoints[at].x, TileManager.Instance.potentialSpawnpoints[at].y)) + new Vector3(BasicUtils.WrappedRandomRange(-0.2f, 0.2f), BasicUtils.WrappedRandomRange(-0.2f, 0.2f)), Quaternion.identity).GetComponentInChildren<Enemy>();
                 enemySpawns.Add(createdEnemy);
             }
             //Creates the correct amount of tier four enemies for the wave
             int tierFourEnemyCount = (int)(2 * Mathf.Max(Mathf.Pow(wave - 76, 1 + (0.09f * enemyDifficulty)) - Mathf.Max(Mathf.Pow(wave - 76, 1 + (0.1f * enemyDifficulty)) - 123.993519004f, 0), 0) * enemyDifficulty);
             for (int i = 0; i < tierThreeEnemyCount; i++)
             {
-                int at = UnityEngine.Random.Range(0, TileManager.Instance.potentialSpawnpoints.Count);
-                Enemy createdEnemy = Instantiate(tierFourEnemies[UnityEngine.Random.Range(0, tierFourEnemies.Length)], TileManager.Instance.TraversableTilemap.CellToWorld(new Vector3Int(TileManager.Instance.potentialSpawnpoints[at].x, TileManager.Instance.potentialSpawnpoints[at].y)) + new Vector3(UnityEngine.Random.Range(-0.2f, 0.2f), UnityEngine.Random.Range(-0.2f, 0.2f)), Quaternion.identity).GetComponentInChildren<Enemy>();
+                int at = BasicUtils.WrappedRandomRange(0, TileManager.Instance.potentialSpawnpoints.Count);
+                Enemy createdEnemy = Instantiate(tierFourEnemies[BasicUtils.WrappedRandomRange(0, tierFourEnemies.Length)], TileManager.Instance.TraversableTilemap.CellToWorld(new Vector3Int(TileManager.Instance.potentialSpawnpoints[at].x, TileManager.Instance.potentialSpawnpoints[at].y)) + new Vector3(BasicUtils.WrappedRandomRange(-0.2f, 0.2f), BasicUtils.WrappedRandomRange(-0.2f, 0.2f)), Quaternion.identity).GetComponentInChildren<Enemy>();
                 enemySpawns.Add(createdEnemy);
             }
             //Creates the correct amount of tier five enemies for the wave
             int tierFiveEnemyCount = (int)(2 * Mathf.Max(Mathf.Pow(wave - 156, 1 + (0.05f * enemyDifficulty)) - Mathf.Max(Mathf.Pow(wave - 156, 1 + (0.06f * enemyDifficulty)) - 216.953760189f, 0), 0) * enemyDifficulty);
             for (int i = 0; i < tierThreeEnemyCount; i++)
             {
-                int at = UnityEngine.Random.Range(0, TileManager.Instance.potentialSpawnpoints.Count);
-                Enemy createdEnemy = Instantiate(tierFiveEnemies[UnityEngine.Random.Range(0, tierFiveEnemies.Length)], TileManager.Instance.TraversableTilemap.CellToWorld(new Vector3Int(TileManager.Instance.potentialSpawnpoints[at].x, TileManager.Instance.potentialSpawnpoints[at].y)) + new Vector3(UnityEngine.Random.Range(-0.2f, 0.2f), UnityEngine.Random.Range(-0.2f, 0.2f)), Quaternion.identity).GetComponentInChildren<Enemy>();
+                int at = BasicUtils.WrappedRandomRange(0, TileManager.Instance.potentialSpawnpoints.Count);
+                Enemy createdEnemy = Instantiate(tierFiveEnemies[BasicUtils.WrappedRandomRange(0, tierFiveEnemies.Length)], TileManager.Instance.TraversableTilemap.CellToWorld(new Vector3Int(TileManager.Instance.potentialSpawnpoints[at].x, TileManager.Instance.potentialSpawnpoints[at].y)) + new Vector3(BasicUtils.WrappedRandomRange(-0.2f, 0.2f), BasicUtils.WrappedRandomRange(-0.2f, 0.2f)), Quaternion.identity).GetComponentInChildren<Enemy>();
                 enemySpawns.Add(createdEnemy);
             }
             ////Creates the correct amount of tier six enemies for the wave
             //int tierSixEnemyCount = (int)(2 * Mathf.Max(Mathf.Pow(wave - 316, 1 + (0.01f * enemyDifficulty - 0.01f)), 0) * enemyDifficulty);
             //for (int i = 0; i < tierThreeEnemyCount; i++)
             //{
-            //    int at = UnityEngine.Random.Range(0, TileManager.Instance.potentialSpawnpoints.Count);
-            //    Enemy createdEnemy = Instantiate(ultimateEnemy, TileManager.Instance.TraversableTilemap.CellToWorld(new Vector3Int(TileManager.Instance.potentialSpawnpoints[at].x, TileManager.Instance.potentialSpawnpoints[at].y)) + new Vector3(UnityEngine.Random.Range(-0.2f, 0.2f), UnityEngine.Random.Range(-0.2f, 0.2f)), Quaternion.identity).GetComponentInChildren<Enemy>();
+            //    int at = BasicUtils.WrappedRandomRange(0, TileManager.Instance.potentialSpawnpoints.Count);
+            //    Enemy createdEnemy = Instantiate(ultimateEnemy, TileManager.Instance.TraversableTilemap.CellToWorld(new Vector3Int(TileManager.Instance.potentialSpawnpoints[at].x, TileManager.Instance.potentialSpawnpoints[at].y)) + new Vector3(BasicUtils.WrappedRandomRange(-0.2f, 0.2f), BasicUtils.WrappedRandomRange(-0.2f, 0.2f)), Quaternion.identity).GetComponentInChildren<Enemy>();
             //    enemySpawns.Add(createdEnemy);
             //}
             //Goes through every enemy
@@ -464,14 +531,14 @@ public class GameManager : Singleton<GameManager>
                 //Ensure that there is actually a path
                 while(checkpoint == null)
                 {
-                    int at = UnityEngine.Random.Range(0, TileManager.Instance.potentialSpawnpoints.Count);
-                    enemy.transform.parent.position = TileManager.Instance.TraversableTilemap.CellToWorld(new Vector3Int(TileManager.Instance.potentialSpawnpoints[at].x, TileManager.Instance.potentialSpawnpoints[at].y)) + new Vector3(UnityEngine.Random.Range(-0.2f, 0.2f), UnityEngine.Random.Range(-0.2f, 0.2f));
+                    int at = BasicUtils.WrappedRandomRange(0, TileManager.Instance.potentialSpawnpoints.Count);
+                    enemy.transform.parent.position = TileManager.Instance.TraversableTilemap.CellToWorld(new Vector3Int(TileManager.Instance.potentialSpawnpoints[at].x, TileManager.Instance.potentialSpawnpoints[at].y)) + new Vector3(BasicUtils.WrappedRandomRange(-0.2f, 0.2f), BasicUtils.WrappedRandomRange(-0.2f, 0.2f));
                     checkpoint = enemy.GeneratePath();
                 }
                 //Duplicates swarmer enemies
                 if(enemy.swarmer)
                 {
-                    Enemy duplicateEnemy = Instantiate(enemy, TileManager.Instance.TraversableTilemap.CellToWorld(TileManager.Instance.TraversableTilemap.WorldToCell(enemy.transform.position)) + new Vector3(UnityEngine.Random.Range(-0.2f, 0.2f), UnityEngine.Random.Range(-0.2f, 0.2f)), Quaternion.identity);
+                    Enemy duplicateEnemy = Instantiate(enemy, TileManager.Instance.TraversableTilemap.CellToWorld(TileManager.Instance.TraversableTilemap.WorldToCell(enemy.transform.position)) + new Vector3(BasicUtils.WrappedRandomRange(-0.2f, 0.2f), BasicUtils.WrappedRandomRange(-0.2f, 0.2f)), Quaternion.identity);
                     currentEnemies.Add(duplicateEnemy);
                     duplicateEnemy.ActivatePath(checkpoint);
                 }
@@ -1495,7 +1562,7 @@ public class GameManager : Singleton<GameManager>
             }
         }
         //Otherwise if you have enough energy to reenable a building
-        else if(mostRecentEnergyDecrease.nextChanged != null && energy - (usedEnergy + energyDeficit) >= mostRecentEnergyDecrease.nextChanged.energyCost)
+        else if(mostRecentEnergyDecrease.nextChanged != null && energy - (usedEnergy + mostRecentEnergyDecrease.nextChanged.energyCost) >= energyDeficit /*- (mostRecentEnergyDecrease.nextChanged.gameObject.TryGetComponent(out ResourceExtractor ext) ? ext.energyRate : 0)*/)
         {
             //Reenable a building and run through checks again
             energyDeficit += mostRecentEnergyDecrease.nextChanged.Enable();
@@ -1561,6 +1628,8 @@ public class GameManager : Singleton<GameManager>
 
         //Other
         data.wave = wave;
+        data.generatedNumbers = BasicUtils.generatedNumbers;
+        data.swappedTiles = tileManager.subbedTiles.ToArray();
 
         //Difficulty
         data.enemyDifficulty = enemyDifficulty;
@@ -1575,7 +1644,6 @@ public class GameManager : Singleton<GameManager>
         {
             data.buildings[i] = buildingArray[i + 1].GetComponentInChildren<PlayerBuilding>().GetAsData();
         }
-
         return data;
     }
 }

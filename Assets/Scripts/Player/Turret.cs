@@ -456,7 +456,7 @@ public class Turret : PlayerBuilding, IDamager, IUpgradeable
         BuildingData data = new BuildingData();
 
         //Sets building type
-        data.type = 5;
+        data.type = 0;
 
         //Sets turret data
         data.damage = damage;
@@ -467,6 +467,7 @@ public class Turret : PlayerBuilding, IDamager, IUpgradeable
         //Sets generic data
         data.health = health;
         data.baseHealth = baseHealth;
+        data.energyCost = energyCost;
         data.cost = cost;
         data.location = location;
         data.range = range;
@@ -485,9 +486,34 @@ public class Turret : PlayerBuilding, IDamager, IUpgradeable
     }
 
     //Loads data from a BuildingData object into the turret
-    //TODO - Implement
     public override void LoadData(BuildingData data)
     {
-        throw new System.NotImplementedException();
+        //Turret data
+        damage = data.damage;
+        firerate = data.firerate;
+        splashRange = data.splashRange;
+        splash = data.splash;
+
+        //Generic data
+        health = data.health;
+        baseHealth = data.baseHealth;
+        energyCost = data.energyCost;
+        cost = data.cost;
+        location = data.location;
+        range = data.range;
+
+        //Upgrade data
+        expenseModifiers = data.expenseModifiers;
+        upgradeLevels = data.upgradeLevels;
+
+        //Alignment data
+        maxAlignments = data.maxAlignments;
+        alignments = data.alignments;
+        primaryMisalignmentChosen = data.primaryMisalignmentChosen;
+        finishedAligning = data.finishedAligning;
+
+        //Energy management
+        GameManager.Instance.energyDeficit += Disable();
+        GameManager.Instance.ChangeEnergyUsage(energyCost);
     }
 }

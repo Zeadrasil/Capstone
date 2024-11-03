@@ -20,4 +20,8 @@ public class GameData
     //Difficulty settings
     public float enemyDifficulty, playerPower, playerIncome, playerCosts;
     public BuildingData[] buildings;
+
+    //Other info
+    public uint generatedNumbers;
+    public Vector2Int[] swappedTiles;
 }
