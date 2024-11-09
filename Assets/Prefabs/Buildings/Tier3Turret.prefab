@@ -109,7 +109,7 @@ MonoBehaviour:
   firerate: 3
   damage: 10
   baseHealth: 20
-  range: 10
+  range: 5
   upgradeLevels: 0000000000000000000000000000000000000000
   expenseModifiers:
   - -Infinity

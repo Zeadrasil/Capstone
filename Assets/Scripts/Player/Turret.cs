@@ -12,7 +12,7 @@ public class Turret : PlayerBuilding, IDamager, IUpgradeable
     [SerializeField] float baseHealth = 20;
     bool splash = false;
     float splashRange = 0.1f;
-    public float range = 100;
+    public float range = 5;
 
     //Other
     bool killed = false;

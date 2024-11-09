@@ -14,24 +14,36 @@ public class Enemy : MonoBehaviour, IDamageable, IDamager
     [SerializeField] private float damage = 2;
     private bool attackMode = false;
     private bool pitbullMode = false;
-    private bool ranged = false;
+    [SerializeField] bool ranged = false;
     private bool blocked = false;
     [SerializeField] private float firerate = 10;
     public bool swarmer = false;
     public EnemyCheckpoint currentGuide;
-    private IDamageable target;
-    private RangedEnemyTargeter targeter;
+    private PlayerBuilding target;
+    [SerializeField] float range = 5;
+    private float rangedSearchCooldown = 0;
+    private float baseRangedSearchCooldown = 10;
     [SerializeField] private float radius;
     private Vector3 offset = Vector3.zero;
     private float offsetDistance = 0;
     private List<IDamager> currentDamagers = new List<IDamager>();
     [SerializeField] GameObject healthBar;
+    Coroutine fireCoroutine;
 
     // Start is called before the first frame update
     void Start()
     {
-        //Set starting rotation
-        transform.rotation = currentGuide.transform.rotation;
+        //If you have a guide, follow it
+        if (currentGuide != null)
+        {
+            //Set starting rotation
+            transform.rotation = currentGuide.transform.rotation;
+        }
+        //Otherwise go straight for the base
+        else
+        {
+            pitbullMode = true;
+        }
 
         //Apply diffculty scaling to enemy
         baseHealth *= GameManager.Instance.enemyStrength;
@@ -41,31 +53,24 @@ public class Enemy : MonoBehaviour, IDamageable, IDamager
         firerate *= GameManager.Instance.enemyStrength;
     }
 
-    void Update()
-    {
-        //Only move if you are not attacking, unless you are attacking with a ranged attack
-        if (!attackMode || (ranged && !blocked))
-        {
-            //Pitbull mode means go straight to player base
-            if (!pitbullMode)
-            {
-                //Move according to direction
-                transform.parent.position += movementSpeed * Time.deltaTime * transform.right.normalized;
-            }
-            else
-            {
-                //Move straight to player base
-                transform.parent.position += (Singleton<GameManager>.Instance.PlayerBase.transform.position - transform.position).normalized * movementSpeed * Time.deltaTime;
-            }
-        }
-    }
 
     //Loop for attacking
     IEnumerator fireLoop()
     {
         while (true)
         {
-            target.TakeDamage(damage);
+            if (!ranged || Vector3.Distance(transform.position, target.transform.position) <= range)
+            {
+                target.TakeDamage(damage);
+            }
+            else
+            {
+                cancelAttack();
+                if(target != null)
+                {
+                    target.TakeDamage(damage);
+                }
+            }
             yield return new WaitForSeconds(10 / firerate);
         }
 
@@ -257,11 +262,51 @@ public class Enemy : MonoBehaviour, IDamageable, IDamager
     //Physics so that rigidbodies can be avoided in order to improve performance
     private void FixedUpdate()
     {
+        //Only move if you are not attacking, unless you are attacking with a ranged attack
+        if (!attackMode || (ranged && !blocked))
+        {
+            //Pitbull mode means go straight to player base
+            if (!pitbullMode)
+            {
+                //Move according to direction
+                transform.parent.position += movementSpeed * 0.02f * transform.right.normalized;
+            }
+            else
+            {
+                //Move straight to player base
+                transform.parent.position += (Singleton<GameManager>.Instance.PlayerBase.transform.position - transform.position).normalized * movementSpeed * 0.02f;
+            }
+        }
+        //If you are ranged and you are not targeting somethign
+        if(ranged && target == null)
+        {
+            //Cooldown to improve performance at the cost of reaction time
+            if (rangedSearchCooldown == 0)
+            {
+                //Identify target
+                target = FindRangedTarget();
+
+                //If target found attack it
+                if(target != null)
+                {
+                    target.AddDamager(this);
+                    fireCoroutine = StartCoroutine(fireLoop());
+                    attackMode = true;
+                }
+                //Reset the cooldown regardless of if it found anything
+                rangedSearchCooldown = baseRangedSearchCooldown;
+            }
+            else
+            {
+                //Process cooldown
+                rangedSearchCooldown--;
+            }
+        }
         //If movement is not confirmed to be blocked, do checks
         if (!blocked)
         {
             //Check in front of enemy and get all collisions shortly ahead
-            RaycastHit2D[] hits = Physics2D.CircleCastAll(transform.position, radius, transform.right, movementSpeed * 0.06f, LayerMask.GetMask(new string[] { "EnemyBlockers" }));
+            RaycastHit2D[] hits = Physics2D.CircleCastAll(transform.position, radius, transform.right, movementSpeed * 0.02f, LayerMask.GetMask(new string[] { "EnemyBlockers" }));
             
             //Go through each collision and figure out what to do with them
             foreach (RaycastHit2D hit in hits)
@@ -274,17 +319,36 @@ public class Enemy : MonoBehaviour, IDamageable, IDamager
                     {
                         blocked = true;
                         attackMode = true;
-                        target = hit.collider.gameObject.GetComponent<IDamageable>();
-                        target.AddDamager(this);
-                        StartCoroutine(fireLoop());
+                        //If you are already attacking a different building due to ranged, stop attacking it
+                        if (ranged && target != hit.collider.gameObject.GetComponent<PlayerBuilding>())
+                        {
+                            target.RemoveDamager(this);
+                        }
+                        //If you are not ranged or you are attacking a different building already, start attacking the building
+                        if(!ranged || target != hit.collider.gameObject.GetComponent<PlayerBuilding>())
+                        {
+                            target = hit.collider.gameObject.GetComponent<PlayerBuilding>();
+                            target.AddDamager(this);
+                            if (fireCoroutine == null)
+                            {
+                                fireCoroutine = StartCoroutine(fireLoop());
+                            }
+
+                        }
                     }
                     //If it is a blocking terrain tile, generate a new path since this means that you are off of the path
                     else if(tags.Tags.Contains("Ground"))
                     {
                         currentGuide = GeneratePath();
+                        //Follow the guide if it exists
                         if (currentGuide != null)
                         {
                             transform.rotation = currentGuide.transform.rotation;
+                        }
+                        //If it does not, go straight for the base
+                        else
+                        {
+                            pitbullMode = true;
                         }
                         transform.parent.position = TileManager.Instance.BlockerTilemap.CellToWorld(TileManager.Instance.BlockerTilemap.WorldToCell(transform.position));
                     }
@@ -313,15 +377,6 @@ public class Enemy : MonoBehaviour, IDamageable, IDamager
         }
     }
 
-    //Register ranged attack target update, currently useless
-    public void RangedTargetUpdate(IDamageable target)
-    {
-        if (ranged && !attackMode)
-        {
-            this.target = target;
-            attackMode = true;
-        }
-    }
     //Take damage
     public float TakeDamage(float damage)
     {
@@ -363,10 +418,28 @@ public class Enemy : MonoBehaviour, IDamageable, IDamager
     //Stop attacking, should only happen when either you or your target dies
     public void cancelAttack()
     {
-        StopAllCoroutines();
-        attackMode = false;
+        //If you killed your enemy and are a ranged attacker
+        if (health > 0 && ranged)
+        {
+            //Find new target
+            target = FindRangedTarget();
+        }
+        else
+        {
+            //Mark target as nonexistent
+            target = null;
+        }
+        //If a building died, guaranteed that you are no longer blocked since blocking buildings take damage priority
         blocked = false;
-        target = null;
+
+        //If no target
+        if (target == null)
+        {
+            //Cancel everything
+            StopCoroutine(fireCoroutine);
+            fireCoroutine = null;
+            attackMode = false;
+        }
     }
 
     //Add to the list of people attacking you
@@ -381,11 +454,37 @@ public class Enemy : MonoBehaviour, IDamageable, IDamager
         currentDamagers.Remove(damager);
     }
 
-    //Heal self, currently useless for enemies due to no callers
+    //Heal self capped to max health, currently useless for enemies due to no callers
     public void Heal(float healing)
     {
         health = Mathf.Min(healing + health, baseHealth);
         healthBar.transform.localScale = new Vector3(health / baseHealth, 0.1f, 1);
         healthBar.transform.localPosition = new Vector3((-1 + health / baseHealth) * 0.5f, -0.55f, 0);
+    }
+
+    public PlayerBuilding FindRangedTarget()
+    {
+        //Get all colliders within range
+        Collider2D[] hits = Physics2D.OverlapCircleAll(transform.position, range);
+
+        //Get a priority queue to ensure that you fire at the closest enemy
+        Utils.PriorityQueue<PlayerBuilding, float> targets = new Utils.PriorityQueue<PlayerBuilding, float>();
+
+        //Go through every potential enemy
+        foreach (Collider2D hit in hits)
+        {
+            //If it is an enemy, add it to the queue with the distance between the enemy and yourself as the priority
+            if (hit.gameObject.TryGetComponent(out PlayerBuilding building))
+            {
+                targets.Enqueue(building, Mathf.Abs((hit.gameObject.transform.position - transform.position).magnitude));
+            }
+        }
+        //If there is at least one potential target, return the closest target
+        if (targets.Count > 0)
+        {
+            return targets.Dequeue();
+        }
+        //Otherwise return null
+        return null;
     }
 }

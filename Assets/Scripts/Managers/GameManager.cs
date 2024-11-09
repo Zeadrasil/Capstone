@@ -129,6 +129,38 @@ public class GameManager : Singleton<GameManager>
     public GameObject fastTankDeadlySpammyEnemy;
     public GameObject swarmTankDeadlySpammyEnemy;
     public GameObject fastSwarmTankDeadlySpammyEnemy;
+    public GameObject rangedEnemy;
+    public GameObject fastRangedEnemy;
+    public GameObject swarmRangedEnemy;
+    public GameObject fastSwarmRangedEnemy;
+    public GameObject tankRangedEnemy;
+    public GameObject fastTankRangedEnemy;
+    public GameObject swarmTankRangedEnemy;
+    public GameObject fastSwarmTankRangedEnemy;
+    public GameObject deadlyRangedEnemy;
+    public GameObject fastDeadlyRangedEnemy;
+    public GameObject swarmDeadlyRangedEnemy;
+    public GameObject fastSwarmDeadlyRangedEnemy;
+    public GameObject tankDeadlyRangedEnemy;
+    public GameObject fastTankDeadlyRangedEnemy;
+    public GameObject swarmTankDeadlyRangedEnemy;
+    public GameObject fastSwarmTankDeadlyRangedEnemy;
+    public GameObject spammyRangedEnemy;
+    public GameObject fastSpammyRangedEnemy;
+    public GameObject swarmSpammyRangedEnemy;
+    public GameObject fastSwarmSpammyRangedEnemy;
+    public GameObject tankSpammyRangedEnemy;
+    public GameObject fastTankSpammyRangedEnemy;
+    public GameObject swarmTankSpammyRangedEnemy;
+    public GameObject fastSwarmTankSpammyRangedEnemy;
+    public GameObject deadlySpammyRangedEnemy;
+    public GameObject fastDeadlySpammyRangedEnemy;
+    public GameObject swarmDeadlySpammyRangedEnemy;
+    public GameObject fastSwarmDeadlySpammyRangedEnemy;
+    public GameObject tankDeadlySpammyRangedEnemy;
+    public GameObject fastTankDeadlySpammyRangedEnemy;
+    public GameObject swarmTankDeadlySpammyRangedEnemy;
+    public GameObject fastSwarmTankDeadlySpammyRangedEnemy;
 
     //Building UI storage
     public Image nextWaveBackground;
@@ -452,15 +484,23 @@ public class GameManager : Singleton<GameManager>
     {
 
         //Assigns enemies to proper tier storages
-        tierOneEnemies = new GameObject[] { fastEnemy, swarmEnemy, tankEnemy, deadlyEnemy, spammyEnemy };
+        tierOneEnemies = new GameObject[] { fastEnemy, swarmEnemy, tankEnemy, deadlyEnemy, spammyEnemy, rangedEnemy };
         tierTwoEnemies = new GameObject[] { fastSwarmEnemy, fastTankEnemy, fastDeadlyEnemy, fastSpammyEnemy,
-            swarmTankEnemy, swarmDeadlyEnemy, swarmSpammyEnemy, tankDeadlyEnemy, tankSpammyEnemy, deadlySpammyEnemy };
+            swarmTankEnemy, swarmDeadlyEnemy, swarmSpammyEnemy, tankDeadlyEnemy, tankSpammyEnemy, deadlySpammyEnemy,
+            fastRangedEnemy, swarmRangedEnemy, tankRangedEnemy, deadlyRangedEnemy, spammyRangedEnemy};
         tierThreeEnemies = new GameObject[] { fastSwarmTankEnemy, fastSwarmDeadlyEnemy, fastSwarmSpammyEnemy,
             fastTankDeadlyEnemy, fastTankSpammyEnemy, fastDeadlySpammyEnemy, swarmTankDeadlyEnemy, swarmTankSpammyEnemy,
-            swarmDeadlySpammyEnemy, tankDeadlySpammyEnemy };
+            swarmDeadlySpammyEnemy, tankDeadlySpammyEnemy, fastSwarmRangedEnemy, fastTankRangedEnemy, 
+            fastDeadlyRangedEnemy, fastSpammyRangedEnemy, swarmTankRangedEnemy, swarmDeadlyRangedEnemy, 
+            swarmSpammyRangedEnemy, tankDeadlyRangedEnemy, tankSpammyRangedEnemy, deadlySpammyRangedEnemy };
         tierFourEnemies = new GameObject[] { fastSwarmTankDeadlyEnemy, fastSwarmTankSpammyEnemy,
-            fastSwarmDeadlySpammyEnemy, fastTankDeadlySpammyEnemy, swarmTankDeadlySpammyEnemy };
-        tierFiveEnemies = new GameObject[] { fastSwarmTankDeadlySpammyEnemy };
+            fastSwarmDeadlySpammyEnemy, fastTankDeadlySpammyEnemy, swarmTankDeadlySpammyEnemy, fastSwarmTankRangedEnemy,
+            fastSwarmDeadlyRangedEnemy, fastSwarmSpammyRangedEnemy, fastTankDeadlyRangedEnemy, fastTankSpammyRangedEnemy,
+            fastDeadlySpammyRangedEnemy, swarmTankDeadlyRangedEnemy, swarmTankSpammyRangedEnemy, 
+            swarmDeadlySpammyRangedEnemy, tankDeadlySpammyRangedEnemy };
+        tierFiveEnemies = new GameObject[] { fastSwarmTankDeadlySpammyEnemy, fastSwarmTankDeadlyRangedEnemy,
+            fastSwarmTankSpammyRangedEnemy, fastSwarmDeadlySpammyRangedEnemy, fastTankDeadlySpammyRangedEnemy,
+            swarmTankDeadlySpammyRangedEnemy};
 
         //Combine tier storages to form overall storage
         //allEnemies = new GameObject[tierOneEnemies.Length + tierTwoEnemies.Length + tierThreeEnemies.Length + tierFourEnemies.Length + tierFiveEnemies.Length + 2];
@@ -545,7 +585,7 @@ public class GameManager : Singleton<GameManager>
             for (int i = 0; i < tierZeroEnemyCount; i++)
             {
                 int at = BasicUtils.WrappedRandomRange(0, TileManager.Instance.potentialSpawnpoints.Count);
-                Enemy createdEnemy = Instantiate(baseEnemy, TileManager.Instance.TraversableTilemap.CellToWorld(new Vector3Int(TileManager.Instance.potentialSpawnpoints[at].x, TileManager.Instance.potentialSpawnpoints[at].y)) + new Vector3(BasicUtils.WrappedRandomRange(-0.2f, 0.2f), BasicUtils.WrappedRandomRange(-0.2f, 0.2f)), Quaternion.identity).GetComponentInChildren<Enemy>();
+                Enemy createdEnemy = Instantiate(rangedEnemy, TileManager.Instance.TraversableTilemap.CellToWorld(new Vector3Int(TileManager.Instance.potentialSpawnpoints[at].x, TileManager.Instance.potentialSpawnpoints[at].y)) + new Vector3(BasicUtils.WrappedRandomRange(-0.2f, 0.2f), BasicUtils.WrappedRandomRange(-0.2f, 0.2f)), Quaternion.identity).GetComponentInChildren<Enemy>();
                 enemySpawns.Add(createdEnemy);
             }
             //Creates the correct amount of tier one enemies for the wave
@@ -588,16 +628,16 @@ public class GameManager : Singleton<GameManager>
                 Enemy createdEnemy = Instantiate(tierFiveEnemies[BasicUtils.WrappedRandomRange(0, tierFiveEnemies.Length)], TileManager.Instance.TraversableTilemap.CellToWorld(new Vector3Int(TileManager.Instance.potentialSpawnpoints[at].x, TileManager.Instance.potentialSpawnpoints[at].y)) + new Vector3(BasicUtils.WrappedRandomRange(-0.2f, 0.2f), BasicUtils.WrappedRandomRange(-0.2f, 0.2f)), Quaternion.identity).GetComponentInChildren<Enemy>();
                 enemySpawns.Add(createdEnemy);
             }
-            ////Creates the correct amount of tier six enemies for the wave
-            //int tierSixEnemyCount = (int)(2 * Mathf.Max(Mathf.Pow(wave - 316, 1 + (0.01f * enemyDifficulty - 0.01f)), 0) * enemyDifficulty);
-            //for (int i = 0; i < tierThreeEnemyCount; i++)
-            //{
-            //    int at = BasicUtils.WrappedRandomRange(0, TileManager.Instance.potentialSpawnpoints.Count);
-            //    Enemy createdEnemy = Instantiate(ultimateEnemy, TileManager.Instance.TraversableTilemap.CellToWorld(new Vector3Int(TileManager.Instance.potentialSpawnpoints[at].x, TileManager.Instance.potentialSpawnpoints[at].y)) + new Vector3(BasicUtils.WrappedRandomRange(-0.2f, 0.2f), BasicUtils.WrappedRandomRange(-0.2f, 0.2f)), Quaternion.identity).GetComponentInChildren<Enemy>();
-            //    enemySpawns.Add(createdEnemy);
-            //}
-            //Goes through every enemy
-            foreach(Enemy enemy in enemySpawns)
+            //Creates the correct amount of tier six enemies for the wave
+            int tierSixEnemyCount = (int)(2 * Mathf.Max(Mathf.Pow(wave - 316, 1 + (0.01f * enemyQuantity - 0.01f)), 0) * enemyQuantity);
+            for (int i = 0; i < tierThreeEnemyCount; i++)
+            {
+                int at = BasicUtils.WrappedRandomRange(0, TileManager.Instance.potentialSpawnpoints.Count);
+                Enemy createdEnemy = Instantiate(fastSwarmTankDeadlySpammyRangedEnemy, TileManager.Instance.TraversableTilemap.CellToWorld(new Vector3Int(TileManager.Instance.potentialSpawnpoints[at].x, TileManager.Instance.potentialSpawnpoints[at].y)) + new Vector3(BasicUtils.WrappedRandomRange(-0.2f, 0.2f), BasicUtils.WrappedRandomRange(-0.2f, 0.2f)), Quaternion.identity).GetComponentInChildren<Enemy>();
+                enemySpawns.Add(createdEnemy);
+            }
+            //Goes through every created enemy
+            foreach (Enemy enemy in enemySpawns)
             {
                 //Adds the enemy to the list of current enemies
                 currentEnemies.Add(enemy);
