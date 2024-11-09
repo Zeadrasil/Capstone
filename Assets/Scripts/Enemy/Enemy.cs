@@ -8,30 +8,30 @@ using Priority_Queue;
 public class Enemy : MonoBehaviour, IDamageable, IDamager
 {
     //Enemy data
-    private float health = 10;
-    [SerializeField] private float baseHealth = 10;
-    [SerializeField] private float movementSpeed = 1;
-    [SerializeField] private float damage = 2;
-    private bool attackMode = false;
-    private bool pitbullMode = false;
+    protected float health = 50;
+    [SerializeField] protected float baseHealth = 10;
+    [SerializeField] protected float movementSpeed = 1;
+    [SerializeField] protected float damage = 2;
+    protected bool attackMode = false;
+    protected bool pitbullMode = false;
     [SerializeField] bool ranged = false;
-    private bool blocked = false;
-    [SerializeField] private float firerate = 10;
+    protected bool blocked = false;
+    [SerializeField] protected float firerate = 10;
     public bool swarmer = false;
     public EnemyCheckpoint currentGuide;
-    private PlayerBuilding target;
+    protected PlayerBuilding target;
     [SerializeField] float range = 5;
-    private float rangedSearchCooldown = 0;
-    private float baseRangedSearchCooldown = 10;
-    [SerializeField] private float radius;
-    private Vector3 offset = Vector3.zero;
-    private float offsetDistance = 0;
-    private List<IDamager> currentDamagers = new List<IDamager>();
+    protected float rangedSearchCooldown = 0;
+    protected float baseRangedSearchCooldown = 9;
+    [SerializeField] protected float radius;
+    protected Vector3 offset = Vector3.zero;
+    protected float offsetDistance = 0;
+    protected List<IDamager> currentDamagers = new List<IDamager>();
     [SerializeField] GameObject healthBar;
     Coroutine fireCoroutine;
 
     // Start is called before the first frame update
-    void Start()
+    protected virtual void Start()
     {
         //If you have a guide, follow it
         if (currentGuide != null)
@@ -260,7 +260,7 @@ public class Enemy : MonoBehaviour, IDamageable, IDamager
     }
 
     //Physics so that rigidbodies can be avoided in order to improve performance
-    private void FixedUpdate()
+    protected virtual void FixedUpdate()
     {
         //Only move if you are not attacking, unless you are attacking with a ranged attack
         if (!attackMode || (ranged && !blocked))
@@ -486,5 +486,88 @@ public class Enemy : MonoBehaviour, IDamageable, IDamager
         }
         //Otherwise return null
         return null;
+    }
+
+    //Apply the effects of an aura
+    public void ApplyAura(int type, int level)
+    {
+        //What type of aura is it
+        switch(type)
+        {
+            //Speed aura
+            case 0:
+                {
+                    movementSpeed *= Mathf.Pow(1.1f, level);
+                    break;
+                }
+                //Healing aura
+            case 1:
+                {
+                    Heal(level * baseHealth * 0.025f);
+                    break;
+                }
+                //Damage aura
+            case 2:
+                {
+                    damage *= Mathf.Pow(1.1f, level);
+                    break;
+                }
+                //Firerate aura
+            case 3:
+                {
+                    firerate *= Mathf.Pow(1.1f, level);
+                    break;
+                }
+                //Range aura
+            case 4:
+                {
+                    range *= Mathf.Pow(1.1f, level);
+                    break;
+                }
+
+        }
+    }
+
+    //Remove the effects of an aura
+    public void RemoveAura(int type, int level)
+    {
+        //What type of aura is it
+        switch(type)
+        {
+            //Speed aura
+            case 0:
+                {
+                    movementSpeed /= Mathf.Pow(1.1f, level);
+                    break;
+                }
+                //Healing aura, not a constant effect so do nothing
+            case 1:
+                {
+                    break;
+                }
+                //Damage aura
+            case 2:
+                {
+                    damage /= Mathf.Pow(1.1f, level);
+                    break;
+                }
+                //Firerate aura
+            case 3:
+                {
+                    firerate /= Mathf.Pow(1.1f, level);
+                    break;
+                }
+                //Range aura
+            case 4:
+                {
+                    range /= Mathf.Pow(1.1f, level);
+                    break;
+                }
+        }
+    }
+
+    protected virtual int GetEnemyType()
+    {
+        return 0;
     }
 }

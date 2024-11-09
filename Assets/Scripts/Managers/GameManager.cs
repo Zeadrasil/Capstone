@@ -161,6 +161,7 @@ public class GameManager : Singleton<GameManager>
     public GameObject fastTankDeadlySpammyRangedEnemy;
     public GameObject swarmTankDeadlySpammyRangedEnemy;
     public GameObject fastSwarmTankDeadlySpammyRangedEnemy;
+    public GameObject auraEnemy;
 
     //Building UI storage
     public Image nextWaveBackground;
@@ -454,6 +455,18 @@ public class GameManager : Singleton<GameManager>
         //Load other data
         wave = data.wave;
         tileManager.subbedTiles = new List<Vector2Int>(data.swappedTiles);
+        
+        //Ensure that all tiles have been generated properly
+        for(int i = 0; i < wave; i++)
+        {
+            tileManager.Next();
+        }
+
+        //Ensure that all subbed tiles have been properly placed
+        foreach(Vector2Int tile in tileManager.subbedTiles)
+        {
+            tileManager.Generate(tile);
+        }
 
         //Go through all of the loaded buildings in order to place them on the map
         foreach (BuildingData buildingData in data.buildings)
@@ -636,6 +649,15 @@ public class GameManager : Singleton<GameManager>
                 Enemy createdEnemy = Instantiate(fastSwarmTankDeadlySpammyRangedEnemy, TileManager.Instance.TraversableTilemap.CellToWorld(new Vector3Int(TileManager.Instance.potentialSpawnpoints[at].x, TileManager.Instance.potentialSpawnpoints[at].y)) + new Vector3(BasicUtils.WrappedRandomRange(-0.2f, 0.2f), BasicUtils.WrappedRandomRange(-0.2f, 0.2f)), Quaternion.identity).GetComponentInChildren<Enemy>();
                 enemySpawns.Add(createdEnemy);
             }
+            //Creates the correct amount of aura enemies for the wave
+            int auraEnemyCount = (int)(enemyQuantity * wave / 50);
+            for(int i = 0; i <auraEnemyCount; i++)
+            {
+                int at = BasicUtils.WrappedRandomRange(0, TileManager.Instance.potentialSpawnpoints.Count);
+                AuraEnemy createdEnemy = Instantiate(auraEnemy, TileManager.Instance.TraversableTilemap.CellToWorld(new Vector3Int(TileManager.Instance.potentialSpawnpoints[at].x, TileManager.Instance.potentialSpawnpoints[at].y)) + new Vector3(BasicUtils.WrappedRandomRange(-0.2f, 0.2f), BasicUtils.WrappedRandomRange(-0.2f, 0.2f)), Quaternion.identity).GetComponentInChildren<AuraEnemy>();
+                createdEnemy.auraCount = auraEnemyCount;
+                enemySpawns.Add(createdEnemy);
+            }
             //Goes through every created enemy
             foreach (Enemy enemy in enemySpawns)
             {
@@ -669,8 +691,6 @@ public class GameManager : Singleton<GameManager>
             TileManager.Instance.Next();
         }
     }
-
-    //Select which building you would like to construct
     public void Build(int type)
     {
         //Change the frames in the UI to show which you have selected

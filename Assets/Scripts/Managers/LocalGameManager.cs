@@ -86,6 +86,7 @@ public class LocalGameManager : MonoBehaviour
     [SerializeField] GameObject fastTankDeadlySpammyRangedEnemy;
     [SerializeField] GameObject swarmTankDeadlySpammyRangedEnemy;
     [SerializeField] GameObject fastSwarmTankDeadlySpammyRangedEnemy;
+    [SerializeField] GameObject auraEnemy;
 
     //Construction panel data
     [SerializeField] Image nextWaveBackground;
@@ -303,6 +304,7 @@ public class LocalGameManager : MonoBehaviour
         GameManager.Instance.fastTankDeadlySpammyRangedEnemy = fastTankDeadlySpammyRangedEnemy;
         GameManager.Instance.swarmTankDeadlySpammyRangedEnemy = swarmTankDeadlySpammyRangedEnemy;
         GameManager.Instance.fastSwarmTankDeadlySpammyRangedEnemy = fastSwarmTankDeadlySpammyRangedEnemy;
+        GameManager.Instance.auraEnemy = auraEnemy;
 
         //Pass construction panel data
         GameManager.Instance.nextWaveBackground = nextWaveBackground;

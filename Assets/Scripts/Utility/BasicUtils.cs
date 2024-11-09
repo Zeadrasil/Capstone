@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -7,6 +8,7 @@ public static class BasicUtils
 {
     //Keeps track of stuff for RNG
     public static uint generatedNumbers = 0;
+    private static System.Random random = new System.Random();
 
     //Translates a KeyCode into a more readable string than the raw implementation of its ToString()
     public static string TranslateKey(KeyCode keyCode)
@@ -88,14 +90,14 @@ public static class BasicUtils
     public static float WrappedRandomRange(float min, float max)
     {
         generatedNumbers++;
-        return UnityEngine.Random.Range(min, max);
+        return min + ((max - min) * random.Next() / (float)int.MaxValue);
     }
 
     //Wraps around the RNG function in order to have saving and loading not affect RNG
     public static int WrappedRandomRange(int min, int max)
     {
         generatedNumbers++;
-        return UnityEngine.Random.Range(min, max);
+        return random.Next(min, max);
     }
 
     //Spams random numbers until you reachthe same position in the RNG sequence as you the given position
@@ -110,7 +112,7 @@ public static class BasicUtils
     //Wraps around the RNG function in order to ensure that the generated number tracking is accurate
     public static void WrappedInitState(int seed)
     {
-        UnityEngine.Random.InitState(seed);
+        random = new System.Random(seed);
         generatedNumbers = 0;
     }
 }

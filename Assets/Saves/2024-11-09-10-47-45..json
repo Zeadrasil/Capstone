@@ -30,16 +30,16 @@
         1.0,
         1.0
     ],
-    "budget": 8.999996185302735,
-    "wave": 0,
+    "budget": 8999999999.999996185302735,
+    "wave": 150,
     "enemyQuantity": 1.0,
     "enemyStrength": 1.0,
     "playerStrength": 1.0,
     "playerHealth": 1.0,
-    "playerIncome": 1.0,
-    "playerCosts": 1.0,
-    "energyProduction": 1.0,
-    "energyConsumption": 1.0,
+    "playerIncome": 10.0,
+    "playerCosts": 0.1,
+    "energyProduction": 10.0,
+    "energyConsumption": 0.1,
     "buildings": [
         {
             "type": 0,

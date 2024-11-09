@@ -9026,6 +9026,7 @@ MonoBehaviour:
   fastTankDeadlySpammyRangedEnemy: {fileID: 4756387668570662307, guid: 3efeeb667f5bd4d489eaf76544e6fb82, type: 3}
   swarmTankDeadlySpammyRangedEnemy: {fileID: 4756387668570662307, guid: e2530b39cf5497f408f9fcd599f7b8e8, type: 3}
   fastSwarmTankDeadlySpammyRangedEnemy: {fileID: 4756387668570662307, guid: b337653635da3d141ab181540b9114a2, type: 3}
+  auraEnemy: {fileID: 4756387668570662307, guid: c40c73862111c6949be0b443b8d8a4d9, type: 3}
   nextWaveBackground: {fileID: 345020067}
   nextWaveFrame: {fileID: 681577564}
   tierOneTurretBackground: {fileID: 1407618499}
