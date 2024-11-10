@@ -270,7 +270,22 @@ public class Turret : PlayerBuilding, IDamager, IUpgradeable
                 //Damage new target if it exists
                 if(target != null)
                 {
-                    target.TakeDamage(damage);
+                    if (splash)
+                    {
+                        Collider2D[] hits = Physics2D.OverlapCircleAll(target.transform.position, splashRange, LayerMask.GetMask(new string[] { "Enemies" }));
+                        foreach(Collider2D hit in hits)
+                        {
+                            Enemy enemy = hit.gameObject.GetComponentInChildren<Enemy>();
+                            if (enemy != null)
+                            {
+                                enemy.TakeDamage(damage);
+                            }
+                        }
+                    }
+                    else
+                    {
+                        target.TakeDamage(damage);
+                    }
                 }
                 else
                 {
@@ -424,6 +439,12 @@ public class Turret : PlayerBuilding, IDamager, IUpgradeable
                 //Increase alignment count and set the alignment
                 alignments++;
                 expenseModifiers[type] = 0.3f;
+                
+                if(type == 0)
+                {
+                    splash = true;
+                    splashRange = 0.1f;
+                }
 
                 //If this is a second alignment (max)
                 if (alignments == 2)
