@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using TMPro;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.Tilemaps;
 using UnityEngine.UI;
@@ -606,7 +607,7 @@ public class GameManager : Singleton<GameManager>
             {
                 
                 int at = BasicUtils.WrappedRandomRange(0, TileManager.Instance.potentialSpawnpoints.Count);
-                AsyncInstantiateOperation<GameObject> createdEnemy = InstantiateAsync(rangedEnemy, TileManager.Instance.TraversableTilemap.CellToWorld(new Vector3Int(TileManager.Instance.potentialSpawnpoints[at].x, TileManager.Instance.potentialSpawnpoints[at].y)) + new Vector3(BasicUtils.WrappedRandomRange(-0.2f, 0.2f), BasicUtils.WrappedRandomRange(-0.2f, 0.2f)), Quaternion.identity);
+                AsyncInstantiateOperation<GameObject> createdEnemy = InstantiateAsync(baseEnemy, TileManager.Instance.TraversableTilemap.CellToWorld(new Vector3Int(TileManager.Instance.potentialSpawnpoints[at].x, TileManager.Instance.potentialSpawnpoints[at].y)) + new Vector3(BasicUtils.WrappedRandomRange(-0.2f, 0.2f), BasicUtils.WrappedRandomRange(-0.2f, 0.2f)), Quaternion.identity);
                 enemySpawns.Add(createdEnemy);
             }
             //Creates the correct amount of tier one enemies for the wave
@@ -685,8 +686,6 @@ public class GameManager : Singleton<GameManager>
             {
                 foreach (Enemy enemy in createdEnemies)
                 {
-                    //Adds the enemy to the list of current enemies
-                    currentEnemies.Add(enemy);
 
                     //Generates a path for the enemy
                     Vector2Int goal = (Vector2Int)TileManager.Instance.TraversableTilemap.WorldToCell(enemy.transform.position);
@@ -700,11 +699,14 @@ public class GameManager : Singleton<GameManager>
                     
                     if (pathFinder[i].Result.Item1)
                     {
+                        //Adds the enemy to the list of current enemies
+                        currentEnemies.Add(createdEnemies[i]);
                         EnemyCheckpoint checkpoint = createdEnemies[i].GeneratePath(pathFinder[i].Result.Item2, (Vector2Int)TileManager.Instance.TraversableTilemap.WorldToCell(createdEnemies[i].transform.position));
+                        pathFinder[i].Result.Item2[(Vector2Int)TileManager.Instance.TraversableTilemap.WorldToCell(createdEnemies[i].transform.position)].Destroy();
                         //Duplicates swarmer enemies
                         if (createdEnemies[i].swarmer)
                         {
-                            Enemy duplicateEnemy = Instantiate(createdEnemies[i], TileManager.Instance.TraversableTilemap.CellToWorld(TileManager.Instance.TraversableTilemap.WorldToCell(createdEnemies[i].transform.position)) + new Vector3(BasicUtils.WrappedRandomRange(-0.2f, 0.2f), BasicUtils.WrappedRandomRange(-0.2f, 0.2f)), Quaternion.identity);
+                            Enemy duplicateEnemy = Instantiate(createdEnemies[i].transform.parent.gameObject, TileManager.Instance.TraversableTilemap.CellToWorld(TileManager.Instance.TraversableTilemap.WorldToCell(createdEnemies[i].transform.position)) + new Vector3(BasicUtils.WrappedRandomRange(-0.2f, 0.2f), BasicUtils.WrappedRandomRange(-0.2f, 0.2f)), Quaternion.identity).GetComponentInChildren<Enemy>();
                             currentEnemies.Add(duplicateEnemy);
                             duplicateEnemy.ActivatePath(checkpoint);
                         }
@@ -712,6 +714,8 @@ public class GameManager : Singleton<GameManager>
                     }
                     else
                     {
+                        int at = BasicUtils.WrappedRandomRange(0, TileManager.Instance.potentialSpawnpoints.Count);
+                        createdEnemies[i].transform.position = TileManager.Instance.TraversableTilemap.CellToWorld(new Vector3Int(TileManager.Instance.potentialSpawnpoints[at].x, TileManager.Instance.potentialSpawnpoints[at].y)) + new Vector3(BasicUtils.WrappedRandomRange(-0.2f, 0.2f), BasicUtils.WrappedRandomRange(-0.2f, 0.2f));
                         enemyContainer.Add(createdEnemies[i]);
                     }
                 }

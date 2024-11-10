@@ -13,6 +13,7 @@ public class NavNode
     public float cost;
     private static int tracker;
     private int id;
+    private bool destroyed = false;
 
     //Constructor only allows NavNodes with locations
     public NavNode(Vector2Int location)
@@ -33,5 +34,18 @@ public class NavNode
     public bool Equals(NavNode other)
     {
         return id == other.id;
+    }
+
+    public void Destroy()
+    {
+        destroyed = true;
+        if (!destroyed)
+        {
+            foreach(NavNode n in neighbors)
+            {
+                n.Destroy();
+            }
+            neighbors = null;
+        }
     }
 }
