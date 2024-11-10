@@ -492,4 +492,21 @@ public class TileManager : Singleton<TileManager>
     {
         Destroy(BlockerTilemap.transform.parent.gameObject);
     }
+
+    public Dictionary<Vector2Int, NavNode> copyAdjacencies()
+    {
+        Dictionary<Vector2Int, NavNode> result = new Dictionary<Vector2Int, NavNode>();
+        foreach(NavNode oldNode in Adjacencies.Values)
+        {
+            result.Add(oldNode.location, new NavNode(oldNode.location, oldNode.position));
+        }
+        foreach (Vector2Int at in Adjacencies.Keys)
+        {
+            foreach (NavNode node in Adjacencies[at].neighbors)
+            {
+                result[at].neighbors.Add(result[node.location]);
+            }
+        }
+        return result;
+    }
 }

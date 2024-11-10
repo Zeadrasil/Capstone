@@ -106,6 +106,7 @@ public class RepairStation : PlayerBuilding, IDamageable, IUpgradeable
         health = Mathf.Min(health + healing, baseHealth);
         healthBar.transform.localScale = new Vector3(health / baseHealth, 0.1f, 1);
         healthBar.transform.localPosition = new Vector3((-1 + health / baseHealth) * 0.5f, -0.4f, 0);
+        GameManager.Instance.playerHealths[location] = health;
     }
 
     //Remove damager from damager list
@@ -120,6 +121,7 @@ public class RepairStation : PlayerBuilding, IDamageable, IUpgradeable
         health -= damage;
         healthBar.transform.localScale = new Vector3(health / baseHealth, 0.1f, 1);
         healthBar.transform.localPosition = new Vector3((-1 + health / baseHealth) * 0.5f, -0.4f, 0);
+        GameManager.Instance.playerHealths[location] = health;
         //If health is at or below 0
         if (health <= 0)
         {
@@ -148,12 +150,14 @@ public class RepairStation : PlayerBuilding, IDamageable, IUpgradeable
             case 0:
                 {
                     range *= upgradeEffects[0] * GameManager.Instance.playerStrength;
+                    GameManager.Instance.playerRepairData[location] = healing * range;
                     break;
                 }
             //Healing power
             case 1:
                 {
                     healing *= upgradeEffects[1] * GameManager.Instance.playerStrength;
+                    GameManager.Instance.playerRepairData[location] = healing * range;
                     break;
                 }
             //Building Health
@@ -161,6 +165,7 @@ public class RepairStation : PlayerBuilding, IDamageable, IUpgradeable
                 {
                     baseHealth *= upgradeEffects[2] * GameManager.Instance.playerHealth;
                     health += upgradeEffects[2] * GameManager.Instance.playerHealth;
+                    GameManager.Instance.playerHealths[location] = health;
                     break;
                 }
         }
@@ -189,6 +194,9 @@ public class RepairStation : PlayerBuilding, IDamageable, IUpgradeable
             //If you are unable to specialize, you are finished specializing
             finishedAligning = maxAlignments == 0;
         }
+
+        GameManager.Instance.playerHealths.Add(location, health);
+        GameManager.Instance.playerRepairData.Add(location, healing * range);
     }
 
     // Update is called once per frame
@@ -263,6 +271,8 @@ public class RepairStation : PlayerBuilding, IDamageable, IUpgradeable
     {
         //Call GameManager removal
         GameManager.Instance.RemoveBuilding(this);
+        GameManager.Instance.playerHealths.Remove(location);
+        GameManager.Instance.playerRepairData.Remove(location);
 
         //Tell all damagers to find something else
         foreach (IDamager damager in currentDamagers)

@@ -10,13 +10,13 @@ public class Enemy : MonoBehaviour, IDamageable, IDamager
     //Enemy data
     protected float health = 50;
     [SerializeField] protected float baseHealth = 10;
-    [SerializeField] protected float movementSpeed = 1;
-    [SerializeField] protected float damage = 2;
+    public float movementSpeed = 1;
+    public float damage = 2;
     protected bool attackMode = false;
     protected bool pitbullMode = false;
     [SerializeField] bool ranged = false;
     protected bool blocked = false;
-    [SerializeField] protected float firerate = 10;
+    public float firerate = 10;
     public bool swarmer = false;
     public EnemyCheckpoint currentGuide;
     protected PlayerBuilding target;
@@ -76,13 +76,11 @@ public class Enemy : MonoBehaviour, IDamageable, IDamager
 
     }
 
-    //Generates a path for the enemy to follow
-    public EnemyCheckpoint GeneratePath()
+    //Finds a path for the enemy
+    public static (bool, Dictionary<Vector2Int, NavNode>) FindPath(Vector2Int goal, float movementSpeed, float damage, float firerate, Vector3 position)
     {
-        //Ready navigation map
-        Tilemap tilemap = TileManager.Instance.TraversableTilemap;
-        Dictionary<Vector2Int, NavNode> tileAdjacencies = TileManager.Instance.Adjacencies;
-        foreach(NavNode nodeToClear in tileAdjacencies.Values )
+        Dictionary<Vector2Int, NavNode> tileAdjacencies = TileManager.Instance.copyAdjacencies();
+        foreach (NavNode nodeToClear in tileAdjacencies.Values)
         {
             nodeToClear.parent = null;
             nodeToClear.cost = float.MaxValue;
@@ -94,15 +92,14 @@ public class Enemy : MonoBehaviour, IDamageable, IDamager
         //Get starting locaation
         tileAdjacencies.TryGetValue(new Vector2Int(), out NavNode start);
         start.cost = 0;
-        Vector2Int goal = (Vector2Int)tilemap.WorldToCell(transform.position);
 
         //Use priorityqueue to ensure that the first path found is the most efficient or tied for most efficient
         SimplePriorityQueue<NavNode, float> nodes = new SimplePriorityQueue<NavNode, float>();
-        nodes.EnqueueWithoutDuplicates(start, Vector3.Distance(tilemap.CellToWorld(new Vector3Int(start.location.x, start.location.y, 0)), transform.position));
+        nodes.EnqueueWithoutDuplicates(start, Vector3.Distance(start.position, position));
         bool found = false;
 
         //Loop until either a path is found or it confirms that there is no path
-        while(!found && nodes.Count > 0)
+        while (!found && nodes.Count > 0)
         {
             //Gets the cheapest node and checks if it is the goal
             NavNode node = nodes.Dequeue();
@@ -121,7 +118,7 @@ public class Enemy : MonoBehaviour, IDamageable, IDamager
                 float damagePreventionModifier = 0;
 
                 //Cost based on distance travelled
-                float distanceCost = Vector3.Distance(tilemap.CellToWorld(new Vector3Int(adjacentNode.location.x, adjacentNode.location.y)), tilemap.CellToWorld(new Vector3Int(node.location.x, node.location.y)));
+                float distanceCost = Vector3.Distance(adjacentNode.position, node.position);
 
                 //Destroy repair stations if it is worthwhile
                 float repairPreventionModifier = 0;
@@ -131,30 +128,27 @@ public class Enemy : MonoBehaviour, IDamageable, IDamager
                 if (GameManager.Instance.playerBuildings.TryGetValue(adjacentNode.location, out GameObject holder))
                 {
                     //Update health
-                    healthCost = holder.GetComponentInChildren<IDamageable>().GetHealth() * avoidanceModifier;
+                    healthCost = GameManager.Instance.playerHealths.GetValueOrDefault(adjacentNode.location);
 
                     //Check if turret
-                    Turret turretData = holder.GetComponentInChildren<Turret>();
-                    if (turretData != null)
+                    if (GameManager.Instance.playerDamageData.TryGetValue(adjacentNode.location, out float baseDamageModifier))
                     {
                         //If turret apply desire to destroy to prevent damage
-                        damagePreventionModifier = turretData.damage * turretData.firerate * turretData.range / (healthCost);
+                        damagePreventionModifier = baseDamageModifier / (healthCost);
                     }
 
                     //Check if repair station
-                    RepairStation repairData = holder.GetComponentInChildren<RepairStation>();
-                    if (repairData != null)
+                    if (GameManager.Instance.playerRepairData.TryGetValue(adjacentNode.location, out float baseRepairModifier))
                     {
                         //If repair station apply desire to destroy to prevent it from repairing structures you want to destroy
-                        repairPreventionModifier = repairData.healing * repairData.range * 10 / healthCost;
+                        repairPreventionModifier = baseRepairModifier * 10 / healthCost;
                     }
 
-                    //Check if resurce extractor
-                    ResourceExtractor extractorData = holder.GetComponentInChildren<ResourceExtractor>();
-                    if (extractorData != null)
+                    //Check if resource extractor
+                    if (GameManager.Instance.playerExtractionData.TryGetValue(adjacentNode.location, out float baseExtractionModifier))
                     {
                         //If resource extractor apply desire to destroy to prevent the player from getting resources
-                        resourceDenialModifier = (extractorData.extractionRate * 40 + extractorData.energyRate * 100) * extractorData.damageEffectiveness / healthCost;
+                        resourceDenialModifier = baseExtractionModifier / healthCost;
                     }
                 }
 
@@ -181,75 +175,76 @@ public class Enemy : MonoBehaviour, IDamageable, IDamager
                     {
                         adjacentNode.cost = cost;
                         adjacentNode.parent = node;
-                        nodes.EnqueueWithoutDuplicates(adjacentNode, adjacentNode.cost + Vector3.Distance(tilemap.CellToWorld(new Vector3Int(adjacentNode.location.x, adjacentNode.location.y)), transform.position));
+                        nodes.EnqueueWithoutDuplicates(adjacentNode, adjacentNode.cost + Vector3.Distance(adjacentNode.position, position));
                     }
                 }
             }
         }
-        //If there is a path found, generate a system of checkpoints for the enemy to follow
-        if(found)
+        return (found, tileAdjacencies);
+    }
+
+    //Generates a path for the enemy to follow
+    public EnemyCheckpoint GeneratePath(Dictionary<Vector2Int, NavNode> tileAdjacencies, Vector2Int goal)
+    {
+        //Storage variables
+        TileManager.TileDirection currentDirection;
+        TileManager.TileDirection nextDirection;
+
+        //Gets the pathing node that is at the player's location
+        tileAdjacencies.TryGetValue(goal, out NavNode currentNode);
+
+        //Gets the direction from the previous node to the final node
+        nextDirection = TileManager.FromRelativePosition(TileManager.Instance.TraversableTilemap.CellToWorld(new Vector3Int(currentNode.parent.location.x, currentNode.parent.location.y)) - transform.position);
+            
+        //Storage variables to hold checkpoints
+        EnemyCheckpoint enemyCheckpoint = null;
+        EnemyCheckpoint prevEnemyCheckpoint = null;
+            
+        //Get previous node to start backtracking to enemy location
+        currentNode = currentNode.parent;
+            
+        //Keep going until you run out of backtracking nodes, meaning that you have reached the location of the enemy
+        while (currentNode.parent != null)
         {
-            TileManager.TileDirection currentDirection;
-            TileManager.TileDirection nextDirection;
-
-            //Gets the pathing node that is at the player's location
-            tileAdjacencies.TryGetValue(goal, out NavNode currentNode);
-
-            //Gets the direction from the previous node to the final node
-            nextDirection = TileManager.FromRelativePosition(tilemap.CellToWorld(new Vector3Int(currentNode.parent.location.x, currentNode.parent.location.y)) - transform.position);
-            
-            //Storage variables to hold checkpoints
-            EnemyCheckpoint enemyCheckpoint = null;
-            EnemyCheckpoint prevEnemyCheckpoint = null;
-            
-            //Get previous node to start backtracking to enemy location
-            currentNode = currentNode.parent;
-            
-            //Keep going until you run out of backtracking nodes, meaning that you have reached the location of the enemy
-            while (currentNode.parent != null)
-            {
-                //Progress direction trackers
-                currentDirection = nextDirection;
-                nextDirection = TileManager.FromRelativePosition(tilemap.CellToWorld(new Vector3Int(currentNode.parent.location.x, currentNode.parent.location.y)) - tilemap.CellToWorld(new Vector3Int(currentNode.location.x, currentNode.location.y)));
+            //Progress direction trackers
+            currentDirection = nextDirection;
+            nextDirection = TileManager.FromRelativePosition(TileManager.Instance.TraversableTilemap.CellToWorld(new Vector3Int(currentNode.parent.location.x, currentNode.parent.location.y)) - TileManager.Instance.TraversableTilemap.CellToWorld(new Vector3Int(currentNode.location.x, currentNode.location.y)));
                 
-                //Skip placing a new checkpoint if direction does not change
-                if (currentDirection != nextDirection)
+            //Skip placing a new checkpoint if direction does not change
+            if (currentDirection != nextDirection)
+            {
+                //Create new checkpoint
+                if(Instantiate(GameManager.Instance.EnemyCheckpointPrefab, TileManager.Instance.TraversableTilemap.CellToWorld(new Vector3Int(currentNode.parent.location.x, currentNode.parent.location.y)), TileManager.RotateToDirection(currentDirection)).TryGetComponent(out EnemyCheckpoint checkpoint))
                 {
-                    //Create new checkpoint
-                    if(Instantiate(GameManager.Instance.EnemyCheckpointPrefab, tilemap.CellToWorld(new Vector3Int(currentNode.parent.location.x, currentNode.parent.location.y)), TileManager.RotateToDirection(currentDirection)).TryGetComponent(out EnemyCheckpoint checkpoint))
-                    {
-                        //Add the new checkpoint to tracker for culling later
-                        GameManager.Instance.checkpoints.Add(checkpoint.gameObject);
+                    //Add the new checkpoint to tracker for culling later
+                    GameManager.Instance.checkpoints.Add(checkpoint.gameObject);
 
-                        //Check for first created checkpoint
-                        if(enemyCheckpoint == null)
-                        {
-                            //Store checkpoint in order to link them together
-                            enemyCheckpoint = checkpoint;
-                            prevEnemyCheckpoint = checkpoint;
-                        }
-                        else
-                        {
-                            //Link checkpoints together and store them
-                            prevEnemyCheckpoint.next = checkpoint;
-                            prevEnemyCheckpoint.next.previous = prevEnemyCheckpoint;
-                            prevEnemyCheckpoint = prevEnemyCheckpoint.next;
-                        }
+                    //Check for first created checkpoint
+                    if(enemyCheckpoint == null)
+                    {
+                        //Store checkpoint in order to link them together
+                        enemyCheckpoint = checkpoint;
+                        prevEnemyCheckpoint = checkpoint;
+                    }
+                    else
+                    {
+                        //Link checkpoints together and store them
+                        prevEnemyCheckpoint.next = checkpoint;
+                        prevEnemyCheckpoint.next.previous = prevEnemyCheckpoint;
+                        prevEnemyCheckpoint = prevEnemyCheckpoint.next;
                     }
                 }
-                //Progress towards enemy
-                currentNode = currentNode.parent;
             }
-            //If it could not generate a path of checkpoints (typically if it is a straight shot to the enemy base) return null
-            if (enemyCheckpoint == null)
-            {
-                return null;
-            }
-            //Return the first checkpoint that will start guiding enemies
-            return enemyCheckpoint;
+            //Progress towards enemy
+            currentNode = currentNode.parent;
         }
-        //If it could not find a path in the modified A*, return null
-        return null;
+        //If it could not generate a path of checkpoints (typically if it is a straight shot to the enemy base) return null
+        if (enemyCheckpoint == null)
+        {
+            return null;
+        }
+        //Return the first checkpoint that will start guiding enemies
+        return enemyCheckpoint;
     }
 
     //Set guide to a generated path
@@ -339,7 +334,16 @@ public class Enemy : MonoBehaviour, IDamageable, IDamager
                     //If it is a blocking terrain tile, generate a new path since this means that you are off of the path
                     else if(tags.Tags.Contains("Ground"))
                     {
-                        currentGuide = GeneratePath();
+                        Vector2Int goal = (Vector2Int)TileManager.Instance.TraversableTilemap.WorldToCell(transform.position);
+                        (bool, Dictionary<Vector2Int, NavNode>) adjacencies = FindPath(goal, movementSpeed, damage, firerate, transform.position);
+                        if (adjacencies.Item1)
+                        {
+                            currentGuide = GeneratePath(adjacencies.Item2, goal);
+                        }
+                        else
+                        {
+                            currentGuide = null;
+                        }
                         //Follow the guide if it exists
                         if (currentGuide != null)
                         {

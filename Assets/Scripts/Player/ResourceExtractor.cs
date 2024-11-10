@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using static UnityEditor.FilePathAttribute;
 
 //ResourceExtractors are used to generate resources for the player
 public class ResourceExtractor : PlayerBuilding, IUpgradeable
@@ -43,14 +44,17 @@ public class ResourceExtractor : PlayerBuilding, IUpgradeable
         {
             GameManager.Instance.IncreaseIncome(-extractionRate * Mathf.Pow(health, damageEffectiveness) / Mathf.Pow(baseHealth, damageEffectiveness));
         }
-        healthBar.transform.localScale = new Vector3(health / baseHealth, 0.1f, 1);
-        healthBar.transform.localPosition = new Vector3((-1 + health / baseHealth) * 0.5f, -0.55f, 0);
 
         //Decrease health
         health -= damage;
 
+        GameManager.Instance.playerHealths[location] = health;
+
+        healthBar.transform.localScale = new Vector3(health / baseHealth, 0.1f, 1);
+        healthBar.transform.localPosition = new Vector3((-1 + health / baseHealth) * 0.5f, -0.55f, 0);
+
         //If out of health
-        if(health <= 0)
+        if (health <= 0)
         {
             //Call removal events
             Remove();
@@ -82,7 +86,8 @@ public class ResourceExtractor : PlayerBuilding, IUpgradeable
             //Figures out alignment config
             finishedAligning = maxAlignments == alignments;
         }
-
+        GameManager.Instance.playerHealths.Add(location, health);
+        GameManager.Instance.playerExtractionData.Add(location, (extractionRate * 40 + energyRate * 100) * damageEffectiveness);
     }
 
     // Update is called once per frame
@@ -128,9 +133,10 @@ public class ResourceExtractor : PlayerBuilding, IUpgradeable
         {
             GameManager.Instance.IncreaseIncome(-extractionRate * Mathf.Pow(health, damageEffectiveness) / Mathf.Pow(baseHealth, damageEffectiveness));
         }
+        health = Mathf.Min(baseHealth, health + healing);
         healthBar.transform.localScale = new Vector3(health / baseHealth, 0.1f, 1);
         healthBar.transform.localPosition = new Vector3((-1 + health / baseHealth) * 0.5f, -0.55f, 0);
-        health = Mathf.Min(baseHealth, health + healing);
+        GameManager.Instance.playerHealths[location] = health;
         if (active)
         {
             GameManager.Instance.IncreaseIncome(extractionRate * Mathf.Pow(health, damageEffectiveness) / Mathf.Pow(baseHealth, damageEffectiveness));
@@ -164,6 +170,7 @@ public class ResourceExtractor : PlayerBuilding, IUpgradeable
                     {
                         GameManager.Instance.IncreaseIncome(extractionRate);
                     }
+                    GameManager.Instance.playerExtractionData[location] = (extractionRate * 40 + energyRate * 100) * damageEffectiveness;
                     break;
                 }
             //Increase energy production
@@ -180,12 +187,15 @@ public class ResourceExtractor : PlayerBuilding, IUpgradeable
                         GameManager.Instance.mostRecentEnergyDecrease = GameManager.Instance.mostRecentEnergyDecrease.nextChanged;
                         Enable();
                     }
+                    GameManager.Instance.playerExtractionData[location] = (extractionRate * 40 + energyRate * 100) * damageEffectiveness;
                     break;
                 }
             //Increase protection
             case 2:
                 {
+                    //TODO: fix issue with improper data manipulation
                     damageEffectiveness *= upgradeEffects[type] / GameManager.Instance.playerHealth;
+                    GameManager.Instance.playerExtractionData[location] = (extractionRate * 40 + energyRate * 100) * damageEffectiveness;
                     TakeDamage(0);
                     break;
                 }
@@ -194,6 +204,7 @@ public class ResourceExtractor : PlayerBuilding, IUpgradeable
                 {
                     baseHealth *= upgradeEffects[type] * GameManager.Instance.playerHealth;
                     health *= upgradeEffects[type] * GameManager.Instance.playerHealth;
+                    GameManager.Instance.playerHealths[location] = health;
                     break;
                 }
             default:
@@ -343,6 +354,8 @@ public class ResourceExtractor : PlayerBuilding, IUpgradeable
     {
         //Remove building
         GameManager.Instance.RemoveBuilding(this);
+        GameManager.Instance.playerHealths.Remove(location);
+        GameManager.Instance.playerExtractionData.Remove(location);
 
         //Tell all damagers to stop attacking this
         foreach (IDamager damager in currentDamagers)

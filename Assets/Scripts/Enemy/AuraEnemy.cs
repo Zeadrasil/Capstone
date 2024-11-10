@@ -19,12 +19,11 @@ public class AuraEnemy : Enemy
         //Call standard enemy start events
         base.Start();
 
-        //Ensure that you do not try to add more auras than exist
-        auraCount = Mathf.Min(activeAuras.Length, auraCount);
         while(auraCount > 0)
         {
             int at = BasicUtils.WrappedRandomRange(0, activeAuras.Length);
             activeAuras[at]++;
+            auraCount--;
         }
     }
 

@@ -57,6 +57,8 @@ public class Turret : PlayerBuilding, IDamager, IUpgradeable
             //Alignment handling
             finishedAligning = maxAlignments == alignments;
         }
+        GameManager.Instance.playerHealths.Add(location, health);
+        GameManager.Instance.playerDamageData.Add(location, range * damage * firerate * (splash ? Mathf.Pow(splashRange * 10, 2) * 5 : 1));
     }
 
     //Upgrade given stat
@@ -77,24 +79,28 @@ public class Turret : PlayerBuilding, IDamager, IUpgradeable
             case 0:
                 {
                     splashRange *= upgradeEffects[0] * GameManager.Instance.playerStrength;
+                    GameManager.Instance.playerDamageData[location] = range * damage * firerate * (splash ? Mathf.Pow(splashRange * 10, 2) * 5 : 1);
                     break;
                 }
             //Turret range
             case 1:
                 {
                     range *= upgradeEffects[1] * GameManager.Instance.playerStrength;
+                    GameManager.Instance.playerDamageData[location] = range * damage * firerate * (splash ? Mathf.Pow(splashRange * 10, 2) * 5 : 1);
                     break;
                 }
             //Damage
             case 2:
                 {
                     damage *= upgradeEffects[2] * GameManager.Instance.playerStrength;
+                    GameManager.Instance.playerDamageData[location] = range * damage * firerate * (splash ? Mathf.Pow(splashRange * 10, 2) * 5 : 1);
                     break;
                 }
             //Firerate
             case 3:
                 {
                     firerate *= upgradeEffects[3] * GameManager.Instance.playerStrength;
+                    GameManager.Instance.playerDamageData[location] = range * damage * firerate * (splash ? Mathf.Pow(splashRange * 10, 2) * 5 : 1);
                     break;
                 }
             //Building health
@@ -102,6 +108,7 @@ public class Turret : PlayerBuilding, IDamager, IUpgradeable
                 {
                     baseHealth *= upgradeEffects[4] * GameManager.Instance.playerHealth;
                     health += upgradeEffects[4] * GameManager.Instance.playerHealth;
+                    GameManager.Instance.playerHealths[location] = health;
                     break;
                 }
         }
@@ -224,6 +231,7 @@ public class Turret : PlayerBuilding, IDamager, IUpgradeable
         health -= damage;
         healthBar.transform.localScale = new Vector3(health / baseHealth, 0.1f, 1);
         healthBar.transform.localPosition = new Vector3((-1 + health / baseHealth) * 0.5f, -0.4f, 0);
+        GameManager.Instance.playerHealths[location] = health;
         //If out of health
         if (health <= 0)
         {
@@ -340,6 +348,7 @@ public class Turret : PlayerBuilding, IDamager, IUpgradeable
         health = Mathf.Min(healing + health, baseHealth);
         healthBar.transform.localScale = new Vector3(health / baseHealth, 0.1f, 1);
         healthBar.transform.localPosition = new Vector3((-1 + health / baseHealth) * 0.5f, -0.4f, 0);
+        GameManager.Instance.playerHealths[location] = health;
     }
 
     //Sell building
@@ -387,6 +396,8 @@ public class Turret : PlayerBuilding, IDamager, IUpgradeable
 
         //Remove building
         GameManager.Instance.RemoveBuilding(this);
+        GameManager.Instance.playerHealths.Remove(location);
+        GameManager.Instance.playerDamageData.Remove(location);
 
         //If there is a target remove self from target's damagers
         if (target != null)

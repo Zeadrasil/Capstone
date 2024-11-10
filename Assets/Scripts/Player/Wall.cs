@@ -80,6 +80,7 @@ public class Wall : PlayerBuilding, IUpgradeable
         health = Mathf.Min(health + healing * healingEffectiveness, baseHealth);
         healthBar.transform.localScale = new Vector3(health / baseHealth, 0.1f, 1);
         healthBar.transform.localPosition = new Vector3((-1 + health / baseHealth) * 0.5f, -0.65f, 0);
+        GameManager.Instance.playerHealths[location] = health;
     }
 
     //Remove damager from damager list
@@ -107,10 +108,11 @@ public class Wall : PlayerBuilding, IUpgradeable
         health -= damage;
         healthBar.transform.localScale = new Vector3(health / baseHealth, 0.1f, 1);
         healthBar.transform.localPosition = new Vector3((-1 + health / baseHealth) * 0.5f, -0.65f, 0);
+        GameManager.Instance.playerHealths[location] = health;
         //If out of health
         if (health <= 0)
         {
-            
+            Remove();
         }
         //Return health for utility
         return health;
@@ -134,6 +136,7 @@ public class Wall : PlayerBuilding, IUpgradeable
             case 0:
                 {
                     baseHealth *= upgradeEffects[0] * GameManager.Instance.playerHealth;
+                    GameManager.Instance.playerHealths[location] = health;
                     health += upgradeEffects[0] * GameManager.Instance.playerHealth;
                     break;
                 }
@@ -158,6 +161,7 @@ public class Wall : PlayerBuilding, IUpgradeable
             //Alignment handling
             finishedAligning = maxAlignments == 0;
         }
+        GameManager.Instance.playerHealths.Add(location, health);
     }
 
     //Get energy required to upgrade stat
@@ -183,6 +187,7 @@ public class Wall : PlayerBuilding, IUpgradeable
     {
         //Remove building
         GameManager.Instance.RemoveBuilding(this);
+        GameManager.Instance.playerHealths.Remove(location);
 
         //Tell all damagers to find something else to attack
         foreach (IDamager damager in currentDamagers)

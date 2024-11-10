@@ -1,9 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using TMPro;
 using UnityEngine;
+using UnityEngine.Tilemaps;
 using UnityEngine.UI;
+using static UnityEngine.EventSystems.EventTrigger;
 
 //GameManager manages everything inside the game that is not directly related to the main menu or tiles
 public class GameManager : Singleton<GameManager>
@@ -30,6 +33,10 @@ public class GameManager : Singleton<GameManager>
     public float[] energyCosts;
 
     public Dictionary<Vector2Int, GameObject> playerBuildings = new Dictionary<Vector2Int, GameObject>();
+    public Dictionary<Vector2Int, float> playerHealths = new Dictionary<Vector2Int, float>();
+    public Dictionary<Vector2Int, float> playerExtractionData = new Dictionary<Vector2Int, float>();
+    public Dictionary<Vector2Int, float> playerDamageData = new Dictionary<Vector2Int, float>();
+    public Dictionary<Vector2Int, float> playerRepairData = new Dictionary<Vector2Int, float>();
 
     //Economy data
     public float budget;
@@ -628,7 +635,7 @@ public class GameManager : Singleton<GameManager>
             }
             //Creates the correct amount of tier four enemies for the wave
             int tierFourEnemyCount = (int)(2 * Mathf.Max(Mathf.Pow(wave - 76, 1 + (0.09f * enemyQuantity)) - Mathf.Max(Mathf.Pow(wave - 76, 1 + (0.1f * enemyQuantity)) - 123.993519004f, 0), 0) * enemyQuantity);
-            for (int i = 0; i < tierThreeEnemyCount; i++)
+            for (int i = 0; i < tierFourEnemyCount; i++)
             {
                 int at = BasicUtils.WrappedRandomRange(0, TileManager.Instance.potentialSpawnpoints.Count);
                 AsyncInstantiateOperation<GameObject> createdEnemy = InstantiateAsync(tierFourEnemies[BasicUtils.WrappedRandomRange(0, tierFourEnemies.Length)], TileManager.Instance.TraversableTilemap.CellToWorld(new Vector3Int(TileManager.Instance.potentialSpawnpoints[at].x, TileManager.Instance.potentialSpawnpoints[at].y)) + new Vector3(BasicUtils.WrappedRandomRange(-0.2f, 0.2f), BasicUtils.WrappedRandomRange(-0.2f, 0.2f)), Quaternion.identity);
@@ -636,7 +643,7 @@ public class GameManager : Singleton<GameManager>
             }
             //Creates the correct amount of tier five enemies for the wave
             int tierFiveEnemyCount = (int)(2 * Mathf.Max(Mathf.Pow(wave - 156, 1 + (0.05f * enemyQuantity)) - Mathf.Max(Mathf.Pow(wave - 156, 1 + (0.06f * enemyQuantity)) - 216.953760189f, 0), 0) * enemyQuantity);
-            for (int i = 0; i < tierThreeEnemyCount; i++)
+            for (int i = 0; i < tierFiveEnemyCount; i++)
             {
                 int at = BasicUtils.WrappedRandomRange(0, TileManager.Instance.potentialSpawnpoints.Count);
                 AsyncInstantiateOperation<GameObject> createdEnemy = InstantiateAsync(tierFiveEnemies[BasicUtils.WrappedRandomRange(0, tierFiveEnemies.Length)], TileManager.Instance.TraversableTilemap.CellToWorld(new Vector3Int(TileManager.Instance.potentialSpawnpoints[at].x, TileManager.Instance.potentialSpawnpoints[at].y)) + new Vector3(BasicUtils.WrappedRandomRange(-0.2f, 0.2f), BasicUtils.WrappedRandomRange(-0.2f, 0.2f)), Quaternion.identity);
@@ -644,7 +651,7 @@ public class GameManager : Singleton<GameManager>
             }
             //Creates the correct amount of tier six enemies for the wave
             int tierSixEnemyCount = (int)(2 * Mathf.Max(Mathf.Pow(wave - 316, 1 + (0.01f * enemyQuantity - 0.01f)), 0) * enemyQuantity);
-            for (int i = 0; i < tierThreeEnemyCount; i++)
+            for (int i = 0; i < tierFiveEnemyCount; i++)
             {
                 int at = BasicUtils.WrappedRandomRange(0, TileManager.Instance.potentialSpawnpoints.Count);
                 AsyncInstantiateOperation<GameObject> createdEnemy = InstantiateAsync(fastSwarmTankDeadlySpammyRangedEnemy, TileManager.Instance.TraversableTilemap.CellToWorld(new Vector3Int(TileManager.Instance.potentialSpawnpoints[at].x, TileManager.Instance.potentialSpawnpoints[at].y)) + new Vector3(BasicUtils.WrappedRandomRange(-0.2f, 0.2f), BasicUtils.WrappedRandomRange(-0.2f, 0.2f)), Quaternion.identity);
@@ -671,30 +678,46 @@ public class GameManager : Singleton<GameManager>
                 createdEnemies.Add(createdEnemy.Result[0].GetComponentInChildren<Enemy>());
             }
 
+            List<Task<(bool, Dictionary<Vector2Int, NavNode>)>> pathFinder = new List<Task<(bool, Dictionary<Vector2Int, NavNode>)>>();
+
             //Goes through every created enemy
-            foreach (Enemy enemy in createdEnemies)
+            while (createdEnemies.Count > 0)
             {
-                //Adds the enemy to the list of current enemies
-                currentEnemies.Add(enemy);
-
-                //Generates a path for the enemy
-                EnemyCheckpoint checkpoint = enemy.GeneratePath();
-
-                //Ensure that there is actually a path
-                while(checkpoint == null)
+                foreach (Enemy enemy in createdEnemies)
                 {
-                    int at = BasicUtils.WrappedRandomRange(0, TileManager.Instance.potentialSpawnpoints.Count);
-                    enemy.transform.parent.position = TileManager.Instance.TraversableTilemap.CellToWorld(new Vector3Int(TileManager.Instance.potentialSpawnpoints[at].x, TileManager.Instance.potentialSpawnpoints[at].y)) + new Vector3(BasicUtils.WrappedRandomRange(-0.2f, 0.2f), BasicUtils.WrappedRandomRange(-0.2f, 0.2f));
-                    checkpoint = enemy.GeneratePath();
+                    //Adds the enemy to the list of current enemies
+                    currentEnemies.Add(enemy);
+
+                    //Generates a path for the enemy
+                    Vector2Int goal = (Vector2Int)TileManager.Instance.TraversableTilemap.WorldToCell(enemy.transform.position);
+                    Vector3 position = enemy.transform.position;
+                    pathFinder.Add(Task<(bool, Dictionary<Vector2Int, NavNode>)>.Factory.StartNew(() => Enemy.FindPath(goal, enemy.movementSpeed, enemy.damage, enemy.firerate, position)));
+
                 }
-                //Duplicates swarmer enemies
-                if(enemy.swarmer)
+                List<Enemy> enemyContainer = new List<Enemy>();
+                for(int i = 0; i < createdEnemies.Count; i++)
                 {
-                    Enemy duplicateEnemy = Instantiate(enemy, TileManager.Instance.TraversableTilemap.CellToWorld(TileManager.Instance.TraversableTilemap.WorldToCell(enemy.transform.position)) + new Vector3(BasicUtils.WrappedRandomRange(-0.2f, 0.2f), BasicUtils.WrappedRandomRange(-0.2f, 0.2f)), Quaternion.identity);
-                    currentEnemies.Add(duplicateEnemy);
-                    duplicateEnemy.ActivatePath(checkpoint);
+                    
+                    if (pathFinder[i].Result.Item1)
+                    {
+                        EnemyCheckpoint checkpoint = createdEnemies[i].GeneratePath(pathFinder[i].Result.Item2, (Vector2Int)TileManager.Instance.TraversableTilemap.WorldToCell(createdEnemies[i].transform.position));
+                        //Duplicates swarmer enemies
+                        if (createdEnemies[i].swarmer)
+                        {
+                            Enemy duplicateEnemy = Instantiate(createdEnemies[i], TileManager.Instance.TraversableTilemap.CellToWorld(TileManager.Instance.TraversableTilemap.WorldToCell(createdEnemies[i].transform.position)) + new Vector3(BasicUtils.WrappedRandomRange(-0.2f, 0.2f), BasicUtils.WrappedRandomRange(-0.2f, 0.2f)), Quaternion.identity);
+                            currentEnemies.Add(duplicateEnemy);
+                            duplicateEnemy.ActivatePath(checkpoint);
+                        }
+                        createdEnemies[i].ActivatePath(checkpoint);
+                    }
+                    else
+                    {
+                        enemyContainer.Add(createdEnemies[i]);
+                    }
                 }
-                enemy.ActivatePath(checkpoint);
+                createdEnemies = enemyContainer;
+                Debug.Log(createdEnemies.Count);
+                pathFinder.Clear();
             }
             //Max enemies in order to ensure that you can tell how many more you need to kill to do the next wave
             maxEnemiesThisWave = currentEnemies.Count;
@@ -1367,6 +1390,7 @@ public class GameManager : Singleton<GameManager>
                     if (Input.GetKeyDown(nextWaveKey) || (selectedConstructionIndex == 10 && Input.GetKeyDown(confirmKey)))
                     {
                         NextWave();
+                        Debug.Log("Finished starting wave");
                     }
                     //Move the selected construction one to the right
                     if (Input.GetKeyDown(moveSelectionRightKey))
