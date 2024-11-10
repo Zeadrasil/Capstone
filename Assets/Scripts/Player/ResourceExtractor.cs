@@ -48,8 +48,10 @@ public class ResourceExtractor : PlayerBuilding, IUpgradeable
         //Decrease health
         health -= damage;
 
+        //Update data for enemies
         GameManager.Instance.playerHealths[location] = health;
 
+        //Update healthbar
         healthBar.transform.localScale = new Vector3(health / baseHealth, 0.1f, 1);
         healthBar.transform.localPosition = new Vector3((-1 + health / baseHealth) * 0.5f, -0.55f, 0);
 
@@ -93,14 +95,18 @@ public class ResourceExtractor : PlayerBuilding, IUpgradeable
     // Update is called once per frame
     void Update()
     {
+        //If activation status is being changed, necessary here to prevent infinite update loops
         if(activate)
         {
+            //Changes what is done depending on whether it is being turned on or off
             activate = false;
             if (active)
             {
+                //Turn it on
                 GameManager.Instance.IncreaseIncome(extractionRate * Mathf.Pow(health, damageEffectiveness) / Mathf.Pow(baseHealth, damageEffectiveness));
                 GameManager.Instance.ChangeEnergyCap(energyRate * Mathf.Pow(health, damageEffectiveness) / Mathf.Pow(baseHealth, damageEffectiveness));
             }
+            //Turn it off
             else
             {
                 GameManager.Instance.ChangeEnergyCap(-energyRate * Mathf.Pow(health, damageEffectiveness) / Mathf.Pow(baseHealth, damageEffectiveness));
@@ -134,8 +140,12 @@ public class ResourceExtractor : PlayerBuilding, IUpgradeable
             GameManager.Instance.IncreaseIncome(-extractionRate * Mathf.Pow(health, damageEffectiveness) / Mathf.Pow(baseHealth, damageEffectiveness));
         }
         health = Mathf.Min(baseHealth, health + healing);
+
+        //Update healthbar
         healthBar.transform.localScale = new Vector3(health / baseHealth, 0.1f, 1);
         healthBar.transform.localPosition = new Vector3((-1 + health / baseHealth) * 0.5f, -0.55f, 0);
+
+        //Update data for enemies
         GameManager.Instance.playerHealths[location] = health;
         if (active)
         {
@@ -161,6 +171,7 @@ public class ResourceExtractor : PlayerBuilding, IUpgradeable
             //Increase extraction rate
             case 0:
                 {
+                    //Update stats
                     if (active)
                     {
                         GameManager.Instance.IncreaseIncome(-extractionRate);
@@ -170,23 +181,29 @@ public class ResourceExtractor : PlayerBuilding, IUpgradeable
                     {
                         GameManager.Instance.IncreaseIncome(extractionRate);
                     }
+
+                    //Update data for enemies
                     GameManager.Instance.playerExtractionData[location] = (extractionRate * 40 + energyRate * 100) * damageEffectiveness;
                     break;
                 }
             //Increase energy production
             case 1:
                 {
+                    //Update stats
                     energyRate += upgradeEffects[type];
                     if (active)
                     {
                         GameManager.Instance.ChangeEnergyCap(upgradeEffects[type]);
                     }
+                    //Check if this upgrade makes it worth activating this
                     else if(energyRate * Mathf.Pow(health, damageEffectiveness) / Mathf.Pow(baseHealth, damageEffectiveness) >= GameManager.Instance.usedEnergy - GameManager.Instance.energy + GameManager.Instance.energyDeficit)
                     {
                         GameManager.Instance.energyDeficit += energyCost;
                         GameManager.Instance.mostRecentEnergyDecrease = GameManager.Instance.mostRecentEnergyDecrease.nextChanged;
                         Enable();
                     }
+
+                    //Update data for enemies
                     GameManager.Instance.playerExtractionData[location] = (extractionRate * 40 + energyRate * 100) * damageEffectiveness;
                     break;
                 }
@@ -194,16 +211,22 @@ public class ResourceExtractor : PlayerBuilding, IUpgradeable
             case 2:
                 {
                     //TODO: fix issue with improper data manipulation
+                    //Update stats
                     damageEffectiveness *= upgradeEffects[type] / GameManager.Instance.playerHealth;
-                    GameManager.Instance.playerExtractionData[location] = (extractionRate * 40 + energyRate * 100) * damageEffectiveness;
                     TakeDamage(0);
+
+                    //Update data for enemies
+                    GameManager.Instance.playerExtractionData[location] = (extractionRate * 40 + energyRate * 100) * damageEffectiveness;
                     break;
                 }
             //Increase health
             case 3:
                 {
+                    //Update stats
                     baseHealth *= upgradeEffects[type] * GameManager.Instance.playerHealth;
                     health *= upgradeEffects[type] * GameManager.Instance.playerHealth;
+
+                    //Update data for enemies
                     GameManager.Instance.playerHealths[location] = health;
                     break;
                 }
@@ -354,6 +377,8 @@ public class ResourceExtractor : PlayerBuilding, IUpgradeable
     {
         //Remove building
         GameManager.Instance.RemoveBuilding(this);
+
+        //Update data for enemies
         GameManager.Instance.playerHealths.Remove(location);
         GameManager.Instance.playerExtractionData.Remove(location);
 
@@ -486,6 +511,7 @@ public class ResourceExtractor : PlayerBuilding, IUpgradeable
         }
     }
 
+    //Return type for use in identify what to do with this
     public override int GetBuildingType()
     {
         return 7 + maxAlignments;

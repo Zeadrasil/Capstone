@@ -6,11 +6,20 @@ using UnityEngine;
 
 public class AuraEnemy : Enemy
 {
+    //Number of aura instances
     public int auraCount;
+
+    //How far away an enemy can be and still get the boosts
     private float auraRange;
+
+    //Stores all of the aura instances
     int[] activeAuras = { 0, 0, 0, 0, 0 };
+
+    //Auras update 2.5x per second
     int auraApplicationCooldown = 0;
     int baseAuraApplicationCooldown = 19;
+
+    //Stores affected enemies so that enemies that leave the aura lose the benefits
     List<Enemy> affectedEnemies = new List<Enemy>();
 
     //Start is called before the first frame update
@@ -19,10 +28,14 @@ public class AuraEnemy : Enemy
         //Call standard enemy start events
         base.Start();
 
+        //Can have multiple instances of the same aura
         while(auraCount > 0)
         {
+            //Determines which type of aura this instance is
             int at = BasicUtils.WrappedRandomRange(0, activeAuras.Length);
             activeAuras[at]++;
+
+            //Spent over 5 hours improving enemy spawn performance only to realize that a lack of altering the aura count is what was causing it to freeze
             auraCount--;
         }
     }
@@ -78,11 +91,12 @@ public class AuraEnemy : Enemy
         }
         else
         {
+            //Reduce cooldown to progress towards next aura update
             auraApplicationCooldown--;
         }
     }
 
-    //Override type return to prevent issues later
+    //Override type return to prevent issues later with carrier if that ever gets made
     protected override int GetEnemyType()
     {
         return 1;

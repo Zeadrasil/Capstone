@@ -62,13 +62,17 @@ public class Enemy : MonoBehaviour, IDamageable, IDamager
     {
         while (true)
         {
+            //If not ranged or within range
             if (!ranged || Vector3.Distance(transform.position, target.transform.position) <= range)
             {
                 target.TakeDamage(damage);
             }
+            //If it isnt, then cancel
             else
             {
                 cancelAttack();
+
+                //Cancel does not always mean no targets, sometimes enemy leaves but another enemy within range
                 if(target != null)
                 {
                     target.TakeDamage(damage);
@@ -89,7 +93,7 @@ public class Enemy : MonoBehaviour, IDamageable, IDamager
             nodeToClear.cost = float.MaxValue;
         }
 
-        //Avoidance modifier makes it so that enemies prioritize going around walls and the like
+        //Avoidance modifier makes it so that enemies prioritize going around walls and destroying turrets/extractors/repair stations
         float avoidanceModifier = 0.9f * movementSpeed / (damage * firerate * 0.1f);
 
         //Get starting locaation
@@ -266,27 +270,13 @@ public class Enemy : MonoBehaviour, IDamageable, IDamager
             //Pitbull mode means go straight to player base
             if (!pitbullMode)
             {
-                try
-                {
-                    //Move according to direction
-                    transform.parent.position += movementSpeed * 0.02f * transform.right.normalized;
-                }
-                catch
-                {
-                    Debug.Log("idk either");
-                }
+                //Move according to direction
+                transform.parent.position += movementSpeed * 0.02f * transform.right.normalized;
             }
             else
             {
-                try
-                {
-                    //Move straight to player base
-                    transform.parent.position += (Singleton<GameManager>.Instance.PlayerBase.transform.position - transform.position).normalized * movementSpeed * 0.02f;
-                }
-                catch
-                {
-                    Debug.Log("idk");
-                }
+                //Move straight to player base
+                transform.parent.position += (Singleton<GameManager>.Instance.PlayerBase.transform.position - transform.position).normalized * movementSpeed * 0.02f;
             }
         }
         //If you are ranged and you are not targeting somethign
@@ -320,7 +310,7 @@ public class Enemy : MonoBehaviour, IDamageable, IDamager
             if (collisionDetectionCooldown == 0)
             {
                 //Check in front of enemy and get all collisions shortly ahead
-                RaycastHit2D[] hits = Physics2D.CircleCastAll(transform.position, radius, transform.right, movementSpeed * 0.2f, LayerMask.GetMask(new string[] { "EnemyBlockers" }));
+                RaycastHit2D[] hits = Physics2D.CircleCastAll(transform.position, radius, transform.right, movementSpeed * 0.02f * baseCollisionDetectionCooldown, LayerMask.GetMask(new string[] { "EnemyBlockers" }));
 
                 //Go through each collision and figure out what to do with them
                 foreach (RaycastHit2D hit in hits)
@@ -397,10 +387,12 @@ public class Enemy : MonoBehaviour, IDamageable, IDamager
                         }
                     }
                 }
+                //Reset collision detection cooldown
                 collisionDetectionCooldown = baseCollisionDetectionCooldown;
             }
             else
             {
+                //Progress cooldown
                 collisionDetectionCooldown--;
             }
         }
@@ -598,6 +590,7 @@ public class Enemy : MonoBehaviour, IDamageable, IDamager
         }
     }
 
+    //For carrier later
     protected virtual int GetEnemyType()
     {
         return 0;

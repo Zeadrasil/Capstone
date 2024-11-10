@@ -598,129 +598,193 @@ public class GameManager : Singleton<GameManager>
             }
             checkpoints.Clear();
 
-            //List where new enemies will be kept, each inside list is all of the enemies that will spawn at the same spot
+            //List where new enemies will be kept, holds them while they finish asynchronously generating
             List<AsyncInstantiateOperation<GameObject>> enemySpawns = new List<AsyncInstantiateOperation<GameObject>>();
 
             //Creates the correct amount of tier zero enemies for the wave
             int tierZeroEnemyCount = (int)(2 * Mathf.Max(Mathf.Pow(wave, 1 + (0.25f * enemyQuantity)) - Mathf.Max(Mathf.Pow(wave, 1 + (0.3f * enemyQuantity)) - 8.10328298346f, 0), 0) * enemyQuantity);
             for (int i = 0; i < tierZeroEnemyCount; i++)
             {
-                
+                //Get location to instantiate at
                 int at = BasicUtils.WrappedRandomRange(0, TileManager.Instance.potentialSpawnpoints.Count);
+                
+                //Start instantiation
                 AsyncInstantiateOperation<GameObject> createdEnemy = InstantiateAsync(baseEnemy, TileManager.Instance.TraversableTilemap.CellToWorld(new Vector3Int(TileManager.Instance.potentialSpawnpoints[at].x, TileManager.Instance.potentialSpawnpoints[at].y)) + new Vector3(BasicUtils.WrappedRandomRange(-0.2f, 0.2f), BasicUtils.WrappedRandomRange(-0.2f, 0.2f)), Quaternion.identity);
+                
+                //Store reference to the handler
                 enemySpawns.Add(createdEnemy);
             }
             //Creates the correct amount of tier one enemies for the wave
             int tierOneEnemyCount = (int)(2 * Mathf.Max(Mathf.Pow(wave - 6, 1 + (0.21f * enemyQuantity)) - Mathf.Max(Mathf.Pow(wave - 6, 1 + (0.25f * enemyQuantity)) - 17.7827941004f, 0), 0) * enemyQuantity);
             for (int i = 0; i < tierOneEnemyCount; i++)
             {
+                //Get location to instantiate at
                 int at = BasicUtils.WrappedRandomRange(0, TileManager.Instance.potentialSpawnpoints.Count);
+                
+                //Start instantiation
                 AsyncInstantiateOperation<GameObject> createdEnemy = InstantiateAsync(tierOneEnemies[BasicUtils.WrappedRandomRange(0, tierOneEnemies.Length)], TileManager.Instance.TraversableTilemap.CellToWorld(new Vector3Int(TileManager.Instance.potentialSpawnpoints[at].x, TileManager.Instance.potentialSpawnpoints[at].y)) + new Vector3(BasicUtils.WrappedRandomRange(-0.2f, 0.2f), BasicUtils.WrappedRandomRange(-0.2f, 0.2f)), Quaternion.identity);
+                
+                //Store reference to the handler
                 enemySpawns.Add(createdEnemy);
             }
             //Creates the correct amount of tier two enemies for the wave
             int tierTwoEnemyCount = (int)(2 * Mathf.Max(Mathf.Pow(wave - 16, 1 + (0.17f * enemyQuantity)) - Mathf.Max(Mathf.Pow(wave - 16, 1 + (0.2f * enemyQuantity)) - 36.4112840605f, 0), 0) * enemyQuantity);
             for (int i = 0; i < tierTwoEnemyCount; i++)
             {
+                //Get location to instantiate at
                 int at = BasicUtils.WrappedRandomRange(0, TileManager.Instance.potentialSpawnpoints.Count);
+                
+                //Start instantiation
                 AsyncInstantiateOperation<GameObject> createdEnemy = InstantiateAsync(tierTwoEnemies[BasicUtils.WrappedRandomRange(0, tierTwoEnemies.Length)], TileManager.Instance.TraversableTilemap.CellToWorld(new Vector3Int(TileManager.Instance.potentialSpawnpoints[at].x, TileManager.Instance.potentialSpawnpoints[at].y)) + new Vector3(BasicUtils.WrappedRandomRange(-0.2f, 0.2f), BasicUtils.WrappedRandomRange(-0.2f, 0.2f)), Quaternion.identity);
+                
+                //Store reference to the handler
                 enemySpawns.Add(createdEnemy);
             }
             //Creates the correct amount of tier three enemies for the wave
             int tierThreeEnemyCount = (int)(2 * Mathf.Max(Mathf.Pow(wave - 36, 1 + (0.13f * enemyQuantity)) - Mathf.Max(Mathf.Pow(wave - 36, 1 + (0.15f * enemyQuantity)) - 69.5615082681f, 0), 0) * enemyQuantity);
             for (int i = 0; i < tierThreeEnemyCount; i++)
             {
+                //Get location to instantiate at
                 int at = BasicUtils.WrappedRandomRange(0, TileManager.Instance.potentialSpawnpoints.Count);
+                
+                //Start instantiation
                 AsyncInstantiateOperation<GameObject> createdEnemy = InstantiateAsync(tierThreeEnemies[BasicUtils.WrappedRandomRange(0, tierThreeEnemies.Length)], TileManager.Instance.TraversableTilemap.CellToWorld(new Vector3Int(TileManager.Instance.potentialSpawnpoints[at].x, TileManager.Instance.potentialSpawnpoints[at].y)) + new Vector3(BasicUtils.WrappedRandomRange(-0.2f, 0.2f), BasicUtils.WrappedRandomRange(-0.2f, 0.2f)), Quaternion.identity);
+                
+                //Store reference to the handler
                 enemySpawns.Add(createdEnemy);
             }
             //Creates the correct amount of tier four enemies for the wave
             int tierFourEnemyCount = (int)(2 * Mathf.Max(Mathf.Pow(wave - 76, 1 + (0.09f * enemyQuantity)) - Mathf.Max(Mathf.Pow(wave - 76, 1 + (0.1f * enemyQuantity)) - 123.993519004f, 0), 0) * enemyQuantity);
             for (int i = 0; i < tierFourEnemyCount; i++)
             {
+                //Get location to instantiate at
                 int at = BasicUtils.WrappedRandomRange(0, TileManager.Instance.potentialSpawnpoints.Count);
+                
+                //Start instantiation
                 AsyncInstantiateOperation<GameObject> createdEnemy = InstantiateAsync(tierFourEnemies[BasicUtils.WrappedRandomRange(0, tierFourEnemies.Length)], TileManager.Instance.TraversableTilemap.CellToWorld(new Vector3Int(TileManager.Instance.potentialSpawnpoints[at].x, TileManager.Instance.potentialSpawnpoints[at].y)) + new Vector3(BasicUtils.WrappedRandomRange(-0.2f, 0.2f), BasicUtils.WrappedRandomRange(-0.2f, 0.2f)), Quaternion.identity);
+                
+                //Store reference to handler
                 enemySpawns.Add(createdEnemy);
             }
             //Creates the correct amount of tier five enemies for the wave
             int tierFiveEnemyCount = (int)(2 * Mathf.Max(Mathf.Pow(wave - 156, 1 + (0.05f * enemyQuantity)) - Mathf.Max(Mathf.Pow(wave - 156, 1 + (0.06f * enemyQuantity)) - 216.953760189f, 0), 0) * enemyQuantity);
             for (int i = 0; i < tierFiveEnemyCount; i++)
             {
+                //Get location to instantiate at
                 int at = BasicUtils.WrappedRandomRange(0, TileManager.Instance.potentialSpawnpoints.Count);
+                
+                //Start instantiation
                 AsyncInstantiateOperation<GameObject> createdEnemy = InstantiateAsync(tierFiveEnemies[BasicUtils.WrappedRandomRange(0, tierFiveEnemies.Length)], TileManager.Instance.TraversableTilemap.CellToWorld(new Vector3Int(TileManager.Instance.potentialSpawnpoints[at].x, TileManager.Instance.potentialSpawnpoints[at].y)) + new Vector3(BasicUtils.WrappedRandomRange(-0.2f, 0.2f), BasicUtils.WrappedRandomRange(-0.2f, 0.2f)), Quaternion.identity);
+                
+                //Store reference to handler
                 enemySpawns.Add(createdEnemy);
             }
             //Creates the correct amount of tier six enemies for the wave
             int tierSixEnemyCount = (int)(2 * Mathf.Max(Mathf.Pow(wave - 316, 1 + (0.01f * enemyQuantity - 0.01f)), 0) * enemyQuantity);
             for (int i = 0; i < tierFiveEnemyCount; i++)
             {
+                //Get location to instantiate at
                 int at = BasicUtils.WrappedRandomRange(0, TileManager.Instance.potentialSpawnpoints.Count);
+                
+                //Start instantiation
                 AsyncInstantiateOperation<GameObject> createdEnemy = InstantiateAsync(fastSwarmTankDeadlySpammyRangedEnemy, TileManager.Instance.TraversableTilemap.CellToWorld(new Vector3Int(TileManager.Instance.potentialSpawnpoints[at].x, TileManager.Instance.potentialSpawnpoints[at].y)) + new Vector3(BasicUtils.WrappedRandomRange(-0.2f, 0.2f), BasicUtils.WrappedRandomRange(-0.2f, 0.2f)), Quaternion.identity);
+                
+                //Store reference to handler
                 enemySpawns.Add(createdEnemy);
             }
 
+            //Store finished enemies
             List<Enemy> createdEnemies = new List<Enemy>();
+
             //Creates the correct amount of aura enemies for the wave
             int auraEnemyCount = (int)(enemyQuantity * wave / 50);
             for(int i = 0; i <auraEnemyCount; i++)
             {
+                //Gets the location to instantiate at
                 int at = BasicUtils.WrappedRandomRange(0, TileManager.Instance.potentialSpawnpoints.Count);
+                
+                //Instantiates the enemy
                 AuraEnemy createdEnemy = Instantiate(auraEnemy, TileManager.Instance.TraversableTilemap.CellToWorld(new Vector3Int(TileManager.Instance.potentialSpawnpoints[at].x, TileManager.Instance.potentialSpawnpoints[at].y)) + new Vector3(BasicUtils.WrappedRandomRange(-0.2f, 0.2f), BasicUtils.WrappedRandomRange(-0.2f, 0.2f)), Quaternion.identity).GetComponentInChildren<AuraEnemy>();
+                
+                //Sets up the aura enemy
                 createdEnemy.auraCount = auraEnemyCount;
+
+                //Stores finished enemy
                 createdEnemies.Add(createdEnemy);
             }
 
+            //Goes through all of the started enemies
             foreach(AsyncInstantiateOperation<GameObject> createdEnemy in enemySpawns)
             {
+                //Ensures that all of the enemies are finished
                 if (!createdEnemy.isDone)
                 {
                     createdEnemy.WaitForCompletion();
                 }
+                //Adds the finished enemies to the enemy storage
                 createdEnemies.Add(createdEnemy.Result[0].GetComponentInChildren<Enemy>());
             }
 
+            //Stores handlers for pathfinding processes
             List<Task<(bool, Dictionary<Vector2Int, NavNode>)>> pathFinder = new List<Task<(bool, Dictionary<Vector2Int, NavNode>)>>();
 
-            //Goes through every created enemy
+            //Ensures that it will keep trying to generate paths until it finds one for every enemy
             while (createdEnemies.Count > 0)
             {
+                //Starts pathfinding for ever single enemy
                 foreach (Enemy enemy in createdEnemies)
                 {
-
-                    //Generates a path for the enemy
+                    //Gets data for path generation
                     Vector2Int goal = (Vector2Int)TileManager.Instance.TraversableTilemap.WorldToCell(enemy.transform.position);
                     Vector3 position = enemy.transform.position;
+
+                    //Begins finding the path and adds the handler to the handler storage
                     pathFinder.Add(Task<(bool, Dictionary<Vector2Int, NavNode>)>.Factory.StartNew(() => Enemy.FindPath(goal, enemy.movementSpeed, enemy.damage, enemy.firerate, position)));
 
                 }
+                //Holds enemies that did not find a path
                 List<Enemy> enemyContainer = new List<Enemy>();
                 for(int i = 0; i < createdEnemies.Count; i++)
                 {
-                    
+                    //Check to see if a path was found
                     if (pathFinder[i].Result.Item1)
                     {
-                        //Adds the enemy to the list of current enemies
+                        //Adds the enemy to the list of finished enemies
                         currentEnemies.Add(createdEnemies[i]);
+
+                        //Generate a series of checkpoints to guide the enemy
                         EnemyCheckpoint checkpoint = createdEnemies[i].GeneratePath(pathFinder[i].Result.Item2, (Vector2Int)TileManager.Instance.TraversableTilemap.WorldToCell(createdEnemies[i].transform.position));
+
+                        //Clears the pathfinding dictionary in order t fix a memory leak
                         pathFinder[i].Result.Item2[(Vector2Int)TileManager.Instance.TraversableTilemap.WorldToCell(createdEnemies[i].transform.position)].Destroy();
+                        
                         //Duplicates swarmer enemies
                         if (createdEnemies[i].swarmer)
                         {
                             Enemy duplicateEnemy = Instantiate(createdEnemies[i].transform.parent.gameObject, TileManager.Instance.TraversableTilemap.CellToWorld(TileManager.Instance.TraversableTilemap.WorldToCell(createdEnemies[i].transform.position)) + new Vector3(BasicUtils.WrappedRandomRange(-0.2f, 0.2f), BasicUtils.WrappedRandomRange(-0.2f, 0.2f)), Quaternion.identity).GetComponentInChildren<Enemy>();
                             currentEnemies.Add(duplicateEnemy);
+                            
+                            //Activate guides on duplicated enemy
                             duplicateEnemy.ActivatePath(checkpoint);
                         }
+                        //Activate guides on original enemy
                         createdEnemies[i].ActivatePath(checkpoint);
                     }
+                    //If a path was not found, try again
                     else
                     {
+                        //Change location since keeping it in the same place will not result in a path being found
                         int at = BasicUtils.WrappedRandomRange(0, TileManager.Instance.potentialSpawnpoints.Count);
                         createdEnemies[i].transform.position = TileManager.Instance.TraversableTilemap.CellToWorld(new Vector3Int(TileManager.Instance.potentialSpawnpoints[at].x, TileManager.Instance.potentialSpawnpoints[at].y)) + new Vector3(BasicUtils.WrappedRandomRange(-0.2f, 0.2f), BasicUtils.WrappedRandomRange(-0.2f, 0.2f));
+                        
+                        //Add to list of enemies with invalid paths
                         enemyContainer.Add(createdEnemies[i]);
                     }
                 }
+                //Replace the enemy storage with the enemies with no path
                 createdEnemies = enemyContainer;
-                Debug.Log(createdEnemies.Count);
+
+                //Clear pathfinding handles
                 pathFinder.Clear();
             }
             //Max enemies in order to ensure that you can tell how many more you need to kill to do the next wave

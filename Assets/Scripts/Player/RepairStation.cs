@@ -104,8 +104,12 @@ public class RepairStation : PlayerBuilding, IDamageable, IUpgradeable
     public override void Heal(float healing)
     {
         health = Mathf.Min(health + healing, baseHealth);
+
+        //Update healthbar
         healthBar.transform.localScale = new Vector3(health / baseHealth, 0.1f, 1);
         healthBar.transform.localPosition = new Vector3((-1 + health / baseHealth) * 0.5f, -0.4f, 0);
+
+        //Update data for enemies
         GameManager.Instance.playerHealths[location] = health;
     }
 
@@ -119,9 +123,14 @@ public class RepairStation : PlayerBuilding, IDamageable, IUpgradeable
     public override float TakeDamage(float damage)
     {
         health -= damage;
+
+        //Update health bar
         healthBar.transform.localScale = new Vector3(health / baseHealth, 0.1f, 1);
         healthBar.transform.localPosition = new Vector3((-1 + health / baseHealth) * 0.5f, -0.4f, 0);
+
+        //Update data for enemies
         GameManager.Instance.playerHealths[location] = health;
+
         //If health is at or below 0
         if (health <= 0)
         {
@@ -149,22 +158,31 @@ public class RepairStation : PlayerBuilding, IDamageable, IUpgradeable
             //Range
             case 0:
                 {
+                    //Update stats
                     range *= upgradeEffects[0] * GameManager.Instance.playerStrength;
+
+                    //Update data for enemies
                     GameManager.Instance.playerRepairData[location] = healing * range;
                     break;
                 }
             //Healing power
             case 1:
                 {
+                    //Update stats
                     healing *= upgradeEffects[1] * GameManager.Instance.playerStrength;
+
+                    //Update data for enemies
                     GameManager.Instance.playerRepairData[location] = healing * range;
                     break;
                 }
             //Building Health
             case 2:
                 {
+                    //Update stats
                     baseHealth *= upgradeEffects[2] * GameManager.Instance.playerHealth;
                     health += upgradeEffects[2] * GameManager.Instance.playerHealth;
+
+                    //Update data for enemies
                     GameManager.Instance.playerHealths[location] = health;
                     break;
                 }
@@ -194,7 +212,7 @@ public class RepairStation : PlayerBuilding, IDamageable, IUpgradeable
             //If you are unable to specialize, you are finished specializing
             finishedAligning = maxAlignments == 0;
         }
-
+        //Update data for enemies
         GameManager.Instance.playerHealths.Add(location, health);
         GameManager.Instance.playerRepairData.Add(location, healing * range);
     }
@@ -271,6 +289,8 @@ public class RepairStation : PlayerBuilding, IDamageable, IUpgradeable
     {
         //Call GameManager removal
         GameManager.Instance.RemoveBuilding(this);
+
+        //Update data for enemies
         GameManager.Instance.playerHealths.Remove(location);
         GameManager.Instance.playerRepairData.Remove(location);
 
@@ -386,6 +406,7 @@ public class RepairStation : PlayerBuilding, IDamageable, IUpgradeable
         GameManager.Instance.ChangeEnergyUsage(energyCost);
     }
 
+    //Return type for use in identify what to do with this
     public override int GetBuildingType()
     {
         return 3 + maxAlignments;

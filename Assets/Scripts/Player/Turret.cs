@@ -57,6 +57,7 @@ public class Turret : PlayerBuilding, IDamager, IUpgradeable
             //Alignment handling
             finishedAligning = maxAlignments == alignments;
         }
+        //Update data for enemies
         GameManager.Instance.playerHealths.Add(location, health);
         GameManager.Instance.playerDamageData.Add(location, range * damage * firerate * (splash ? Mathf.Pow(splashRange * 10, 2) * 5 : 1));
     }
@@ -78,36 +79,51 @@ public class Turret : PlayerBuilding, IDamager, IUpgradeable
             //Splash range
             case 0:
                 {
+                    //Update stats
                     splashRange *= upgradeEffects[0] * GameManager.Instance.playerStrength;
+
+                    //Update data for enemies
                     GameManager.Instance.playerDamageData[location] = range * damage * firerate * (splash ? Mathf.Pow(splashRange * 10, 2) * 5 : 1);
                     break;
                 }
             //Turret range
             case 1:
                 {
+                    //Update stats
                     range *= upgradeEffects[1] * GameManager.Instance.playerStrength;
+
+                    //Update data for enemies
                     GameManager.Instance.playerDamageData[location] = range * damage * firerate * (splash ? Mathf.Pow(splashRange * 10, 2) * 5 : 1);
                     break;
                 }
             //Damage
             case 2:
                 {
+                    //Update stats
                     damage *= upgradeEffects[2] * GameManager.Instance.playerStrength;
+
+                    //Update data for enemies
                     GameManager.Instance.playerDamageData[location] = range * damage * firerate * (splash ? Mathf.Pow(splashRange * 10, 2) * 5 : 1);
                     break;
                 }
             //Firerate
             case 3:
                 {
+                    //Update stats
                     firerate *= upgradeEffects[3] * GameManager.Instance.playerStrength;
+
+                    //Update data for enemies
                     GameManager.Instance.playerDamageData[location] = range * damage * firerate * (splash ? Mathf.Pow(splashRange * 10, 2) * 5 : 1);
                     break;
                 }
             //Building health
             case 4:
                 {
+                    //Update stats
                     baseHealth *= upgradeEffects[4] * GameManager.Instance.playerHealth;
                     health += upgradeEffects[4] * GameManager.Instance.playerHealth;
+
+                    //Update data for enemies
                     GameManager.Instance.playerHealths[location] = health;
                     break;
                 }
@@ -209,7 +225,6 @@ public class Turret : PlayerBuilding, IDamager, IUpgradeable
         {
             target = findTargets();
 
-
             //If a target was found
             if (target != null)
             {
@@ -229,9 +244,14 @@ public class Turret : PlayerBuilding, IDamager, IUpgradeable
     public override float TakeDamage(float damage)
     {
         health -= damage;
+
+        //Update health bar
         healthBar.transform.localScale = new Vector3(health / baseHealth, 0.1f, 1);
         healthBar.transform.localPosition = new Vector3((-1 + health / baseHealth) * 0.5f, -0.4f, 0);
+
+        //Update data for enemies
         GameManager.Instance.playerHealths[location] = health;
+
         //If out of health
         if (health <= 0)
         {
@@ -270,18 +290,23 @@ public class Turret : PlayerBuilding, IDamager, IUpgradeable
                 //Damage new target if it exists
                 if(target != null)
                 {
+                    //If it is splash hit everything within range
                     if (splash)
                     {
+                        //Find enemies within range
                         Collider2D[] hits = Physics2D.OverlapCircleAll(target.transform.position, splashRange, LayerMask.GetMask(new string[] { "Enemies" }));
                         foreach(Collider2D hit in hits)
                         {
+                            //Confirm that it is an enemy so that it can be accessed
                             Enemy enemy = hit.gameObject.GetComponentInChildren<Enemy>();
                             if (enemy != null)
                             {
+                                //Damage the enemy
                                 enemy.TakeDamage(damage);
                             }
                         }
                     }
+                    //If it is not a splash turret, just be normal
                     else
                     {
                         target.TakeDamage(damage);
@@ -361,8 +386,12 @@ public class Turret : PlayerBuilding, IDamager, IUpgradeable
     public override void Heal(float healing)
     {
         health = Mathf.Min(healing + health, baseHealth);
+
+        //Update health bar
         healthBar.transform.localScale = new Vector3(health / baseHealth, 0.1f, 1);
         healthBar.transform.localPosition = new Vector3((-1 + health / baseHealth) * 0.5f, -0.4f, 0);
+
+        //Update data for enemies
         GameManager.Instance.playerHealths[location] = health;
     }
 
@@ -411,6 +440,8 @@ public class Turret : PlayerBuilding, IDamager, IUpgradeable
 
         //Remove building
         GameManager.Instance.RemoveBuilding(this);
+
+        //Update data for enemies
         GameManager.Instance.playerHealths.Remove(location);
         GameManager.Instance.playerDamageData.Remove(location);
 
@@ -440,6 +471,7 @@ public class Turret : PlayerBuilding, IDamager, IUpgradeable
                 alignments++;
                 expenseModifiers[type] = 0.3f;
                 
+                //If it is aligned to splash, make it splashable
                 if(type == 0)
                 {
                     splash = true;
@@ -554,6 +586,7 @@ public class Turret : PlayerBuilding, IDamager, IUpgradeable
         GameManager.Instance.ChangeEnergyUsage(energyCost);
     }
 
+    //Return type for use in identify what to do with this
     public override int GetBuildingType()
     {
         return maxAlignments;

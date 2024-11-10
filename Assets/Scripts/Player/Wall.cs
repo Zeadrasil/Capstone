@@ -78,8 +78,12 @@ public class Wall : PlayerBuilding, IUpgradeable
     public override void Heal(float healing)
     {
         health = Mathf.Min(health + healing * healingEffectiveness, baseHealth);
+
+        //Update health bar
         healthBar.transform.localScale = new Vector3(health / baseHealth, 0.1f, 1);
         healthBar.transform.localPosition = new Vector3((-1 + health / baseHealth) * 0.5f, -0.65f, 0);
+
+        //Update data for enemies
         GameManager.Instance.playerHealths[location] = health;
     }
 
@@ -106,9 +110,14 @@ public class Wall : PlayerBuilding, IUpgradeable
     public override float TakeDamage(float damage)
     {
         health -= damage;
+
+        //Update healthbar
         healthBar.transform.localScale = new Vector3(health / baseHealth, 0.1f, 1);
         healthBar.transform.localPosition = new Vector3((-1 + health / baseHealth) * 0.5f, -0.65f, 0);
+        
+        //Update data for enemies
         GameManager.Instance.playerHealths[location] = health;
+        
         //If out of health
         if (health <= 0)
         {
@@ -135,14 +144,18 @@ public class Wall : PlayerBuilding, IUpgradeable
             //Health
             case 0:
                 {
+                    //Update stats
                     baseHealth *= upgradeEffects[0] * GameManager.Instance.playerHealth;
+                    health *= upgradeEffects[0] * GameManager.Instance.playerHealth;
+
+                    //Update data for enemies
                     GameManager.Instance.playerHealths[location] = health;
-                    health += upgradeEffects[0] * GameManager.Instance.playerHealth;
                     break;
                 }
             //Healing effectiveness
             case 1:
                 {
+                    //Update stats
                     healingEffectiveness *= upgradeEffects[1] * GameManager.Instance.playerStrength;
                     break;
                 }
@@ -161,6 +174,7 @@ public class Wall : PlayerBuilding, IUpgradeable
             //Alignment handling
             finishedAligning = maxAlignments == 0;
         }
+        //Update data for enemies
         GameManager.Instance.playerHealths.Add(location, health);
     }
 
@@ -187,6 +201,8 @@ public class Wall : PlayerBuilding, IUpgradeable
     {
         //Remove building
         GameManager.Instance.RemoveBuilding(this);
+
+        //Update data for enemies
         GameManager.Instance.playerHealths.Remove(location);
 
         //Tell all damagers to find something else to attack
@@ -270,6 +286,7 @@ public class Wall : PlayerBuilding, IUpgradeable
         GameManager.Instance.ChangeEnergyUsage(energyCost);
     }
 
+    //Return type for use in identify what to do with this
     public override int GetBuildingType()
     {
         return 5 + maxAlignments;

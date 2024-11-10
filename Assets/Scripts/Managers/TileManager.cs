@@ -488,25 +488,34 @@ public class TileManager : Singleton<TileManager>
         return CheckResource(coords.x, coords.y);
     }
 
+    //Called upon leaving for main menu
     public void Deactivate()
     {
+        //Destroys tilemap GameObject to avoid duplicates
         Destroy(BlockerTilemap.transform.parent.gameObject);
     }
 
+    //Creates a copy of all of the adjacencies, created to allow multithreading
     public Dictionary<Vector2Int, NavNode> copyAdjacencies()
     {
+        //Creates output dictionary
         Dictionary<Vector2Int, NavNode> result = new Dictionary<Vector2Int, NavNode>();
+
+        //Duplicates all of the base nodes
         foreach(NavNode oldNode in Adjacencies.Values)
         {
             result.Add(oldNode.location, new NavNode(oldNode.location, oldNode.position));
         }
+        //Duplicates connections
         foreach (Vector2Int at in Adjacencies.Keys)
         {
+            //Ensure each connection gets placed
             foreach (NavNode node in Adjacencies[at].neighbors)
             {
                 result[at].neighbors.Add(result[node.location]);
             }
         }
+        //Return the final result
         return result;
     }
 }

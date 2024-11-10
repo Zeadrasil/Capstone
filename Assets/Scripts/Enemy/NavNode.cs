@@ -23,6 +23,7 @@ public class NavNode
         id = tracker++;
         position = TileManager.Instance.TraversableTilemap.CellToWorld(new Vector3Int(location.x, location.y));
     }
+    //Other constructor requires location, but lets you put in position. For use with multithreading.
     public NavNode(Vector2Int location, Vector3 position)
     {
         this.location = location;
@@ -31,17 +32,20 @@ public class NavNode
         this.position = position;
     }
 
+    //Determines whether two nodes are the same
     public bool Equals(NavNode other)
     {
         return id == other.id;
     }
 
+    //Clear out connections to allow the garbage collector to tell this is useless
     public void Destroy()
     {
-        destroyed = true;
+        //Prevent infinite loops everybody
         if (!destroyed)
         {
-            foreach(NavNode n in neighbors)
+            destroyed = true;
+            foreach (NavNode n in neighbors)
             {
                 n.Destroy();
             }
