@@ -38,13 +38,48 @@ public class Turret : PlayerBuilding, IDamager, IUpgradeable
     [SerializeField] SpriteRenderer spriteRenderer;
 
     //Other
-    [SerializeField] Color activeColor = Color.white;
     [SerializeField] int baseUpgradeCost = 10;
+    [SerializeField] GameObject rotationCenter;
+
+    //Sprite data
+    [SerializeField] Color activeColor = Color.white;
+    
+    //Barrels
+    [SerializeField] SpriteRenderer defaultBarrel;
+    [SerializeField] SpriteRenderer firerateBarrelA;
+    [SerializeField] SpriteRenderer firerateBarrelB;
+
+    //Hubs
+    [SerializeField] SpriteRenderer defaultHub;
+    [SerializeField] SpriteRenderer splashHub;
+    [SerializeField] SpriteRenderer rangeBase;
+
+    //Tips
+    [SerializeField] SpriteRenderer damageTip;
+
+    //Armor
+    [SerializeField] SpriteRenderer healthArmorA;
+    [SerializeField] SpriteRenderer healthArmorB;
+    [SerializeField] SpriteRenderer healthArmorC;
+    [SerializeField] SpriteRenderer healthArmorD;
 
     // Start is called before the first frame update
     void Start()
     {
-        //Skip aplying difficulty modifiers if already applied due to loading
+        //Set default sprite data
+        defaultBarrel.enabled = true;
+        firerateBarrelA.enabled = false;
+        firerateBarrelB.enabled = false;
+        defaultHub.enabled = true;
+        splashHub.enabled = false;
+        rangeBase.enabled = false;
+        damageTip.enabled = false;
+        healthArmorA.enabled = false;
+        healthArmorB.enabled = false;
+        healthArmorC.enabled = false;
+        healthArmorD.enabled = false;
+
+        //Skip applying difficulty modifiers if already applied due to loading
         if (needsDifficultyModifiers)
         {
             //Applies difficulty modifiers to stats
@@ -56,6 +91,41 @@ public class Turret : PlayerBuilding, IDamager, IUpgradeable
 
             //Alignment handling
             finishedAligning = maxAlignments == alignments;
+        }
+        //This means it was loaded, so apply sprite data if relevant
+        else
+        {
+            //If aligned with splash, update sprites to match
+            if (expenseModifiers[0] == 0.3f)
+            {
+                splashHub.enabled = true;
+                defaultHub.enabled = false;
+            }
+            //If aligned with range, update sprites to match
+            if (expenseModifiers[1] == 0.3f)
+            {
+                rangeBase.enabled = true;
+            }
+            //If aligned with damage, update sprites to match
+            if (expenseModifiers[2] == 0.3f)
+            {
+                damageTip.enabled = true;
+            }
+            //If aligned with firerate, update sprites to match
+            if (expenseModifiers[3] == 0.3f)
+            {
+                firerateBarrelA.enabled = true;
+                firerateBarrelB.enabled = true;
+                defaultBarrel.enabled = false;
+            }
+            //If aligned with health, update sprites to match
+            if(expenseModifiers[4] == 0.3f)
+            {
+                healthArmorA.enabled = true;
+                healthArmorB.enabled = true;
+                healthArmorC.enabled = true;
+                healthArmorD.enabled = true;
+            }
         }
         //Update data for enemies
         GameManager.Instance.playerHealths.Add(location, health);
@@ -237,6 +307,11 @@ public class Turret : PlayerBuilding, IDamager, IUpgradeable
                     fireCoroutine = StartCoroutine(fireLoop());
                 }
             }
+        }
+        if(target != null)
+        {
+            Vector2 relative = new Vector2(target.transform.position.x - transform.position.x, target.transform.position.y - transform.position.y);
+            rotationCenter.transform.rotation = Quaternion.AngleAxis(Mathf.Rad2Deg * Mathf.Atan2(relative.y, relative.x), new Vector3(0, 0, 1));
         }
     }
 
@@ -477,6 +552,48 @@ public class Turret : PlayerBuilding, IDamager, IUpgradeable
                     splash = true;
                     splashRange = 0.1f;
                 }
+
+                //Update sprites to show proper sprites for alignment
+                switch(type)
+                {
+                    //Activate splash sprites
+                    case 0:
+                        {
+                            splashHub.enabled = true;
+                            defaultHub.enabled = false;
+                            break;
+                        }
+                        //Activate range sprite
+                    case 1:
+                        {
+                            rangeBase.enabled = true;
+                            break;
+                        }
+                        //Activate damage sprite
+                    case 2:
+                        {
+                            damageTip.enabled = true;
+                            break;
+                        }
+                        //Activate firerate sprites
+                    case 3:
+                        {
+                            firerateBarrelA.enabled = true;
+                            firerateBarrelB.enabled = true;
+                            defaultBarrel.enabled = false;
+                            break;
+                        }
+                        //Activate health sprites
+                    case 4:
+                        {
+                            healthArmorA.enabled = true;
+                            healthArmorB.enabled = true;
+                            healthArmorC.enabled = true;
+                            healthArmorD.enabled = true;
+                            break;
+                        }
+                }
+
 
                 //If this is a second alignment (max)
                 if (alignments == 2)

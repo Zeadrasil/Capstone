@@ -30,8 +30,25 @@ public class ResourceExtractor : PlayerBuilding, IUpgradeable
     private bool primaryMisalignmentChosen = false;
     private bool finishedAligning = false;
 
-    //Other
+    //Sprite data
     [SerializeField] Color activeColor = Color.white;
+
+    //Center data
+    [SerializeField] SpriteRenderer energyCenter;
+    [SerializeField] SpriteRenderer extractionCenter;
+
+    //Health
+    [SerializeField] SpriteRenderer healthArmorA;
+    [SerializeField] SpriteRenderer healthArmorB;
+    [SerializeField] SpriteRenderer healthArmorC;
+    [SerializeField] SpriteRenderer healthArmorD;
+    [SerializeField] SpriteRenderer healthArmorE;
+    [SerializeField] SpriteRenderer healthArmorF;
+
+    //Protection
+    [SerializeField] SpriteRenderer protectionBarA;
+    [SerializeField] SpriteRenderer protectionBarB;
+    [SerializeField] SpriteRenderer protectionBarC;
 
     //Damager list to avoid null references and improve reaction speed
     private List<IDamager> currentDamagers = new List<IDamager>();
@@ -73,6 +90,19 @@ public class ResourceExtractor : PlayerBuilding, IUpgradeable
     // Start is called before the first frame update
     void Start()
     {
+        //Set default sprite data
+        energyCenter.enabled = false;
+        extractionCenter.enabled = false;
+        healthArmorA.enabled = false;
+        healthArmorB.enabled = false;
+        healthArmorC.enabled = false;
+        healthArmorD.enabled = false;
+        healthArmorE.enabled = false;
+        healthArmorF.enabled = false;
+        protectionBarA.enabled = false;
+        protectionBarB.enabled = false;
+        protectionBarC.enabled = false;
+
         //Skip applying difficulty modifiers if they have alread been applied due to loading
         if (needsDifficultyModifiers)
         {
@@ -88,6 +118,38 @@ public class ResourceExtractor : PlayerBuilding, IUpgradeable
             //Figures out alignment config
             finishedAligning = maxAlignments == alignments;
         }
+        //This means it was loaded, so apply sprite data if relevant
+        else
+        {
+            //If aligned with extraction rate, update sprites to match
+            if (expenseModifiers[0] == 0.3f)
+            {
+                extractionCenter.enabled = true;
+            }
+            //If aligned with energy rate, update sprites to match
+            if(expenseModifiers[1] == 0.3f)
+            {
+                energyCenter.enabled = true;
+            }
+            //If aligned with protection, update sprites to match
+            if (expenseModifiers[2] == 0.3f)
+            {
+                protectionBarA.enabled = true;
+                protectionBarB.enabled = true;
+                protectionBarC.enabled = true;
+            }
+            //If aligned with health update sprites to match
+            if (expenseModifiers[3] == 0.3f)
+            {
+                healthArmorA.enabled = true;
+                healthArmorB.enabled = true;
+                healthArmorC.enabled = true;
+                healthArmorD.enabled = true;
+                healthArmorE.enabled = true;
+                healthArmorF.enabled = true;
+            }
+        }
+        //Update data for enemies
         GameManager.Instance.playerHealths.Add(location, health);
         GameManager.Instance.playerExtractionData.Add(location, (extractionRate * 40 + energyRate * 100) * damageEffectiveness);
     }
@@ -403,6 +465,42 @@ public class ResourceExtractor : PlayerBuilding, IUpgradeable
                 //Increase alignment count and set the alignment
                 alignments++;
                 expenseModifiers[type] = 0.3f;
+
+                //Update sprites to show proper sprites for alignment
+                switch(type)
+                {
+                    //Activate extraction sprite
+                    case 0:
+                        {
+                            extractionCenter.enabled = true;
+                            break;
+                        }
+                    //Activate energy sprite
+                    case 1:
+                        {
+                            energyCenter.enabled = true;
+                            break;
+                        }
+                    //Activate protection sprites
+                    case 2:
+                        {
+                            protectionBarA.enabled = true;
+                            protectionBarB.enabled = true;
+                            protectionBarC.enabled = true;
+                            break;
+                        }
+                    //Activate health sprites
+                    case 3:
+                        {
+                            healthArmorA.enabled = true;
+                            healthArmorB.enabled = true;
+                            healthArmorC.enabled = true;
+                            healthArmorD.enabled = true;
+                            healthArmorE.enabled = true;
+                            healthArmorF.enabled = true;
+                            break;
+                        }
+                }
 
                 //If this is a second alignment (max)
                 if(alignments == 2)

@@ -22,9 +22,17 @@ public class Wall : PlayerBuilding, IUpgradeable
     public int maxAlignments = 0;
     private bool finishedAligning = false;
 
-    //Other
-    [SerializeField] Color activeColor = Color.white;
-    [SerializeField] SpriteRenderer spriteRenderer;
+    //Sprite data
+    //Health
+    [SerializeField] SpriteRenderer healthArmorA;
+    [SerializeField] SpriteRenderer healthArmorB;
+    [SerializeField] SpriteRenderer healthArmorC;
+    [SerializeField] SpriteRenderer healthArmorD;
+    [SerializeField] SpriteRenderer healthArmorE;
+    [SerializeField] SpriteRenderer healthArmorF;
+
+    //Healing
+    [SerializeField] SpriteRenderer healingCenter;
 
     //Add damager to damager list
     public override void AddDamager(IDamager damager)
@@ -162,8 +170,17 @@ public class Wall : PlayerBuilding, IUpgradeable
         }
     }
 
+    //Start is called before the first frame update
     private void Start()
     {
+        //Apply default sprite data
+        healthArmorA.enabled = false;
+        healthArmorB.enabled = false;
+        healthArmorC.enabled = false;
+        healthArmorD.enabled = false;
+        healthArmorE.enabled = false;
+        healthArmorF.enabled = false;
+        healingCenter.enabled = false;
         if (needsDifficultyModifiers)
         {
             //Apply difficulty modifiers
@@ -173,6 +190,25 @@ public class Wall : PlayerBuilding, IUpgradeable
 
             //Alignment handling
             finishedAligning = maxAlignments == 0;
+        }
+        //This means it was loaded, so apply sprite data if relevant
+        else
+        {
+            //If aligned with health, update sprites to match
+            if (expenseModifiers[0] == 0.3f)
+            {
+                healthArmorA.enabled = true;
+                healthArmorB.enabled = true;
+                healthArmorC.enabled = true;
+                healthArmorD.enabled = true;
+                healthArmorE.enabled = true;
+                healthArmorF.enabled = true;
+            }
+            //If aligned with healing effectiveness, update sprites to match
+            if(expenseModifiers[1] == 0.3f)
+            {
+                healingCenter.enabled = true;
+            }
         }
         //Update data for enemies
         GameManager.Instance.playerHealths.Add(location, health);
@@ -222,6 +258,22 @@ public class Wall : PlayerBuilding, IUpgradeable
 
         //Set the chosen alignment as primary
         expenseModifiers[type] = 0.3f;
+
+        //If aligning to health, update sprites to match
+        if(type == 0)
+        {
+            healthArmorA.enabled = true;
+            healthArmorB.enabled = true;
+            healthArmorC.enabled = true;
+            healthArmorD.enabled = true;
+            healthArmorE.enabled = true;
+            healthArmorF.enabled = true;
+        }
+        //If aligning to healing effectiveness, update sprites to match
+        else
+        {
+            healingCenter.enabled = true;
+        }
 
         //Automatically pick the other as primary misalignment
         expenseModifiers[(type + 1) % expenseModifiers.Length] = 1f;

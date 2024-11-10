@@ -1,0 +1,252 @@
+{
+    "seedA": 2512581753,
+    "seedB": 2334928186,
+    "seedC": 3556147647,
+    "seedD": 573997839,
+    "seedE": 3359922793,
+    "seedF": 4139708295,
+    "simplifiedSeed": 1234768896,
+    "budgetCosts": [
+        1.0,
+        1.5,
+        6.220800876617432,
+        1.0,
+        1.5,
+        1.0,
+        1.5,
+        1.0,
+        1.5,
+        2.5
+    ],
+    "energyCosts": [
+        0.10000000149011612,
+        0.10000000149011612,
+        0.3500000238418579,
+        0.10000000149011612,
+        0.10000000149011612,
+        0.10000000149011612,
+        0.10000000149011612,
+        0.10000000149011612,
+        0.10000000149011612,
+        0.10000000149011612
+    ],
+    "budget": 981.39599609375,
+    "wave": 0,
+    "enemyQuantity": 1.0,
+    "enemyStrength": 1.0,
+    "playerStrength": 1.0,
+    "playerHealth": 1.0,
+    "playerIncome": 10.0,
+    "playerCosts": 0.10000000149011612,
+    "energyProduction": 10.0,
+    "energyConsumption": 0.10000000149011612,
+    "buildings": [
+        {
+            "type": 0,
+            "firerate": 3.0,
+            "damage": 10.0,
+            "splashRange": 0.10000000149011612,
+            "splash": false,
+            "cooldown": 0,
+            "baseCooldown": 0,
+            "healing": 0.0,
+            "healingEffectiveness": 0.0,
+            "extractionRate": 0.0,
+            "energyRate": 0.0,
+            "damageEffectiveness": 0.0,
+            "range": 5.0,
+            "health": 20.0,
+            "baseHealth": 20.0,
+            "energyCost": 0.10000000149011612,
+            "cost": 0.0,
+            "location": {
+                "x": 1,
+                "y": 0
+            },
+            "expenseModifiers": [
+                0.3,
+                0.30000001192092898,
+                0.30000001192092898,
+                0.3,
+                0.3
+            ],
+            "upgradeLevels": [
+                0,
+                0,
+                0,
+                0,
+                0
+            ],
+            "maxAlignments": 2,
+            "alignments": 2,
+            "primaryMisalignmentChosen": false,
+            "finishedAligning": true
+        },
+        {
+            "type": 0,
+            "firerate": 3.0,
+            "damage": 10.0,
+            "splashRange": 0.10000000149011612,
+            "splash": false,
+            "cooldown": 0,
+            "baseCooldown": 0,
+            "healing": 0.0,
+            "healingEffectiveness": 0.0,
+            "extractionRate": 0.0,
+            "energyRate": 0.0,
+            "damageEffectiveness": 0.0,
+            "range": 5.0,
+            "health": 20.0,
+            "baseHealth": 20.0,
+            "energyCost": 0.15000000596046449,
+            "cost": 0.0,
+            "location": {
+                "x": 0,
+                "y": -1
+            },
+            "expenseModifiers": [
+                -Infinity,
+                3.0,
+                3.0,
+                0.30000001192092898,
+                0.30000001192092898
+            ],
+            "upgradeLevels": [
+                0,
+                0,
+                0,
+                0,
+                0
+            ],
+            "maxAlignments": 2,
+            "alignments": 2,
+            "primaryMisalignmentChosen": false,
+            "finishedAligning": true
+        },
+        {
+            "type": 0,
+            "firerate": 3.0,
+            "damage": 10.0,
+            "splashRange": 0.10000000149011612,
+            "splash": false,
+            "cooldown": 0,
+            "baseCooldown": 0,
+            "healing": 0.0,
+            "healingEffectiveness": 0.0,
+            "extractionRate": 0.0,
+            "energyRate": 0.0,
+            "damageEffectiveness": 0.0,
+            "range": 5.0,
+            "health": 20.0,
+            "baseHealth": 20.0,
+            "energyCost": 0.20000000298023225,
+            "cost": 0.0,
+            "location": {
+                "x": -1,
+                "y": -2
+            },
+            "expenseModifiers": [
+                -Infinity,
+                0.5,
+                0.5,
+                0.5,
+                0.5
+            ],
+            "upgradeLevels": [
+                0,
+                0,
+                0,
+                0,
+                0
+            ],
+            "maxAlignments": 2,
+            "alignments": 0,
+            "primaryMisalignmentChosen": false,
+            "finishedAligning": false
+        },
+        {
+            "type": 0,
+            "firerate": 3.0,
+            "damage": 10.0,
+            "splashRange": 0.10000000149011612,
+            "splash": false,
+            "cooldown": 0,
+            "baseCooldown": 0,
+            "healing": 0.0,
+            "healingEffectiveness": 0.0,
+            "extractionRate": 0.0,
+            "energyRate": 0.0,
+            "damageEffectiveness": 0.0,
+            "range": 5.0,
+            "health": 20.0,
+            "baseHealth": 20.0,
+            "energyCost": 0.25,
+            "cost": 0.0,
+            "location": {
+                "x": 0,
+                "y": -2
+            },
+            "expenseModifiers": [
+                -Infinity,
+                0.5,
+                0.5,
+                0.5,
+                0.5
+            ],
+            "upgradeLevels": [
+                0,
+                0,
+                0,
+                0,
+                0
+            ],
+            "maxAlignments": 2,
+            "alignments": 0,
+            "primaryMisalignmentChosen": false,
+            "finishedAligning": false
+        },
+        {
+            "type": 0,
+            "firerate": 3.0,
+            "damage": 10.0,
+            "splashRange": 0.10000000149011612,
+            "splash": true,
+            "cooldown": 0,
+            "baseCooldown": 0,
+            "healing": 0.0,
+            "healingEffectiveness": 0.0,
+            "extractionRate": 0.0,
+            "energyRate": 0.0,
+            "damageEffectiveness": 0.0,
+            "range": 5.0,
+            "health": 20.0,
+            "baseHealth": 20.0,
+            "energyCost": 0.30000001192092898,
+            "cost": 0.0,
+            "location": {
+                "x": 1,
+                "y": -2
+            },
+            "expenseModifiers": [
+                0.30000001192092898,
+                3.0,
+                3.0,
+                0.30000001192092898,
+                3.0
+            ],
+            "upgradeLevels": [
+                0,
+                0,
+                0,
+                0,
+                0
+            ],
+            "maxAlignments": 2,
+            "alignments": 2,
+            "primaryMisalignmentChosen": false,
+            "finishedAligning": true
+        }
+    ],
+    "generatedNumbers": 6,
+    "swappedTiles": []
+}

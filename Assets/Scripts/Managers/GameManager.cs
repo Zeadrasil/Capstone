@@ -1926,6 +1926,13 @@ public class GameManager : Singleton<GameManager>
     public void Deactivate()
     {
         active = false;
+
+        //Clear data
+        playerBuildings.Clear();
+        playerHealths.Clear();
+        playerExtractionData.Clear();
+        playerDamageData.Clear();
+        playerRepairData.Clear();
         TileManager.Instance.Deactivate();
     }
 }

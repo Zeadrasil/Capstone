@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Data;
+using Unity.VisualScripting;
 using UnityEngine;
 
 //RepairStations allow buildings to be repaired, though a repair station can only repair other buildings and repair stations and not itself
@@ -31,8 +32,22 @@ public class RepairStation : PlayerBuilding, IDamageable, IUpgradeable
     public float[] energyCosts = new float[] { 0.1f, 0.1f, 0.1f };
     [SerializeField] SpriteRenderer spriteRenderer;
 
-    //Other
+    //Sprite data
     [SerializeField] Color activeColor = Color.white;
+
+    //Healing
+    [SerializeField] SpriteRenderer healingCenter;
+
+    //Health
+    [SerializeField] SpriteRenderer healthArmorA;
+    [SerializeField] SpriteRenderer healthArmorB;
+    [SerializeField] SpriteRenderer healthArmorC;
+
+    //Range
+    [SerializeField] SpriteRenderer rangeDotA;
+    [SerializeField] SpriteRenderer rangeDotB;
+    [SerializeField] SpriteRenderer rangeDotC;
+    [SerializeField] SpriteRenderer rangeDotD;
 
     //Add damager to list
     public override void AddDamager(IDamager damager)
@@ -201,6 +216,16 @@ public class RepairStation : PlayerBuilding, IDamageable, IUpgradeable
     // Start is called before the first frame update
     void Start()
     {
+        //Apply default sprite data
+        healingCenter.enabled = false;
+        healthArmorA.enabled = false;
+        healthArmorB.enabled = false;
+        healthArmorC.enabled = false;
+        rangeDotA.enabled = false;
+        rangeDotB.enabled = false;
+        rangeDotC.enabled = false;
+        rangeDotD.enabled = false;
+
         //Skip applying difficulty modifiers if they were already applied due to load
         if (needsDifficultyModifiers)
         {
@@ -211,6 +236,30 @@ public class RepairStation : PlayerBuilding, IDamageable, IUpgradeable
 
             //If you are unable to specialize, you are finished specializing
             finishedAligning = maxAlignments == 0;
+        }
+        //This means it was loaded, so apply sprite data if relevant
+        else
+        {
+            //If aligned with range, update sprites to match
+            if (expenseModifiers[0] == 0.3f)
+            {
+                rangeDotA.enabled = true;
+                rangeDotB.enabled = true;
+                rangeDotC.enabled = true;
+                rangeDotD.enabled = true;
+            }
+            //If aligned with healing, update sprites to match
+            if(expenseModifiers[1] == 0.3f)
+            {
+                healingCenter.enabled = true;
+            }
+            //If aligned with health, update sprites to match
+            if (expenseModifiers[2] == 0.3f)
+            {
+                healthArmorA.enabled = true;
+                healthArmorB.enabled = true;
+                healthArmorC.enabled = true;
+            }
         }
         //Update data for enemies
         GameManager.Instance.playerHealths.Add(location, health);
@@ -332,6 +381,34 @@ public class RepairStation : PlayerBuilding, IDamageable, IUpgradeable
                 //Select primary alignment
                 alignments++;
                 expenseModifiers[type] = 0.3f;
+
+                //Update sprites to match new alignment
+                switch(type)
+                {
+                    //Activate range sprites
+                    case 0:
+                        {
+                            rangeDotA.enabled = true;
+                            rangeDotB.enabled = true;
+                            rangeDotC.enabled = true;
+                            rangeDotD.enabled = true;
+                            break;
+                        }
+                    //Activate healing sprite
+                    case 1:
+                        {
+                            healingCenter.enabled = true;
+                            break;
+                        }
+                    //Activate health sprites
+                    case 2:
+                        {
+                            healthArmorA.enabled = true;
+                            healthArmorB.enabled = true;
+                            healthArmorC.enabled = true;
+                            break;
+                        }
+                }
             }
         }
     }
