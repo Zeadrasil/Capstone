@@ -828,6 +828,10 @@ public class GameManager : Singleton<GameManager>
             //Ensures that there is no functionality to the building tracker
             Destroy(selectedConstruction.GetComponentInChildren<PlayerBuilding>());
         }
+        else if (type != 10 && type != -1)
+        {
+            Build(-1);
+        }
     }
 
     //Clear out construction data

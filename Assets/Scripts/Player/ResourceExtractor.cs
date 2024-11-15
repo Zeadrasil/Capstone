@@ -1,7 +1,5 @@
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.UI;
-using static UnityEditor.FilePathAttribute;
 
 //ResourceExtractors are used to generate resources for the player
 public class ResourceExtractor : PlayerBuilding, IUpgradeable
@@ -148,6 +146,10 @@ public class ResourceExtractor : PlayerBuilding, IUpgradeable
                 healthArmorE.enabled = true;
                 healthArmorF.enabled = true;
             }
+
+            //Also apply resource production
+            GameManager.Instance.IncreaseIncome(extractionRate * Mathf.Pow(health, damageEffectiveness) / Mathf.Pow(baseHealth, damageEffectiveness));
+            GameManager.Instance.ChangeEnergyCap(energyRate * Mathf.Pow(health, damageEffectiveness) / Mathf.Pow(baseHealth, damageEffectiveness));
         }
         //Update data for enemies
         GameManager.Instance.playerHealths.Add(location, health);

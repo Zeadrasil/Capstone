@@ -82,7 +82,10 @@ public class PlayerBase : PlayerBuilding
             damager.cancelAttack();
         }
         //Destroy self
-        Destroy(transform.parent.gameObject);
+        Destroy(gameObject);
+
+        //Go back to main menu
+        MenuManager.Instance.Return();
     }
 
     public override BuildingData GetAsData()
