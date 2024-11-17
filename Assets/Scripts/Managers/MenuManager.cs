@@ -11,6 +11,7 @@ public class MenuManager : Singleton<MenuManager>
     [SerializeField] Canvas mainMenu;
     [SerializeField] Canvas optionsMenu;
     [SerializeField] Canvas newGameMenu;
+    [SerializeField] Canvas creditsMenu;
 
     //In-game data
     public Canvas pauseMenu;
@@ -392,6 +393,8 @@ public class MenuManager : Singleton<MenuManager>
         optionsMenu.enabled = false;
         basicSettings.enabled = false;
         advancedSettings.enabled = false;
+        customSettings.enabled = false;
+        creditsMenu.enabled = false;
     }
 
     //Called every frame
@@ -1458,5 +1461,19 @@ public class MenuManager : Singleton<MenuManager>
         {
             field.enabled = true;
         }
+    }
+
+    //Go to credits
+    public void EnterCredits()
+    {
+        mainMenu.enabled = false;
+        creditsMenu.enabled = true;
+    }
+
+    //Return from credits
+    public void ExitCredits()
+    {
+        mainMenu.enabled = true;
+        creditsMenu.enabled = false;
     }
 }
