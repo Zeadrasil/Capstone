@@ -7,7 +7,7 @@ using UnityEngine;
 public class GameData
 {
     //Seed data
-    public uint seedA, seedB, seedC, seedD, seedE, seedF;
+    public uint seedA, seedB, seedC, seedD, seedE, seedF, seedG, seedH, seedI;
     public int simplifiedSeed;
 
     //Economy info

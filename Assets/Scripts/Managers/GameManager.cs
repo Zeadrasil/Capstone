@@ -51,7 +51,7 @@ public class GameManager : Singleton<GameManager>
     public int wave;
 
     //Stores enemies so that it is known when you have killed them all
-    private List<Enemy> currentEnemies = new List<Enemy>();
+    public List<Enemy> currentEnemies = new List<Enemy>();
 
     //Stores checkpoints so that they can be culled for the new wave
     public List<GameObject> checkpoints = new List<GameObject>();
@@ -224,6 +224,7 @@ public class GameManager : Singleton<GameManager>
 
     //Settings data
     public int simplifiedSeed;
+    public int outlineType = 0;
 
     public float enemyQuantity = 1;
     public float enemyStrength = 1;
@@ -380,6 +381,9 @@ public class GameManager : Singleton<GameManager>
         tileManager.seedD = ((uint)BasicUtils.WrappedRandomRange(int.MinValue, int.MaxValue)) + int.MaxValue;
         tileManager.seedE = ((uint)BasicUtils.WrappedRandomRange(int.MinValue, int.MaxValue)) + int.MaxValue;
         tileManager.seedF = ((uint)BasicUtils.WrappedRandomRange(int.MinValue, int.MaxValue)) + int.MaxValue;
+        tileManager.seedG = ((uint)BasicUtils.WrappedRandomRange(int.MinValue, int.MaxValue)) + int.MaxValue;
+        tileManager.seedH = ((uint)BasicUtils.WrappedRandomRange(int.MinValue, int.MaxValue)) + int.MaxValue;
+        tileManager.seedI = ((uint)BasicUtils.WrappedRandomRange(int.MinValue, int.MaxValue)) + int.MaxValue;
 
         //Modifies starting values by the difficulty modifiers
         budget *= playerIncome;
@@ -423,6 +427,9 @@ public class GameManager : Singleton<GameManager>
         tileManager.seedD = data.seedD;
         tileManager.seedE = data.seedE;
         tileManager.seedF = data.seedF;
+        tileManager.seedD = data.seedG;
+        tileManager.seedE = data.seedH;
+        tileManager.seedF = data.seedI;
 
         //Load difficulty settings
         enemyQuantity = data.enemyQuantity;
@@ -1895,6 +1902,9 @@ public class GameManager : Singleton<GameManager>
         data.seedD = tileManager.seedD;
         data.seedE = tileManager.seedE;
         data.seedF = tileManager.seedF;
+        data.seedD = tileManager.seedG;
+        data.seedE = tileManager.seedH;
+        data.seedF = tileManager.seedI;
 
         //Economy info
         data.budgetCosts = budgetCosts;

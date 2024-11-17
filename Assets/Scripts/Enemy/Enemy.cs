@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Tilemaps;
 using Priority_Queue;
+using System.Threading.Tasks;
+using Unity.Burst.CompilerServices;
 
 //Base Enemy class that all types of enemies will use
 public class Enemy : MonoBehaviour, IDamageable, IDamager
@@ -24,13 +26,15 @@ public class Enemy : MonoBehaviour, IDamageable, IDamager
     protected float rangedSearchCooldown = 0;
     protected float baseRangedSearchCooldown = 9;
     [SerializeField] protected float radius;
-    protected Vector3 offset = Vector3.zero;
+    protected float offset = 0;
     protected float offsetDistance = 0;
     protected List<IDamager> currentDamagers = new List<IDamager>();
     [SerializeField] GameObject healthBar;
     Coroutine fireCoroutine;
     protected int collisionDetectionCooldown = 0;
     protected int baseCollisionDetectionCooldown = 9;
+
+    protected Task<(bool, Dictionary<Vector2Int, NavNode>)> findPathTask;
 
     // Start is called before the first frame update
     protected virtual void Start()
@@ -47,13 +51,38 @@ public class Enemy : MonoBehaviour, IDamageable, IDamager
             pitbullMode = true;
         }
 
-        //Apply diffculty scaling to enemy
+        //Apply difficulty scaling to enemy
         baseHealth *= GameManager.Instance.enemyStrength;
-        health = baseHealth;
         damage *= GameManager.Instance.enemyStrength;
         movementSpeed *= GameManager.Instance.enemyStrength;
         firerate *= GameManager.Instance.enemyStrength;
-        collisionDetectionCooldown = BasicUtils.WrappedRandomRange(0, 10);
+
+        //Improve performance by spreading out collision checks over time
+        //baseCollisionDetectionCooldown = (int)Mathf.Max(1, GameManager.Instance.currentEnemies.Count / 30);
+        collisionDetectionCooldown = BasicUtils.WrappedRandomRange(0, baseCollisionDetectionCooldown);
+
+        //Apply wave modifiers
+
+        //Damage modifiers
+        damage *= GameManager.Instance.wave % 5 == 0 ? 1.5f : 1;
+        damage *= Mathf.Pow(1.025f, GameManager.Instance.wave - 1);
+
+        //Firerate modifiers
+        firerate *= GameManager.Instance.wave % 7 == 0 ? 1.5f : 1;
+
+        //Health modifiers
+        baseHealth *= GameManager.Instance.wave % 9 == 0 ? 1.5f : 1;
+        baseHealth *= Mathf.Pow(1.025f, GameManager.Instance.wave - 1);
+
+        //Range modifiers
+        range *= GameManager.Instance.wave % 11 == 0 ? 1.5f : 1;
+        range *= Mathf.Pow(1.0125f, GameManager.Instance.wave - 1);
+
+        //Movement speed modifiers
+        movementSpeed *= GameManager.Instance.wave % 13 == 0 ? 1.5f : 1;
+        movementSpeed *= Mathf.Pow(1.0025f, GameManager.Instance.wave - 1);
+
+        health = baseHealth;
     }
 
 
@@ -271,13 +300,35 @@ public class Enemy : MonoBehaviour, IDamageable, IDamager
             if (!pitbullMode)
             {
                 //Move according to direction
-                transform.parent.position += movementSpeed * 0.02f * transform.right.normalized;
+                transform.parent.position += Mathf.Max(movementSpeed * 0.02f - offset, 0) * transform.right.normalized;
+                offset = Mathf.Max(offset - movementSpeed, 0);
             }
-            else
+            else if (pitbullMode)
             {
                 //Move straight to player base
-                transform.parent.position += (Singleton<GameManager>.Instance.PlayerBase.transform.position - transform.position).normalized * movementSpeed * 0.02f;
+                transform.parent.position += (Singleton<GameManager>.Instance.PlayerBase.transform.position - transform.position).normalized * Mathf.Max(movementSpeed * 0.02f - offset, 0);
+                offset = Mathf.Max(offset - movementSpeed, 0);
             }
+        }
+        //If searching for a new path
+        if(blocked && currentGuide == null && !pitbullMode && findPathTask.IsCompleted)
+        {
+            //Generate guides from found path
+            if(findPathTask.Result.Item1)
+            {
+                currentGuide = GeneratePath(findPathTask.Result.Item2, (Vector2Int)TileManager.Instance.TraversableTilemap.WorldToCell(transform.position));
+            }
+            //If no guide, either from straight shot or no valid path found
+            if(currentGuide == null)
+            {
+                pitbullMode = true;
+            }
+            //If guide, rotate properly
+            else
+            {
+                transform.right = currentGuide.transform.right;
+            }
+            blocked = false;
         }
         //If you are ranged and you are not targeting somethign
         if(ranged && target == null)
@@ -309,84 +360,8 @@ public class Enemy : MonoBehaviour, IDamageable, IDamager
         {
             if (collisionDetectionCooldown == 0)
             {
-                //Check in front of enemy and get all collisions shortly ahead
-                RaycastHit2D[] hits = Physics2D.CircleCastAll(transform.position, radius, transform.right, movementSpeed * 0.02f * baseCollisionDetectionCooldown, LayerMask.GetMask(new string[] { "EnemyBlockers" }));
+                runCollision(movementSpeed * 0.02f * (baseCollisionDetectionCooldown + 1));
 
-                //Go through each collision and figure out what to do with them
-                foreach (RaycastHit2D hit in hits)
-                {
-                    //Checks for Multitag component (allows multiple tags per object)
-                    if (hit.collider.gameObject.TryGetComponent(out MultiTag tags))
-                    {
-                        //If it is a player building, start attacking it
-                        if (tags.Tags.Contains("PlayerBuilding"))
-                        {
-                            blocked = true;
-                            attackMode = true;
-                            //If you are already attacking a different building due to ranged, stop attacking it
-                            if (ranged && target != hit.collider.gameObject.GetComponent<PlayerBuilding>())
-                            {
-                                target.RemoveDamager(this);
-                            }
-                            //If you are not ranged or you are attacking a different building already, start attacking the building
-                            if (!ranged || target != hit.collider.gameObject.GetComponent<PlayerBuilding>())
-                            {
-                                target = hit.collider.gameObject.GetComponent<PlayerBuilding>();
-                                target.AddDamager(this);
-                                if (fireCoroutine == null)
-                                {
-                                    fireCoroutine = StartCoroutine(fireLoop());
-                                }
-
-                            }
-                        }
-                        //If it is a blocking terrain tile, generate a new path since this means that you are off of the path
-                        else if (tags.Tags.Contains("Ground"))
-                        {
-                            Vector2Int goal = (Vector2Int)TileManager.Instance.TraversableTilemap.WorldToCell(transform.position);
-                            (bool, Dictionary<Vector2Int, NavNode>) adjacencies = FindPath(goal, movementSpeed, damage, firerate, transform.position);
-                            if (adjacencies.Item1)
-                            {
-                                currentGuide = GeneratePath(adjacencies.Item2, goal);
-                            }
-                            else
-                            {
-                                currentGuide = null;
-                            }
-                            //Follow the guide if it exists
-                            if (currentGuide != null)
-                            {
-                                transform.rotation = currentGuide.transform.rotation;
-                            }
-                            //If it does not, go straight for the base
-                            else
-                            {
-                                pitbullMode = true;
-                            }
-                            transform.parent.position = TileManager.Instance.BlockerTilemap.CellToWorld(TileManager.Instance.BlockerTilemap.WorldToCell(transform.position));
-                        }
-                    }
-                    //If it is an enemy checkpoint
-                    else if (hit.collider.gameObject.TryGetComponent(out EnemyCheckpoint checkpoint))
-                    {
-                        //Check to see if you have a guiding checkpoint, and if so check to see if the checkpoint you just hit is the checkpoint that is currently guiding you
-                        if (currentGuide != null && checkpoint.id == currentGuide.id)
-                        {
-                            //If your current guide has a next guide
-                            if (currentGuide.next != null)
-                            {
-                                //Change guides to the next guide
-                                currentGuide = currentGuide.next;
-                                transform.rotation = currentGuide.transform.rotation;
-                            }
-                            else
-                            {
-                                //If there is no next guide go into pitbull mode
-                                pitbullMode = true;
-                            }
-                        }
-                    }
-                }
                 //Reset collision detection cooldown
                 collisionDetectionCooldown = baseCollisionDetectionCooldown;
             }
@@ -396,6 +371,106 @@ public class Enemy : MonoBehaviour, IDamageable, IDamager
                 collisionDetectionCooldown--;
             }
         }
+    }
+
+    //Check for collisions
+    private void runCollision(float forLength)
+    {
+
+        //Check in front of enemy and get all collisions shortly ahead
+        RaycastHit2D[] hits = Physics2D.RaycastAll(transform.position, transform.right, forLength, LayerMask.GetMask(new string[] { "EnemyBlockers" }));
+        Debug.DrawLine(transform.position, transform.position + transform.right.normalized * forLength);
+
+        //Go through each collision and figure out what to do with them
+        foreach (RaycastHit2D hit in hits)
+        {
+            //Checks for Multitag component (allows multiple tags per object)
+            if (hit.collider.gameObject.TryGetComponent(out MultiTag tags))
+            {
+                //If it is a player building, start attacking it
+                if (tags.Tags.Contains("PlayerBuilding"))
+                {
+                    blocked = true;
+                    attackMode = true;
+                    //If you are already attacking a different building due to ranged, stop attacking it
+                    if (ranged && target != hit.collider.gameObject.GetComponent<PlayerBuilding>())
+                    {
+                        target.RemoveDamager(this);
+                    }
+                    //If you are not ranged or you are attacking a different building already, start attacking the building
+                    if (!ranged || target != hit.collider.gameObject.GetComponent<PlayerBuilding>())
+                    {
+                        target = hit.collider.gameObject.GetComponent<PlayerBuilding>();
+                        target.AddDamager(this);
+                        if (fireCoroutine == null)
+                        {
+                            fireCoroutine = StartCoroutine(fireLoop());
+                        }
+
+                    }
+                    return;
+                }
+                //If it is a blocking terrain tile, generate a new path since this means that you are off of the path
+                else if (tags.Tags.Contains("Ground"))
+                {
+                    Vector2Int goal = (Vector2Int)TileManager.Instance.TraversableTilemap.WorldToCell(transform.position);
+                    Vector3 currentPosition = transform.position;
+                    findPathTask = Task<(bool, Dictionary<Vector2Int, NavNode>)>.Factory.StartNew(() => FindPath(goal, movementSpeed, damage, firerate, currentPosition));
+                    blocked = true;
+                    currentGuide = null;
+                }
+            }
+            //If it is an enemy checkpoint
+            else if (hit.collider.gameObject.TryGetComponent(out EnemyCheckpoint checkpoint))
+            {
+                //Check to see if you have a guiding checkpoint, and if so check to see if the checkpoint you just hit is the checkpoint that is currently guiding you
+                if (currentGuide != null && checkpoint.id == currentGuide.id)
+                {
+                    //If your current guide has a next guide
+                    if (currentGuide.next != null)
+                    {
+                        //Change guides to the next guide
+                        currentGuide = currentGuide.next;
+
+                        //Progress enemy forward to ensure that minor positioning changes do not add up over time
+                        transform.parent.position += transform.right.normalized * hit.distance;
+                        transform.rotation = currentGuide.transform.rotation;
+                        offset += hit.distance;
+                        runCollision(forLength - hit.distance);
+                        return;
+                    }
+                    else
+                    {
+                        //If there is no next guide go into pitbull mode
+                        pitbullMode = true;
+                    }
+                }
+            }
+        }
+        //Collider2D[] ons = Physics2D.OverlapCircleAll(transform.position, transform.localScale.x + transform.localScale.y);
+        //foreach(Collider2D on in ons)
+        //{
+        //    if (on.gameObject.TryGetComponent(out EnemyCheckpoint checkpoint))
+        //    {
+        //        //Check to see if you have a guiding checkpoint, and if so check to see if the checkpoint you just hit is the checkpoint that is currently guiding you
+        //        if (currentGuide != null && checkpoint.id == currentGuide.id)
+        //        {
+        //            //If your current guide has a next guide
+        //            if (currentGuide.next != null)
+        //            {
+        //                //Change guides to the next guide
+        //                currentGuide = currentGuide.next;
+        //                transform.rotation = currentGuide.transform.rotation;
+        //                runCollision(forLength);
+        //            }
+        //            else
+        //            {
+        //                //If there is no next guide go into pitbull mode
+        //                pitbullMode = true;
+        //            }
+        //        }
+        //    }
+        //}
     }
 
     //Take damage
@@ -500,7 +575,7 @@ public class Enemy : MonoBehaviour, IDamageable, IDamager
             //If it is an enemy, add it to the queue with the distance between the enemy and yourself as the priority
             if (hit.gameObject.TryGetComponent(out PlayerBuilding building))
             {
-                targets.Enqueue(building, Mathf.Abs((hit.gameObject.transform.position - transform.position).magnitude));
+                targets.Enqueue(building, (hit.gameObject.transform.position - transform.position).magnitude);
             }
         }
         //If there is at least one potential target, return the closest target

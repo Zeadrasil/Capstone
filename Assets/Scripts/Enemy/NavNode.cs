@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using System.Threading.Tasks;
 
 //NavNode class is used to generate paths for Enemies and EnemyCheckpoints
 public class NavNode
@@ -47,7 +48,7 @@ public class NavNode
             destroyed = true;
             foreach (NavNode n in neighbors)
             {
-                n.Destroy();
+                Task.Factory.StartNew(() => n.Destroy());
             }
             neighbors = null;
         }

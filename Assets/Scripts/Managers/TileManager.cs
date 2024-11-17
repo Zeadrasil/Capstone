@@ -53,16 +53,19 @@ public class TileManager : Singleton<TileManager>
     public Tilemap BlockerTilemap;
 
     //Tiles
-    public TileBase blockerTile;
-    public TileBase traversableTile;
-    public TileBase blockerResourceTile;
-    public TileBase traversableResourceTile;
+    public TileBase[] blockerTiles;
+    public TileBase[] traversableTiles;
+    public TileBase[] blockerResourceTiles;
+    public TileBase[] traversableResourceTiles;
 
     //Map scaling (compresses map to make gaps smaller)
     int mapScaling = 300000000;
 
     //Relative compression of resources compared to the normal map
     float resourceScaling = 2.5f;
+
+    //Relative compression of aesthetic changes compared to the normal map
+    float aestheticScaling = 3f;
 
     //Adjcenct tile container
     public Dictionary<Vector2Int, NavNode> Adjacencies = new Dictionary<Vector2Int, NavNode>();
@@ -91,6 +94,9 @@ public class TileManager : Singleton<TileManager>
     public uint seedD;
     public uint seedE;
     public uint seedF;
+    public uint seedG;
+    public uint seedH;
+    public uint seedI;
     // Start is called before the first frame update
     void Start()
     {
@@ -398,12 +404,12 @@ public class TileManager : Singleton<TileManager>
             if (CheckResource(x, y) >= resourceCutoff)
             {
                 //If it is resource-rich, place blocker resource tile
-                BlockerTilemap.SetTile(new Vector3Int(x, y, 0), blockerResourceTile);
+                BlockerTilemap.SetTile(new Vector3Int(x, y, 0), getTile(x, y, 0));
             }
             else
             {
                 //If it is not, place standard blocker tile
-                BlockerTilemap.SetTile(new Vector3Int(x, y, 0), blockerTile);
+                BlockerTilemap.SetTile(new Vector3Int(x, y, 0), getTile(x, y, 1));
             }
             //Either way it is a blocker, so add it to the blockers
             BlockerTiles.Add(new Vector2Int(x, y));
@@ -414,12 +420,12 @@ public class TileManager : Singleton<TileManager>
             if (CheckResource(x, y) >= resourceCutoff)
             {
                 //If it is resource-rich, place traversable resource tile
-                TraversableTilemap.SetTile(new Vector3Int(x, y, 0), traversableResourceTile);
+                TraversableTilemap.SetTile(new Vector3Int(x, y, 0), getTile(x, y, 2));
             }
             else
             {
                 //If it is not, place standard traversable tile
-                TraversableTilemap.SetTile(new Vector3Int(x, y, 0), traversableTile);
+                TraversableTilemap.SetTile(new Vector3Int(x, y, 0), getTile(x, y, 3));
             }
             //Either way it is traversable
             //Get world position of generated tile
@@ -486,6 +492,73 @@ public class TileManager : Singleton<TileManager>
     {
         //Calls the specific version
         return CheckResource(coords.x, coords.y);
+    }
+
+    //Identify the tile to be generated based off of aesthetic map
+    private TileBase getTile(int x, int y, int type)
+    {
+        switch(type)
+        {
+            //Blocking resource tile
+            case 0:
+                {
+                    return blockerResourceTiles[checkAesthetic(x, y)];
+                }
+                //Blocking standard tile
+            case 1:
+                {
+                    return blockerTiles[checkAesthetic(x, y)];
+                }
+                //Traversable resource tile
+            case 2:
+                {
+                    return traversableResourceTiles[checkAesthetic(x, y)];
+                }
+                //Traversable standard tile
+            case 3:
+                {
+                    return traversableTiles[checkAesthetic(x, y)];
+                }
+                //Should not happen
+            default:
+                {
+                    return null;
+                }
+        }
+    }
+
+    //Identify the aesthetic style of a given tile
+    public int checkAesthetic(int x, int y)
+    {
+        //Manipulate x and y to be based off of scaling and offset
+        float actualx = (x + xOffset) / (float)int.MaxValue * mapScaling * aestheticScaling;
+        float actualy = (y + yOffset) / (float)int.MaxValue * mapScaling * aestheticScaling;
+
+        //Get the perlin noise map height at the given location using the aesthetic seeds
+        float value = PerlinGenerator.Noise(actualx, actualy, seedG, seedH, seedI);
+
+        //Style A
+        if(value > 0.8)
+        {
+            return 0;
+        }
+        //Style B
+        if(value > 0.6)
+        {
+            return 1;
+        }
+        //Style C
+        if(value > 0.4)
+        {
+            return 2;
+        }
+        //Style D
+        if(value > 0.2)
+        {
+            return 3;
+        }
+        //Style E
+        return 4;
     }
 
     //Called upon leaving for main menu
