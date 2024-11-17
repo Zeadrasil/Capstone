@@ -510,6 +510,8 @@ public class GameManager : Singleton<GameManager>
     //Initialize the manager since you cannot pass in most of the data until you open the main scene
     public void Initialize()
     {
+        //Starts music
+        MusicManager.Instance.PlayBetween();
 
         //Assigns enemies to proper tier storages
         tierOneEnemies = new GameObject[] { fastEnemy, swarmEnemy, tankEnemy, deadlyEnemy, spammyEnemy, rangedEnemy };
@@ -585,6 +587,10 @@ public class GameManager : Singleton<GameManager>
         //You cannot start a wave if you have not finished your current wave, might change this later
         if(betweenWaves)
         {
+            //Change music
+            MusicManager.Instance.StopBetween();
+            MusicManager.Instance.PlayBattle();
+
             //Changes color to indicate that you cannot yet start a new wave
             nextWaveBackground.color = new Color(unavailableColor.x, unavailableColor.y, unavailableColor.z);
 
@@ -1771,6 +1777,12 @@ public class GameManager : Singleton<GameManager>
         //Checks to see if the wave is over
         betweenWaves = currentEnemies.Count == 0;
 
+        //If wave over swap music
+        if(betweenWaves)
+        {
+            MusicManager.Instance.StopBattle();
+            MusicManager.Instance.PlayBetween();
+        }
 
         //Sets the wave background to show what the remaining enemy status is
         nextWaveBackground.color = new Color(Mathf.Lerp(unavailableColor.x, availableColor.x, 1 - Mathf.Clamp(currentEnemies.Count / (float)maxEnemiesThisWave, 0, 1)), Mathf.Lerp(unavailableColor.y, availableColor.y, 1 - Mathf.Clamp(currentEnemies.Count / (float)maxEnemiesThisWave, 0, 1)), Mathf.Lerp(unavailableColor.z, availableColor.z, 1 - Mathf.Clamp(currentEnemies.Count / (float)maxEnemiesThisWave, 0, 1)));

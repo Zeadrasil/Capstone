@@ -794,6 +794,9 @@ public class MenuManager : Singleton<MenuManager>
             field.enabled = false;
         }
 
+        //Stop menu theme
+        MusicManager.Instance.StopMenu();
+
         //Disable irrelevant menus
         basicSettings.enabled = false;
         advancedSettings.enabled = false;
@@ -1195,6 +1198,9 @@ public class MenuManager : Singleton<MenuManager>
     //Go back to main menu
     public void Return()
     {
+        //Update music
+        MusicManager.Instance.PlayMenu();
+
         //Clear out the building references to avoid memory leaks
         while (GameManager.Instance.mostRecentEnergyDecrease.nextChanged != null)
         {

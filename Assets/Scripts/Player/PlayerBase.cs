@@ -84,20 +84,26 @@ public class PlayerBase : PlayerBuilding
         //Destroy self
         Destroy(gameObject);
 
+        //Stop music
+        MusicManager.Instance.StopBattle();
+
         //Go back to main menu
         MenuManager.Instance.Return();
     }
 
+    //Attempt to get building data, should not be possible to call this function on this building
     public override BuildingData GetAsData()
     {
         throw new System.NotImplementedException();
     }
 
+    //Attempt to load building data, should not be possible to call this function on this building
     public override void LoadData(BuildingData data)
     {
         throw new System.NotImplementedException();
     }
 
+    //Get building type for convenient way to determine what it is
     public override int GetBuildingType()
     {
         return -1;
