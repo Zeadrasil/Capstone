@@ -75,6 +75,58 @@ public class MenuManager : Singleton<MenuManager>
     [SerializeField] TMP_InputField playerEnergyUsageInput;
     [SerializeField] Slider playerEnergyUsageSlider;
 
+    //New game custom settings controls
+
+    //Seed settings
+    [SerializeField] TMP_InputField seedAInput;
+    [SerializeField] Slider seedASlider;
+    [SerializeField] TMP_InputField seedBInput;
+    [SerializeField] Slider seedBSlider;
+    [SerializeField] TMP_InputField seedCInput;
+    [SerializeField] Slider seedCSlider;
+    [SerializeField] TMP_InputField seedDInput;
+    [SerializeField] Slider seedDSlider;
+    [SerializeField] TMP_InputField seedEInput;
+    [SerializeField] Slider seedESlider;
+    [SerializeField] TMP_InputField seedFInput;
+    [SerializeField] Slider seedFSlider;
+    [SerializeField] TMP_InputField seedGInput;
+    [SerializeField] Slider seedGSlider;
+    [SerializeField] TMP_InputField seedHInput;
+    [SerializeField] Slider seedHSlider;
+    [SerializeField] TMP_InputField seedIInput;
+    [SerializeField] Slider seedISlider;
+
+    //Scaling
+    [SerializeField] TMP_InputField mapScalingInput;
+    [SerializeField] Slider mapScalingSlider;
+    [SerializeField] TMP_InputField resourceScalingInput;
+    [SerializeField] Slider resourceScalingSlider;
+    [SerializeField] TMP_InputField aestheticScalingInput;
+    [SerializeField] Slider aestheticScalingSlider;
+
+    //Cutoffs
+    [SerializeField] TMP_InputField mapCutoffInput;
+    [SerializeField] Slider mapCutoffSlider;
+    [SerializeField] TMP_InputField resourceCutoffInput;
+    [SerializeField] Slider resourceCutoffSlider;
+
+    //Aesthetics cutoffs
+    [SerializeField] TMP_InputField aestheticACutoffInput;
+    [SerializeField] Slider aestheticACutoffSlider;
+    [SerializeField] TMP_InputField aestheticBCutoffInput;
+    [SerializeField] Slider aestheticBCutoffSlider;
+    [SerializeField] TMP_InputField aestheticCCutoffInput;
+    [SerializeField] Slider aestheticCCutoffSlider;
+    [SerializeField] TMP_InputField aestheticDCutoffInput;
+    [SerializeField] Slider aestheticDCutoffSlider;
+
+    //Map data
+    [SerializeField] TMP_InputField mapStartSizeInput;
+    [SerializeField] Slider mapStartSizeSlider;
+    [SerializeField] TMP_InputField mapExpansionRateInput;
+    [SerializeField] Slider mapExpansionRateSlider;
+
     //Arrays for sliders and text fields
     private TMP_InputField[] inputFieldsFloatRange;
     private TMP_InputField[] inputFieldsFullInt;
@@ -82,22 +134,28 @@ public class MenuManager : Singleton<MenuManager>
     private Slider[] slidersFullInt;
 
     //Holder variables to avoid update loops
-    private bool[] freshesFloatRange = new bool[] { true, true, true, true, true, true, true, true, true, true, true };
-    private bool[] freshesFullInt = new bool[] { true };
+    private bool[] freshesFloatRange = new bool[] { true, true, true, true, true, true, true, true, true, true, true, 
+        true, true, true, true, true, true, true, true, true, true, true, true };
+    private bool[] freshesFullInt = new bool[] { true, true, true, true, true, true, true, true, true, true };
 
     //Holder variables to store creation settings before they are passed into the GameManager
     int simplifiedSeed = 0;
-    uint seedA = 0;
-    uint seedB = 0;
-    uint seedC = 0;
-    uint seedD = 0;
-    uint seedE = 0;
-    uint seedF = 0;
+    int seedA = 0;
+    int seedB = 0;
+    int seedC = 0;
+    int seedD = 0;
+    int seedE = 0;
+    int seedF = 0;
+    int seedG = 0;
+    int seedH = 0;
+    int seedI = 0;
 
+    //Basic
     float enemyDifficulty = 1;
     float playerPower = 1;
     float playerEconomy = 1;
 
+    //Advanced
     float enemyQuantity = 1;
     float enemyStrength = 1;
     float playerStrength = 1;
@@ -106,6 +164,23 @@ public class MenuManager : Singleton<MenuManager>
     float playerCosts = 1;
     float energyProduction = 1;
     float energyConsumption = 1;
+
+    //Scaling
+    float mapScaling = 300000000;
+    float resourceScaling = 2.5f;
+    float aestheticScaling = 3.0f;
+
+    //Cutoffs
+    float resourceCutoff = 0.725f;
+    float traversableCutoff = 0.45f;
+    float aestheticACutoff = 0.2f;
+    float aestheticBCutoff = 0.4f;
+    float aestheticCCutoff = 0.6f;
+    float aestheticDCutoff = 0.8f;
+
+    //Map data
+    int startSize = 15;
+    int expansionRate = 2; 
 
     //Allows GameManager initialization to be queued up in order to allow time for data to be passed into it
     int queueInitialize = -1;
@@ -120,6 +195,7 @@ public class MenuManager : Singleton<MenuManager>
     //Storage for new game menu UIs
     [SerializeField] Canvas basicSettings;
     [SerializeField] Canvas advancedSettings;
+    [SerializeField] Canvas customSettings;
 
     //Loaded data storage
     GameData loadedData;
@@ -131,12 +207,24 @@ public class MenuManager : Singleton<MenuManager>
         hotkeyTexts = new TMP_Text[] {cameraForwardText, cameraBackText, cameraLeftText, cameraRightText, tierOneTurretText, tierTwoTurretText, tierThreeTurretText, tierOneRepairStationText,  tierTwoRepairStationText, tierOneWallText, tierTwoWallText, tierOneExtractorText, tierTwoExtractorText, tierThreeExtractorText, nextWaveText, cancelText, confirmText, selectionUpText, selectionDownText, selectionLeftText, selectionRightText, sellText};
 
         //Create storages for settings inputs
-        inputFieldsFloatRange = new TMP_InputField[] { enemyDifficultyInput, playerPowerInput, playerEconomyInput, enemyQuantityInput, enemyStrengthInput, playerStrengthInput, playerHealthInput, playerIncomeInput, playerCostsInput, playerEnergyProductionInput, playerEnergyUsageInput };
-        inputFieldsFullInt = new TMP_InputField[] { simplifiedSeedInput };
+        inputFieldsFloatRange = new TMP_InputField[] { enemyDifficultyInput, playerPowerInput, playerEconomyInput, 
+            enemyQuantityInput, enemyStrengthInput, playerStrengthInput, playerHealthInput, playerIncomeInput, 
+            playerCostsInput, playerEnergyProductionInput, playerEnergyUsageInput, mapScalingInput, 
+            resourceScalingInput, aestheticScalingInput, mapCutoffInput, resourceCutoffInput, aestheticACutoffInput, 
+            aestheticBCutoffInput, aestheticCCutoffInput, aestheticDCutoffInput, mapStartSizeInput, 
+            mapExpansionRateInput };
+        inputFieldsFullInt = new TMP_InputField[] { simplifiedSeedInput, seedAInput, seedBInput, seedCInput, seedDInput,
+            seedEInput, seedFInput, seedGInput, seedHInput, seedIInput};
         
         //Create storages for settings sliders
-        slidersFloatRange = new Slider[] { enemyDifficultySlider, playerPowerSlider, playerEconomySlider, enemyQuantitySlider, enemyStrengthSlider, playerStrengthSlider, playerHealthSlider, playerIncomeSlider, playerCostsSlider, playerEnergyProductionSlider, playerEnergyUsageSlider };
-        slidersFullInt = new Slider[] { simplifiedSeedSlider };
+        slidersFloatRange = new Slider[] { enemyDifficultySlider, playerPowerSlider, playerEconomySlider, 
+            enemyQuantitySlider, enemyStrengthSlider, playerStrengthSlider, playerHealthSlider, playerIncomeSlider, 
+            playerCostsSlider, playerEnergyProductionSlider, playerEnergyUsageSlider, mapScalingSlider, 
+            resourceScalingSlider, aestheticScalingSlider, mapCutoffSlider, resourceCutoffSlider, aestheticACutoffSlider,
+            aestheticBCutoffSlider, aestheticCCutoffSlider, aestheticDCutoffSlider, mapStartSizeSlider,
+            mapExpansionRateSlider };
+        slidersFullInt = new Slider[] { simplifiedSeedSlider, seedASlider, seedBSlider, seedCSlider, seedDSlider,
+            seedESlider, seedFSlider, seedGSlider, seedHSlider, seedISlider };
 
         //Initializes manager reference
         gameManager = GameManager.Instance;
@@ -752,6 +840,7 @@ public class MenuManager : Singleton<MenuManager>
                     //Custom settings
                     case 2:
                         {
+                            GameManager.Instance.Initialize(simplifiedSeed, enemyQuantity, enemyStrength, playerStrength, playerHealth, playerCosts, playerIncome, energyProduction, energyConsumption, (uint)seedA, (uint)seedB, (uint)seedC, (uint)seedD, (uint)seedE, (uint)seedF, (uint)seedG, (uint)seedH, (uint)seedI, (int)mapScaling, traversableCutoff, resourceScaling, resourceCutoff, aestheticScaling, aestheticACutoff, aestheticACutoff, aestheticCCutoff, aestheticDCutoff, startSize, expansionRate);
                             break;
                         }
                     //Loaded Save
@@ -899,6 +988,60 @@ public class MenuManager : Singleton<MenuManager>
                     simplifiedSeed = slidersFullInt[setting].value == (float)int.MinValue ? int.MinValue : slidersFullInt[setting].value == (float)int.MaxValue ? int.MaxValue : (int)slidersFullInt[setting].value;
                     break;
                 }
+            //Map seed A
+            case 1:
+                {
+                    seedA = slidersFullInt[setting].value == (float)int.MinValue ? int.MinValue : slidersFullInt[setting].value == (float)int.MaxValue ? int.MaxValue : (int)slidersFullInt[setting].value;
+                    break;
+                }
+            //Map seed B
+            case 2:
+                {
+                    seedB = slidersFullInt[setting].value == (float)int.MinValue ? int.MinValue : slidersFullInt[setting].value == (float)int.MaxValue ? int.MaxValue : (int)slidersFullInt[setting].value;
+                    break;
+                }
+            //Map seed C
+            case 3:
+                {
+                    seedC = slidersFullInt[setting].value == (float)int.MinValue ? int.MinValue : slidersFullInt[setting].value == (float)int.MaxValue ? int.MaxValue : (int)slidersFullInt[setting].value;
+                    break;
+                }
+            //Resource seed A
+            case 4:
+                {
+                    seedD = slidersFullInt[setting].value == (float)int.MinValue ? int.MinValue : slidersFullInt[setting].value == (float)int.MaxValue ? int.MaxValue : (int)slidersFullInt[setting].value;
+                    break;
+                }
+            //Resource seed B
+            case 5:
+                {
+                    seedE = slidersFullInt[setting].value == (float)int.MinValue ? int.MinValue : slidersFullInt[setting].value == (float)int.MaxValue ? int.MaxValue : (int)slidersFullInt[setting].value;
+                    break;
+                }
+            //Resource seed C
+            case 6:
+                {
+                    seedF = slidersFullInt[setting].value == (float)int.MinValue ? int.MinValue : slidersFullInt[setting].value == (float)int.MaxValue ? int.MaxValue : (int)slidersFullInt[setting].value;
+                    break;
+                }
+            //Aesthetic seed A
+            case 7:
+                {
+                    seedG = slidersFullInt[setting].value == (float)int.MinValue ? int.MinValue : slidersFullInt[setting].value == (float)int.MaxValue ? int.MaxValue : (int)slidersFullInt[setting].value;
+                    break;
+                }
+            //Aesthetic seed B
+            case 8:
+                {
+                    seedH = slidersFullInt[setting].value == (float)int.MinValue ? int.MinValue : slidersFullInt[setting].value == (float)int.MaxValue ? int.MaxValue : (int)slidersFullInt[setting].value;
+                    break;
+                }
+            //Aesthetic seed C
+            case 9:
+                {
+                    seedI = slidersFullInt[setting].value == (float)int.MinValue ? int.MinValue : slidersFullInt[setting].value == (float)int.MaxValue ? int.MaxValue : (int)slidersFullInt[setting].value;
+                    break;
+                }
         }
     }
 
@@ -1024,6 +1167,71 @@ public class MenuManager : Singleton<MenuManager>
                     energyConsumption = slidersFloatRange[setting].value;
                     break;
                 }
+            //Map scaling
+            case 11:
+                {
+                    mapScaling = slidersFloatRange[setting].value;
+                    break;
+                }
+            case 12:
+                {
+                    resourceScaling = slidersFloatRange[setting].value;
+                    break;
+                }
+            //Aesthetic scaling
+            case 13:
+                {
+                    aestheticScaling = slidersFloatRange[setting].value;
+                    break;
+                }
+            //Map cutoff
+            case 14:
+                {
+                    traversableCutoff = slidersFloatRange[setting].value;
+                    break;
+                }
+            //Resource cutoff
+            case 15:
+                {
+                    resourceCutoff = slidersFloatRange[setting].value;
+                    break;
+                }
+            //Aesthetic A cutoff
+            case 16:
+                {
+                    aestheticACutoff = slidersFloatRange[setting].value;
+                    break;
+                }
+            //Aesthetic B cutoff
+            case 17:
+                {
+                    aestheticBCutoff = slidersFloatRange[setting].value;
+                    break;
+                }
+            //Aesthetic C cutoff
+            case 18:
+                {
+                    aestheticCCutoff = slidersFloatRange[setting].value;
+                    break;
+                }
+            //Aesthetic D cutoff
+            case 19:
+                {
+                    aestheticDCutoff = slidersFloatRange[setting].value;
+                    break;
+                }
+            //Map start size
+            case 20:
+                {
+                    startSize = (int)slidersFloatRange[setting].value;
+                    break;
+                }
+            //Expansion rate
+            case 21:
+                {
+                    expansionRate = (int)slidersFloatRange[setting].value;
+                    break;
+                }
         }
     }
 
@@ -1082,6 +1290,7 @@ public class MenuManager : Singleton<MenuManager>
     {
         advancedSettings.enabled = true;
         basicSettings.enabled = false;
+        customSettings.enabled = false;
         initializationType = 1;
     }
 
@@ -1090,7 +1299,17 @@ public class MenuManager : Singleton<MenuManager>
     {
         basicSettings.enabled = true;
         advancedSettings.enabled = false;
+        customSettings.enabled= false;
         initializationType = 0;
+    }
+
+    //Go to custom new game settings
+    public void CustomSettings()
+    {
+        basicSettings.enabled = false;
+        advancedSettings.enabled = false;
+        customSettings.enabled = true;
+        initializationType = 2;
     }
 
     //Load data from save

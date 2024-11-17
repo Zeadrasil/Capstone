@@ -59,13 +59,13 @@ public class TileManager : Singleton<TileManager>
     public TileBase[] traversableResourceTiles;
 
     //Map scaling (compresses map to make gaps smaller)
-    int mapScaling = 300000000;
+    public int mapScaling = 300000000;
 
     //Relative compression of resources compared to the normal map
-    float resourceScaling = 2.5f;
+    public float resourceScaling = 2.5f;
 
     //Relative compression of aesthetic changes compared to the normal map
-    float aestheticScaling = 3f;
+    public float aestheticScaling = 3f;
 
     //Adjcenct tile container
     public Dictionary<Vector2Int, NavNode> Adjacencies = new Dictionary<Vector2Int, NavNode>();
@@ -85,6 +85,13 @@ public class TileManager : Singleton<TileManager>
     //Cutoffs for tile types
     public float traversableCutoff = 0.45f;
     public float resourceCutoff = 0.725f;
+    public float aestheticACutoff = 0.2f;
+    public float aestheticBCutoff = 0.4f;
+    public float aestheticCCutoff = 0.6f;
+    public float aestheticDCutoff = 0.8f;
+
+    //Start size
+    public int size = 15;
 
     //Seed data
     public bool customSeeds = false;
@@ -115,8 +122,8 @@ public class TileManager : Singleton<TileManager>
         Adjacencies.Clear();
         potentialSpawnpoints.Clear();
 
-        //Generate 14 tiles out from the center
-        for (int i = 0; i < 15; i++)
+        //Generate tiles out from the center
+        for (int i = 0; i < size; i++)
         {
             Next();
         }
@@ -538,22 +545,22 @@ public class TileManager : Singleton<TileManager>
         float value = PerlinGenerator.Noise(actualx, actualy, seedG, seedH, seedI);
 
         //Style A
-        if(value > 0.8)
+        if(value > aestheticDCutoff)
         {
             return 0;
         }
         //Style B
-        if(value > 0.6)
+        if(value > aestheticCCutoff)
         {
             return 1;
         }
         //Style C
-        if(value > 0.4)
+        if(value > aestheticBCutoff)
         {
             return 2;
         }
         //Style D
-        if(value > 0.2)
+        if(value > aestheticACutoff)
         {
             return 3;
         }

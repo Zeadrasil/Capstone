@@ -47,6 +47,9 @@ public class GameManager : Singleton<GameManager>
     public float energyDeficit;
     public PlayerBuilding mostRecentEnergyDecrease;
 
+    //Map data
+    int expansionRate = 2;
+
     //Stores which wave you are on
     public int wave;
 
@@ -350,7 +353,8 @@ public class GameManager : Singleton<GameManager>
         midInit();
     }
 
-    private void midInit()
+    //Common initialization events
+    private void midInit(bool generateSeeds = true)
     {
         //Sets the RNG seed so that you can generate the same map every time if you use the same seed
         BasicUtils.WrappedInitState(simplifiedSeed);
@@ -374,16 +378,19 @@ public class GameManager : Singleton<GameManager>
         budget = 100;
 
 
-        //Generates the map seeds
-        tileManager.seedA = ((uint)BasicUtils.WrappedRandomRange(int.MinValue, int.MaxValue)) + int.MaxValue;
-        tileManager.seedB = ((uint)BasicUtils.WrappedRandomRange(int.MinValue, int.MaxValue)) + int.MaxValue;
-        tileManager.seedC = ((uint)BasicUtils.WrappedRandomRange(int.MinValue, int.MaxValue)) + int.MaxValue;
-        tileManager.seedD = ((uint)BasicUtils.WrappedRandomRange(int.MinValue, int.MaxValue)) + int.MaxValue;
-        tileManager.seedE = ((uint)BasicUtils.WrappedRandomRange(int.MinValue, int.MaxValue)) + int.MaxValue;
-        tileManager.seedF = ((uint)BasicUtils.WrappedRandomRange(int.MinValue, int.MaxValue)) + int.MaxValue;
-        tileManager.seedG = ((uint)BasicUtils.WrappedRandomRange(int.MinValue, int.MaxValue)) + int.MaxValue;
-        tileManager.seedH = ((uint)BasicUtils.WrappedRandomRange(int.MinValue, int.MaxValue)) + int.MaxValue;
-        tileManager.seedI = ((uint)BasicUtils.WrappedRandomRange(int.MinValue, int.MaxValue)) + int.MaxValue;
+        //Generates the map seeds if applicable
+        if (generateSeeds)
+        {
+            tileManager.seedA = ((uint)BasicUtils.WrappedRandomRange(int.MinValue, int.MaxValue)) + int.MaxValue;
+            tileManager.seedB = ((uint)BasicUtils.WrappedRandomRange(int.MinValue, int.MaxValue)) + int.MaxValue;
+            tileManager.seedC = ((uint)BasicUtils.WrappedRandomRange(int.MinValue, int.MaxValue)) + int.MaxValue;
+            tileManager.seedD = ((uint)BasicUtils.WrappedRandomRange(int.MinValue, int.MaxValue)) + int.MaxValue;
+            tileManager.seedE = ((uint)BasicUtils.WrappedRandomRange(int.MinValue, int.MaxValue)) + int.MaxValue;
+            tileManager.seedF = ((uint)BasicUtils.WrappedRandomRange(int.MinValue, int.MaxValue)) + int.MaxValue;
+            tileManager.seedG = ((uint)BasicUtils.WrappedRandomRange(int.MinValue, int.MaxValue)) + int.MaxValue;
+            tileManager.seedH = ((uint)BasicUtils.WrappedRandomRange(int.MinValue, int.MaxValue)) + int.MaxValue;
+            tileManager.seedI = ((uint)BasicUtils.WrappedRandomRange(int.MinValue, int.MaxValue)) + int.MaxValue;
+        }
 
         //Modifies starting values by the difficulty modifiers
         budget *= playerIncome;
@@ -400,7 +407,8 @@ public class GameManager : Singleton<GameManager>
         Initialize();
     }
 
-    public void Initialize(int simplifiedSeed, float enemyQuantity, float enemyStrength, float playerStrength, float playerHealth, float playerCosts, float playerIncome, float energyProduction, float energyConsumption)
+    public void Initialize(int simplifiedSeed, float enemyQuantity, float enemyStrength, float playerStrength, 
+        float playerHealth, float playerCosts, float playerIncome, float energyProduction, float energyConsumption, bool generateSeeds = true)
     {
         //Sets the passed in data
         this.simplifiedSeed = simplifiedSeed;
@@ -414,9 +422,51 @@ public class GameManager : Singleton<GameManager>
         this.energyProduction = energyProduction;
 
         //Further events are identical between advanced and basic, so pass to another function
-        midInit();
+        midInit(generateSeeds);
     }
 
+    //Initialize with custom game settings
+    public void Initialize(int simplifiedSeed, float enemyQuantity, float enemyStrength, float playerStrength, 
+        float playerHealth, float playerCosts, float playerIncome, float energyProduction, float energyConsumption, 
+        uint seedA, uint seedB, uint seedC, uint seedD, uint seedE, uint seedF, uint seedG, uint seedH, uint seedI, 
+        int mapScaling, float traversalCutoff, float resourceScaling, float resourceCutoff, float aestheticScaling, 
+        float aestheticACutoff, float aestheticBCutoff, float aestheticCCutoff, float aestheticDCutoff, 
+        int mapStartSize, int mapExpansionRate)
+    {
+        //Seed data
+        TileManager.Instance.seedA = seedA;
+        TileManager.Instance.seedB = seedB;
+        TileManager.Instance.seedC = seedC;
+        TileManager.Instance.seedD = seedD;
+        TileManager.Instance.seedE = seedE;
+        TileManager.Instance.seedF = seedF;
+        TileManager.Instance.seedG = seedG;
+        TileManager.Instance.seedH = seedH;
+        TileManager.Instance.seedI = seedI;
+
+        //Aesthetic cutoffs
+        TileManager.Instance.aestheticACutoff = aestheticACutoff;
+        TileManager.Instance.aestheticBCutoff = aestheticBCutoff;
+        TileManager.Instance.aestheticCCutoff = aestheticCCutoff;
+        TileManager.Instance.aestheticDCutoff = aestheticDCutoff;
+
+        //Scaling data
+        TileManager.Instance.mapScaling = mapScaling;
+        TileManager.Instance.resourceScaling = resourceScaling;
+        TileManager.Instance.aestheticScaling = aestheticScaling;
+
+        //Cutoff data
+        TileManager.Instance.traversableCutoff = traversalCutoff;
+        TileManager.Instance.resourceCutoff = resourceCutoff;
+
+        //Other map data
+        TileManager.Instance.size = mapStartSize;
+        expansionRate = mapExpansionRate;
+
+        Initialize(simplifiedSeed, enemyQuantity, enemyStrength, playerStrength, playerHealth, playerCosts, playerIncome, energyProduction, energyConsumption, false);
+    }
+
+    //Initialize from loaded file
     public void InitializeFromLoad(GameData data)
     {
         //Load seed data
@@ -427,9 +477,9 @@ public class GameManager : Singleton<GameManager>
         tileManager.seedD = data.seedD;
         tileManager.seedE = data.seedE;
         tileManager.seedF = data.seedF;
-        tileManager.seedD = data.seedG;
-        tileManager.seedE = data.seedH;
-        tileManager.seedF = data.seedI;
+        tileManager.seedG = data.seedG;
+        tileManager.seedH = data.seedH;
+        tileManager.seedI = data.seedI;
 
         //Load difficulty settings
         enemyQuantity = data.enemyQuantity;
@@ -804,8 +854,10 @@ public class GameManager : Singleton<GameManager>
             maxEnemiesThisWave = currentEnemies.Count;
 
             //Expand the map two tiles
-            TileManager.Instance.Next();
-            TileManager.Instance.Next();
+            for (int i = 0; i < expansionRate; i++)
+            {
+                TileManager.Instance.Next();
+            }
         }
     }
     public void Build(int type)
