@@ -553,7 +553,7 @@ MonoBehaviour:
   - 0.1
   - 0.1
   spriteRenderer: {fileID: 2418110036009873002}
-  baseUpgradeCost: 10
+  baseUpgradeCost: 20
   rotationCenter: {fileID: 1798025326910904941}
   activeColor: {r: 0.49803922, g: 0.49803922, b: 1, a: 1}
   defaultBarrel: {fileID: 3193772913536952492}

@@ -300,6 +300,7 @@ public class MusicManager : Singleton<MusicManager>
         clickFX.PlayOneShot(clickFX.clip);
     }
 
+    //Set the volume of the sound effects
     public void UpdateSFXVolume(float newVolume)
     {
         sfxVolume = newVolume;

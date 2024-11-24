@@ -778,7 +778,7 @@ MonoBehaviour:
   - 1.25
   - 1.25
   upgradeLevels: 000000000000000000000000
-  baseUpgradeCost: 10
+  baseUpgradeCost: 20
   maxAlignments: 1
   energyCosts:
   - 0.1
@@ -796,6 +796,7 @@ MonoBehaviour:
   rangeDotD: {fileID: 9084996769549818202}
   audioSource: {fileID: 3003224890853326480}
   upgradeSource: {fileID: 7126424158252379394}
+  repairVFX: {fileID: 5767029299366041914, guid: e89b93b0a2661cf478d3eddab1de99f2, type: 3}
 --- !u!60 &7836262703086842780
 PolygonCollider2D:
   m_ObjectHideFlags: 0

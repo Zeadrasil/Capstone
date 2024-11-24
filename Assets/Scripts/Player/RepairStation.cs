@@ -52,6 +52,8 @@ public class RepairStation : PlayerBuilding, IDamageable, IUpgradeable
     [SerializeField] AudioSource audioSource;
     [SerializeField] AudioSource upgradeSource;
 
+    [SerializeField] GameObject repairVFX;
+
     //Add damager to list
     public override void AddDamager(IDamager damager)
     {
@@ -231,7 +233,7 @@ public class RepairStation : PlayerBuilding, IDamageable, IUpgradeable
         rangeDotC.enabled = false;
         rangeDotD.enabled = false;
 
-        audioSource.volume = (MusicManager.Instance.masterVolume / 100) * (MusicManager.Instance.sfxVolume / 100);
+        audioSource.volume = (MusicManager.Instance.masterVolume / 100) * (MusicManager.Instance.sfxVolume / 200);
 
         //Skip applying difficulty modifiers if they were already applied due to load
         if (needsDifficultyModifiers)
@@ -295,6 +297,12 @@ public class RepairStation : PlayerBuilding, IDamageable, IUpgradeable
                     }
                 }
                 audioSource.PlayOneShot(audioSource.clip);
+
+                GameObject go = Instantiate(repairVFX, transform.position, transform.rotation);
+                go.transform.localScale = go.transform.localScale * range * 2;
+
+                Destroy(go, 1);
+
 
                 //Reset cooldown
                 cooldown = baseCooldown;

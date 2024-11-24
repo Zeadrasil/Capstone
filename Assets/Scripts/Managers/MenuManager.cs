@@ -9,10 +9,13 @@ public class MenuManager : Singleton<MenuManager>
 {
     //Major menus
     [SerializeField] Canvas mainMenu;
+    [SerializeField] Canvas optionsmenu;
     [SerializeField] Canvas controlsMenu;
     [SerializeField] Canvas newGameMenu;
     [SerializeField] Canvas creditsMenu;
     [SerializeField] Canvas settingsMenu;
+    [SerializeField] Canvas helpMenu;
+    [SerializeField] Canvas buildingInfo;
 
     //In-game data
     public Canvas pauseMenu;
@@ -443,12 +446,13 @@ public class MenuManager : Singleton<MenuManager>
         //}
 
         newGameMenu.enabled = false;
-        controlsMenu.enabled = false;
         settingsMenu.enabled = false;
         basicSettings.enabled = false;
         advancedSettings.enabled = false;
         customSettings.enabled = false;
         creditsMenu.enabled = false;
+        optionsmenu.enabled = false;
+        helpMenu.enabled = false;
 
         outlineDropdown.value = PlayerPrefs.GetInt("OutlineType", 0);
         screenHeightInput.text = PlayerPrefs.GetInt("ScreenHeight", 1920).ToString();
@@ -954,7 +958,7 @@ public class MenuManager : Singleton<MenuManager>
         //Disable irrelevant menus
         basicSettings.enabled = false;
         advancedSettings.enabled = false;
-        controlsMenu.enabled = false;
+        optionsmenu.enabled = false;
 
         //Go to the scene with all of the in game data
         SceneManager.LoadScene("MainScene");
@@ -974,8 +978,9 @@ public class MenuManager : Singleton<MenuManager>
     {
         //Ensure that only the relevant menu is visible
         controlsMenu.enabled = true;
-        mainMenu.enabled = false;
-        newGameMenu.enabled = false;
+        settingsMenu.enabled = false;
+
+        loadBackground();
 
         //Ensure that the listed hotkeys are accurate
         cameraForwardText.text = BasicUtils.TranslateKey(gameManager.forwardKey);
@@ -1002,17 +1007,6 @@ public class MenuManager : Singleton<MenuManager>
         sellText.text = BasicUtils.TranslateKey(gameManager.sellKey);
     }
 
-    //Return from the menu where you change your hotkeys
-    public void ExitControls()
-    {
-        //Ensure that only the relevant menu is visible
-        controlsMenu.enabled = false;
-        mainMenu.enabled = true;
-        newGameMenu.enabled = false;
-
-        //Ensure that you do not accidently change data outside of the options menu
-        controlToUpdate = -1;
-    }
 
     //Mark a hotkey as needing to be changed
     public void UpdateKey(int keyId)
@@ -1566,16 +1560,9 @@ public class MenuManager : Singleton<MenuManager>
     //Go to settings
     public void EnterSettings()
     {
-        mainMenu.enabled = false;
+        controlsMenu.enabled = false;
         settingsMenu.enabled = true;
-    }
-
-    //Return to main menu from settings
-    public void ExitSettings()
-    {
-        mainMenu.enabled = true;
-        settingsMenu.enabled = false;
-        loadBackground();
+        controlToUpdate = -1;
     }
 
     //Turn fullscreen mode on and off
@@ -1617,26 +1604,75 @@ public class MenuManager : Singleton<MenuManager>
     //Load background tiles
     private void loadBackground()
     {
+        //Set the tiles based on the outline settings
         localTileManager.PassTiles();
+        
+        //Sets how much is generated, 15 is just large enough
         TileManager.Instance.size = 15;
+
+        //Sets seeds for the traversal data of the background
         TileManager.Instance.seedA = menuTraversableSeedA;
         TileManager.Instance.seedB = menuTraversableSeedB;
         TileManager.Instance.seedC = menuTraversableSeedC;
+
+        //Sets seeds for the resource data of the background
         TileManager.Instance.seedD = menuResourceSeedA;
         TileManager.Instance.seedE = menuResourceSeedB;
         TileManager.Instance.seedF = menuResourceSeedC;
+
+        //Sets seeds for the resource data of the background
         TileManager.Instance.seedG = menuAestheticSeedA;
         TileManager.Instance.seedH = menuAestheticSeedB;
         TileManager.Instance.seedI = menuAestheticSeedC;
+
+        //Scaling for map
         TileManager.Instance.resourceScaling = 2.5f;
         TileManager.Instance.aestheticScaling = 3.0f;
+        TileManager.Instance.mapScaling = 300000000;
+
+        //Cutoffs 
         TileManager.Instance.traversableCutoff = 0.45f;
         TileManager.Instance.resourceCutoff = 0.75f;
         TileManager.Instance.aestheticACutoff = 0.2f;
         TileManager.Instance.aestheticBCutoff = 0.4f;
         TileManager.Instance.aestheticCCutoff = 0.6f;
         TileManager.Instance.aestheticDCutoff = 0.8f;
-        TileManager.Instance.mapScaling = 300000000;
+
+        //Makes the background
         TileManager.Instance.Initialize();
+    }
+
+    //Enter the combined options menus
+    public void EnterOptions()
+    {
+        optionsmenu.enabled = true;
+        mainMenu.enabled = false;
+        EnterControls();
+    }
+
+    //Exit the combined options menu
+    public void ExitOptions()
+    {
+        optionsmenu.enabled = false;
+        settingsMenu.enabled = false;
+        controlsMenu.enabled = false;
+        mainMenu.enabled = true;
+        controlToUpdate = -1;
+    }
+
+    //Enter help menu
+    public void EnterHelp()
+    {
+        helpMenu.enabled = true;
+        mainMenu.enabled = false;
+        buildingInfo.enabled = true;
+    }
+
+    //Exit help menu
+    public void ExitHelp()
+    {
+        helpMenu.enabled = false;
+        mainMenu.enabled = true;
+        buildingInfo.enabled = false;
     }
 }

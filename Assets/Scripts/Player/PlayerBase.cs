@@ -22,7 +22,7 @@ public class PlayerBase : PlayerBuilding
     private void Start()
     {
         baseHealth *= GameManager.Instance.playerHealth;
-        audioSource.volume = (MusicManager.Instance.masterVolume / 100) * (MusicManager.Instance.sfxVolume / 100);
+        audioSource.volume = (MusicManager.Instance.masterVolume / 100) * (MusicManager.Instance.sfxVolume / 1000);
         health = baseHealth;
     }
 

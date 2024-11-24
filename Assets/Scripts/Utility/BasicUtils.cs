@@ -10,6 +10,7 @@ public static class BasicUtils
     public static uint generatedNumbers = 0;
     private static System.Random random = new System.Random();
 
+
     //Translates a KeyCode into a more readable string than the raw implementation of its ToString()
     public static string TranslateKey(KeyCode keyCode)
     {
@@ -115,4 +116,55 @@ public static class BasicUtils
         random = new System.Random(seed);
         generatedNumbers = 0;
     }
+
+    //Draws line from a given point to another point
+    public static void DrawLine(Vector3 start, Vector3 end, Color startColor, Color endColor, float duration = 0.05f, float width = 0.1f, bool fade = false)
+    {
+        //Create gameobject to store line
+        GameObject gameObj = new GameObject();
+        LineRenderer lineRenderer = gameObj.AddComponent<LineRenderer>();
+
+        //If you want the line to gradually fade, make it do so
+        if(fade)
+        {
+            FadingRenderer fader = gameObj.AddComponent<FadingRenderer>();
+            fader.renderer = lineRenderer;
+            fader.fadeDuration = duration;
+        }
+
+        //Set colors
+        lineRenderer.startColor = startColor;
+        lineRenderer.endColor = endColor;
+
+        //Solution for the magenta line issue from https://forum.unity.com/threads/cant-set-color-for-linerenderer-always-comes-out-as-magenta-or-black.968447/
+        lineRenderer.material = new Material(Shader.Find("Legacy Shaders/Particles/Alpha Blended Premultiply"));
+        //End solution
+
+        //Sets rendering positions
+        lineRenderer.SetPosition(0, start);
+        lineRenderer.SetPosition(1, end);
+
+        //Sets width
+        lineRenderer.startWidth = width;
+        lineRenderer.endWidth = width;
+
+        //Queues Destruction
+        GameObject.Destroy(gameObj, duration);
+    }
+
+    public static void DrawLine(Vector3 start, Vector3 end, Color color, float duration = 0.05f, float width = 0.1f, bool fade = false)
+    {
+        DrawLine(start, end, color, color, duration, width, fade);
+    }
+
+    ////Allows you to queue destruction of gameobjects more effectively than GameObject.Destroy(object, time)
+    //public static IEnumerator DestroyLater(GameObject obj, float initialTime, float delay)
+    //{
+    //    while (initialTime + delay > Time.time)
+    //    {
+    //        yield return new WaitForSeconds(delay);
+    //    }
+    //    GameObject.Destroy(obj);
+    //    yield return null;
+    //}
 }

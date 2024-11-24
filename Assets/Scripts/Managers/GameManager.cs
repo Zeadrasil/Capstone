@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using TMPro;
 using Unity.VisualScripting;
 using UnityEngine;
+using UnityEngine.Android;
 using UnityEngine.Tilemaps;
 using UnityEngine.UI;
 using static UnityEngine.EventSystems.EventTrigger;
@@ -362,7 +363,7 @@ public class GameManager : Singleton<GameManager>
         //Sets defaults
         wave = 0;
         budgetCosts = new float[] { 10, 15, 25, 10, 15, 10, 15, 10, 15, 25 };
-        energyCosts = new float[] { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
+        energyCosts = new float[] { 1, 1, 1, 1, 1, 0, 0, 1, 1, 1 };
         energy = 10;
         maxEnemiesThisWave = 1;
         usedEnergy = 0;
@@ -517,6 +518,8 @@ public class GameManager : Singleton<GameManager>
         //Main initilization phase
         Initialize();
 
+        betweenWaves = true;
+
         //Load other data
         wave = data.wave;
         tileManager.subbedTiles = new List<Vector2Int>(data.swappedTiles);
@@ -621,7 +624,9 @@ public class GameManager : Singleton<GameManager>
 
         //Sets the buildings array since the data has now been passed in
         buildings = new GameObject[] { turretTierOne, turretTierTwo, turretTierThree, repairTierOne, repairTierTwo, wallTierOne, wallTierTwo, extractorTierOne, extractorTierTwo, extractorTierThree};
-        
+
+        betweenWaves = true;
+
         //Initialize the tilemanager for the same reason that this needs to be initialized
         TileManager.Instance.Initialize();
 
@@ -667,7 +672,7 @@ public class GameManager : Singleton<GameManager>
             List<AsyncInstantiateOperation<GameObject>> enemySpawns = new List<AsyncInstantiateOperation<GameObject>>();
 
             //Creates the correct amount of tier zero enemies for the wave
-            int tierZeroEnemyCount = (int)(2 * Mathf.Max(Mathf.Pow(wave, 1 + (0.25f * enemyQuantity)) - Mathf.Max(Mathf.Pow(wave, 1 + (0.3f * enemyQuantity)) - 8.10328298346f, 0), 0) * enemyQuantity);
+            int tierZeroEnemyCount = (int)(2 * Mathf.Max(Mathf.Pow(wave, 1 + (0.15f * enemyQuantity)) - Mathf.Max(Mathf.Pow(wave, 1 + (0.2f * enemyQuantity)) - 3.73719281885f, 0), 0) * enemyQuantity);
             for (int i = 0; i < tierZeroEnemyCount; i++)
             {
                 //Get location to instantiate at
@@ -680,7 +685,7 @@ public class GameManager : Singleton<GameManager>
                 enemySpawns.Add(createdEnemy);
             }
             //Creates the correct amount of tier one enemies for the wave
-            int tierOneEnemyCount = (int)(2 * Mathf.Max(Mathf.Pow(wave - 6, 1 + (0.21f * enemyQuantity)) - Mathf.Max(Mathf.Pow(wave - 6, 1 + (0.25f * enemyQuantity)) - 17.7827941004f, 0), 0) * enemyQuantity);
+            int tierOneEnemyCount = (int)(2 * Mathf.Max(Mathf.Pow(wave - 3, 1 + (0.125f * enemyQuantity)) - Mathf.Max(Mathf.Pow(wave - 3, 1 + (0.175f * enemyQuantity)) - 8.20970816332f, 0), 0) * enemyQuantity);
             for (int i = 0; i < tierOneEnemyCount; i++)
             {
                 //Get location to instantiate at
@@ -693,7 +698,7 @@ public class GameManager : Singleton<GameManager>
                 enemySpawns.Add(createdEnemy);
             }
             //Creates the correct amount of tier two enemies for the wave
-            int tierTwoEnemyCount = (int)(2 * Mathf.Max(Mathf.Pow(wave - 16, 1 + (0.17f * enemyQuantity)) - Mathf.Max(Mathf.Pow(wave - 16, 1 + (0.2f * enemyQuantity)) - 36.4112840605f, 0), 0) * enemyQuantity);
+            int tierTwoEnemyCount = (int)(2 * Mathf.Max(Mathf.Pow(wave - 9, 1 + (0.1f * enemyQuantity)) - Mathf.Max(Mathf.Pow(wave - 9, 1 + (0.15f * enemyQuantity)) - 17.4204124379f, 0), 0) * enemyQuantity);
             for (int i = 0; i < tierTwoEnemyCount; i++)
             {
                 //Get location to instantiate at
@@ -706,7 +711,7 @@ public class GameManager : Singleton<GameManager>
                 enemySpawns.Add(createdEnemy);
             }
             //Creates the correct amount of tier three enemies for the wave
-            int tierThreeEnemyCount = (int)(2 * Mathf.Max(Mathf.Pow(wave - 36, 1 + (0.13f * enemyQuantity)) - Mathf.Max(Mathf.Pow(wave - 36, 1 + (0.15f * enemyQuantity)) - 69.5615082681f, 0), 0) * enemyQuantity);
+            int tierThreeEnemyCount = (int)(2 * Mathf.Max(Mathf.Pow(wave - 21, 1 + (0.075f * enemyQuantity)) - Mathf.Max(Mathf.Pow(wave - 21, 1 + (0.125f * enemyQuantity)) - 35.7057078279f, 0), 0) * enemyQuantity);
             for (int i = 0; i < tierThreeEnemyCount; i++)
             {
                 //Get location to instantiate at
@@ -719,7 +724,7 @@ public class GameManager : Singleton<GameManager>
                 enemySpawns.Add(createdEnemy);
             }
             //Creates the correct amount of tier four enemies for the wave
-            int tierFourEnemyCount = (int)(2 * Mathf.Max(Mathf.Pow(wave - 76, 1 + (0.09f * enemyQuantity)) - Mathf.Max(Mathf.Pow(wave - 76, 1 + (0.1f * enemyQuantity)) - 123.993519004f, 0), 0) * enemyQuantity);
+            int tierFourEnemyCount = (int)(2 * Mathf.Max(Mathf.Pow(wave - 45, 1 + (0.05f * enemyQuantity)) - Mathf.Max(Mathf.Pow(wave - 45, 1 + (0.1f * enemyQuantity)) - 70.6912011617f, 0), 0) * enemyQuantity);
             for (int i = 0; i < tierFourEnemyCount; i++)
             {
                 //Get location to instantiate at
@@ -732,7 +737,7 @@ public class GameManager : Singleton<GameManager>
                 enemySpawns.Add(createdEnemy);
             }
             //Creates the correct amount of tier five enemies for the wave
-            int tierFiveEnemyCount = (int)(2 * Mathf.Max(Mathf.Pow(wave - 156, 1 + (0.05f * enemyQuantity)) - Mathf.Max(Mathf.Pow(wave - 156, 1 + (0.06f * enemyQuantity)) - 216.953760189f, 0), 0) * enemyQuantity);
+            int tierFiveEnemyCount = (int)(2 * Mathf.Max(Mathf.Pow(wave - 93, 1 + (0.025f * enemyQuantity)) - Mathf.Max(Mathf.Pow(wave - 93, 1 + (0.075f * enemyQuantity)) - 135.18906847f, 0), 0) * enemyQuantity);
             for (int i = 0; i < tierFiveEnemyCount; i++)
             {
                 //Get location to instantiate at
@@ -745,7 +750,7 @@ public class GameManager : Singleton<GameManager>
                 enemySpawns.Add(createdEnemy);
             }
             //Creates the correct amount of tier six enemies for the wave
-            int tierSixEnemyCount = (int)(2 * Mathf.Max(Mathf.Pow(wave - 316, 1 + (0.01f * enemyQuantity - 0.01f)), 0) * enemyQuantity);
+            int tierSixEnemyCount = (int)(2 * Mathf.Max(Mathf.Pow(wave - 189, 1 + (0.01f * enemyQuantity - 0.01f)), 0) * enemyQuantity);
             for (int i = 0; i < tierFiveEnemyCount; i++)
             {
                 //Get location to instantiate at
@@ -762,7 +767,7 @@ public class GameManager : Singleton<GameManager>
             List<Enemy> createdEnemies = new List<Enemy>();
 
             //Creates the correct amount of aura enemies for the wave
-            int auraEnemyCount = (int)(enemyQuantity * wave / 50);
+            int auraEnemyCount = (int)(enemyQuantity * wave / 10);
             for(int i = 0; i <auraEnemyCount; i++)
             {
                 //Gets the location to instantiate at
@@ -772,7 +777,7 @@ public class GameManager : Singleton<GameManager>
                 AuraEnemy createdEnemy = Instantiate(auraEnemy, TileManager.Instance.TraversableTilemap.CellToWorld(new Vector3Int(TileManager.Instance.potentialSpawnpoints[at].x, TileManager.Instance.potentialSpawnpoints[at].y)) + new Vector3(BasicUtils.WrappedRandomRange(-0.2f, 0.2f), BasicUtils.WrappedRandomRange(-0.2f, 0.2f)), Quaternion.identity).GetComponentInChildren<AuraEnemy>();
                 
                 //Sets up the aura enemy
-                createdEnemy.auraCount = auraEnemyCount;
+                createdEnemy.auraCount = (int)(auraEnemyCount * 0.2) + 1;
 
                 //Stores finished enemy
                 createdEnemies.Add(createdEnemy);
@@ -840,7 +845,7 @@ public class GameManager : Singleton<GameManager>
                     {
                         //Change location since keeping it in the same place will not result in a path being found
                         int at = BasicUtils.WrappedRandomRange(0, TileManager.Instance.potentialSpawnpoints.Count);
-                        createdEnemies[i].transform.position = TileManager.Instance.TraversableTilemap.CellToWorld(new Vector3Int(TileManager.Instance.potentialSpawnpoints[at].x, TileManager.Instance.potentialSpawnpoints[at].y)) + new Vector3(BasicUtils.WrappedRandomRange(-0.2f, 0.2f), BasicUtils.WrappedRandomRange(-0.2f, 0.2f));
+                        createdEnemies[i].transform.parent.position = TileManager.Instance.TraversableTilemap.CellToWorld(new Vector3Int(TileManager.Instance.potentialSpawnpoints[at].x, TileManager.Instance.potentialSpawnpoints[at].y)) + new Vector3(BasicUtils.WrappedRandomRange(-0.2f, 0.2f), BasicUtils.WrappedRandomRange(-0.2f, 0.2f));
                         
                         //Add to list of enemies with invalid paths
                         enemyContainer.Add(createdEnemies[i]);
@@ -1199,7 +1204,7 @@ public class GameManager : Singleton<GameManager>
 
         //Energy management
         pb.energyCost = energyCosts[pb.GetBuildingType()];
-        energyCosts[pb.GetBuildingType()] += energyConsumption * 0.5f;
+        energyCosts[pb.GetBuildingType()] += pb.GetBuildingType() == 5 || pb.GetBuildingType() == 6 ? 0 :energyConsumption * 0.5f;
         energyDeficit += pb.Disable();
         ChangeEnergyUsage(pb.energyCost);
 
@@ -1716,10 +1721,10 @@ public class GameManager : Singleton<GameManager>
                         }
                     }
                     //Do things if you either have left clicked or used the confirm button and you are not above the construction panel
-                    if ((Input.GetMouseButtonDown(0) || Input.GetKeyDown(confirmKey)) && Input.mousePosition.y > 200 && betweenWaves)
+                    if ((Input.GetMouseButtonDown(0) || Input.GetKeyDown(confirmKey)) && Input.mousePosition.y > Screen.height * 0.1851851852 && betweenWaves)
                     {
                         //Checks the place you are over to see if there is a building there, also ensures that you are not changing selections when upgrading with mouse
-                        if (playerBuildings.TryGetValue(hoveredTile, out GameObject building))
+                        if (playerBuildings.TryGetValue(hoveredTile, out GameObject building) && (Input.GetMouseButtonDown(0) || selectedBuilding == null) && Input.mousePosition.x < Screen.width - Screen.width * 0.2375)
                         {
                             //Clears building data
                             Build(-1);

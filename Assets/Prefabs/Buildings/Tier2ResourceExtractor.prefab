@@ -400,7 +400,7 @@ MonoBehaviour:
   - 0.25
   - 0.9
   - 1.2
-  baseUpgradeCost: 10
+  baseUpgradeCost: 20
   energyCosts:
   - 0.1
   - 0

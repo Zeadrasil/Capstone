@@ -883,6 +883,7 @@ MonoBehaviour:
   rangeDotD: {fileID: 7723738447206431091}
   audioSource: {fileID: 7660136805996674303}
   upgradeSource: {fileID: 6414261208862003523}
+  repairVFX: {fileID: 5767029299366041914, guid: e89b93b0a2661cf478d3eddab1de99f2, type: 3}
 --- !u!60 &7836262703086842780
 PolygonCollider2D:
   m_ObjectHideFlags: 0

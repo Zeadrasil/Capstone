@@ -587,7 +587,7 @@ MonoBehaviour:
   - 1.2
   - 1.2
   upgradeLevels: 0000000000000000
-  baseUpgradeCost: 10
+  baseUpgradeCost: 20
   maxAlignments: 1
   healthArmorA: {fileID: 3008171177086728306}
   healthArmorB: {fileID: 1130892277418850844}

@@ -286,8 +286,11 @@ public class Enemy : MonoBehaviour, IDamageable, IDamager
     //Set guide to a generated path
     public void ActivatePath(EnemyCheckpoint checkpoint)
     {
-        currentGuide = checkpoint;
-        transform.rotation = checkpoint.transform.rotation;
+        if (checkpoint != null)
+        {
+            currentGuide = checkpoint;
+            transform.rotation = checkpoint.transform.rotation;
+        }
     }
 
     //Physics so that rigidbodies can be avoided in order to improve performance
@@ -390,6 +393,7 @@ public class Enemy : MonoBehaviour, IDamageable, IDamager
                 //If it is a player building, start attacking it
                 if (tags.Tags.Contains("PlayerBuilding"))
                 {
+                    transform.parent.position = hit.point;
                     blocked = true;
                     attackMode = true;
                     //If you are already attacking a different building due to ranged, stop attacking it
@@ -406,7 +410,6 @@ public class Enemy : MonoBehaviour, IDamageable, IDamager
                         {
                             fireCoroutine = StartCoroutine(fireLoop());
                         }
-
                     }
                     return;
                 }
@@ -483,7 +486,7 @@ public class Enemy : MonoBehaviour, IDamageable, IDamager
         if(health <= 0)
         {
             //Give budget based on max health
-            GameManager.Instance.budget += baseHealth * GameManager.Instance.playerIncome;
+            GameManager.Instance.budget += baseHealth * GameManager.Instance.playerIncome * 0.1f;
 
             //Used to update wave progress
             GameManager.Instance.KillEnemy(this);

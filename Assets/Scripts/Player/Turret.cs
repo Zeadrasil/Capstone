@@ -372,6 +372,9 @@ public class Turret : PlayerBuilding, IDamager, IUpgradeable
                 //Damage new target if it exists
                 if(target != null)
                 {
+                    audioSource.PlayOneShot(audioSource.clip); Vector2 relative = new Vector2(target.transform.position.x - transform.position.x, target.transform.position.y - transform.position.y);
+                    rotationCenter.transform.rotation = Quaternion.AngleAxis(Mathf.Rad2Deg * Mathf.Atan2(relative.y, relative.x), new Vector3(0, 0, 1));
+
                     //If it is splash hit everything within range
                     if (splash)
                     {
@@ -385,7 +388,6 @@ public class Turret : PlayerBuilding, IDamager, IUpgradeable
                             {
                                 //Damage the enemy
                                 enemy.TakeDamage(damage);
-                                audioSource.PlayOneShot(audioSource.clip);
                             }
                         }
                     }
@@ -394,6 +396,9 @@ public class Turret : PlayerBuilding, IDamager, IUpgradeable
                     {
                         target.TakeDamage(damage);
                     }
+
+                    //Fire Effects
+                    BasicUtils.DrawLine(damageTip.transform.position, target.transform.position, new Color(0, 1, 1, 0.75f), 0.5f, 0.1f, true);
                 }
                 else
                 {
@@ -403,9 +408,15 @@ public class Turret : PlayerBuilding, IDamager, IUpgradeable
             }
             else
             {
+                Vector2 relative = new Vector2(target.transform.position.x - transform.position.x, target.transform.position.y - transform.position.y);
+                rotationCenter.transform.rotation = Quaternion.AngleAxis(Mathf.Rad2Deg * Mathf.Atan2(relative.y, relative.x), new Vector3(0, 0, 1));
+
                 //If it is attack it
                 target.TakeDamage(damage);
+
+                //Fire Effects
                 audioSource.PlayOneShot(audioSource.clip);
+                BasicUtils.DrawLine(damageTip.transform.position, target.transform.position, new Color(0, 1, 1, 0.75f), 0.5f, 0.1f, true);
             }
             //Wait until  time to fire again
             yield return new WaitForSeconds(10 / firerate);
