@@ -7,8 +7,11 @@ public class PlayerBase : PlayerBuilding
     //Basic data
     float health = 100;
     float baseHealth = 100;
+
     //Damagers to avoid null references and improve reaction time
     private List<IDamager> currentDamagers = new List<IDamager>();
+
+    [SerializeField] AudioSource audioSource;
 
     //Add damager to damager list
     public override void AddDamager(IDamager damager)
@@ -19,6 +22,7 @@ public class PlayerBase : PlayerBuilding
     private void Start()
     {
         baseHealth *= GameManager.Instance.playerHealth;
+        audioSource.volume = (MusicManager.Instance.masterVolume / 100) * (MusicManager.Instance.sfxVolume / 100);
         health = baseHealth;
     }
 
@@ -60,6 +64,7 @@ public class PlayerBase : PlayerBuilding
     //Take damage to self and kill if out
     public override float TakeDamage(float damage)
     {
+        audioSource.PlayOneShot(audioSource.clip);
         health -= damage;
         //healthBar.transform.localScale = new Vector3(health / baseHealth, 0.1f, 1);
         //healthBar.transform.localPosition = new Vector3((-1 + health / baseHealth) * -0.5f, -0.4f, 0);

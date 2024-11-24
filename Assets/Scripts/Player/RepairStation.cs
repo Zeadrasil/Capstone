@@ -11,8 +11,8 @@ public class RepairStation : PlayerBuilding, IDamageable, IUpgradeable
 
     //Basic stats
     private float health;
-    int cooldown = 10;
-    int baseCooldown = 10;
+    int cooldown = 50;
+    int baseCooldown = 150;
     [SerializeField] float baseHealth;
     public float healing;
     public float range;
@@ -48,6 +48,9 @@ public class RepairStation : PlayerBuilding, IDamageable, IUpgradeable
     [SerializeField] SpriteRenderer rangeDotB;
     [SerializeField] SpriteRenderer rangeDotC;
     [SerializeField] SpriteRenderer rangeDotD;
+
+    [SerializeField] AudioSource audioSource;
+    [SerializeField] AudioSource upgradeSource;
 
     //Add damager to list
     public override void AddDamager(IDamager damager)
@@ -162,6 +165,8 @@ public class RepairStation : PlayerBuilding, IDamageable, IUpgradeable
         //Subtract the cost of the upgrade from player budget
         GameManager.Instance.budget -= GetUpgradeCost(type);
 
+        upgradeSource.PlayOneShot(upgradeSource.clip);
+
         cost += GetUpgradeCost(type);
 
         //Mark level has having increased
@@ -226,6 +231,8 @@ public class RepairStation : PlayerBuilding, IDamageable, IUpgradeable
         rangeDotC.enabled = false;
         rangeDotD.enabled = false;
 
+        audioSource.volume = (MusicManager.Instance.masterVolume / 100) * (MusicManager.Instance.sfxVolume / 100);
+
         //Skip applying difficulty modifiers if they were already applied due to load
         if (needsDifficultyModifiers)
         {
@@ -287,6 +294,8 @@ public class RepairStation : PlayerBuilding, IDamageable, IUpgradeable
                         building.Heal(healing * 0.2f);
                     }
                 }
+                audioSource.PlayOneShot(audioSource.clip);
+
                 //Reset cooldown
                 cooldown = baseCooldown;
             }

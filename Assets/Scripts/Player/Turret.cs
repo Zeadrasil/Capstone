@@ -63,6 +63,9 @@ public class Turret : PlayerBuilding, IDamager, IUpgradeable
     [SerializeField] SpriteRenderer healthArmorC;
     [SerializeField] SpriteRenderer healthArmorD;
 
+    [SerializeField] AudioSource audioSource;
+    [SerializeField] AudioSource upgradeSource;
+
     // Start is called before the first frame update
     void Start()
     {
@@ -78,6 +81,8 @@ public class Turret : PlayerBuilding, IDamager, IUpgradeable
         healthArmorB.enabled = false;
         healthArmorC.enabled = false;
         healthArmorD.enabled = false;
+
+        audioSource.volume = (MusicManager.Instance.masterVolume / 100) * (MusicManager.Instance.sfxVolume / 100);
 
         //Skip applying difficulty modifiers if already applied due to loading
         if (needsDifficultyModifiers)
@@ -137,6 +142,8 @@ public class Turret : PlayerBuilding, IDamager, IUpgradeable
     {
         //Subtracts upgrade cost from yourbudget
         GameManager.Instance.budget -= GetUpgradeCost(type);
+
+        upgradeSource.PlayOneShot(upgradeSource.clip);
 
         cost += GetUpgradeCost(type);
 
@@ -378,6 +385,7 @@ public class Turret : PlayerBuilding, IDamager, IUpgradeable
                             {
                                 //Damage the enemy
                                 enemy.TakeDamage(damage);
+                                audioSource.PlayOneShot(audioSource.clip);
                             }
                         }
                     }
@@ -397,6 +405,7 @@ public class Turret : PlayerBuilding, IDamager, IUpgradeable
             {
                 //If it is attack it
                 target.TakeDamage(damage);
+                audioSource.PlayOneShot(audioSource.clip);
             }
             //Wait until  time to fire again
             yield return new WaitForSeconds(10 / firerate);

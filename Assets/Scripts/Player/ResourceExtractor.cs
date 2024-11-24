@@ -48,6 +48,8 @@ public class ResourceExtractor : PlayerBuilding, IUpgradeable
     [SerializeField] SpriteRenderer protectionBarB;
     [SerializeField] SpriteRenderer protectionBarC;
 
+    [SerializeField] AudioSource upgradeSource;
+
     //Damager list to avoid null references and improve reaction speed
     private List<IDamager> currentDamagers = new List<IDamager>();
 
@@ -222,6 +224,8 @@ public class ResourceExtractor : PlayerBuilding, IUpgradeable
     {
         //Increase noted cost
         cost += GetUpgradeCost(type);
+
+        upgradeSource.PlayOneShot(upgradeSource.clip);
 
         //Remove budget
         GameManager.Instance.budget -= GetUpgradeCost(type);

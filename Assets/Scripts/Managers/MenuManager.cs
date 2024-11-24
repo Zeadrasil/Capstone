@@ -9,9 +9,10 @@ public class MenuManager : Singleton<MenuManager>
 {
     //Major menus
     [SerializeField] Canvas mainMenu;
-    [SerializeField] Canvas optionsMenu;
+    [SerializeField] Canvas controlsMenu;
     [SerializeField] Canvas newGameMenu;
     [SerializeField] Canvas creditsMenu;
+    [SerializeField] Canvas settingsMenu;
 
     //In-game data
     public Canvas pauseMenu;
@@ -47,6 +48,32 @@ public class MenuManager : Singleton<MenuManager>
     [SerializeField] TMP_Text selectionRightText;
     [SerializeField] TMP_Text sellText;
     private TMP_Text[] hotkeyTexts;
+
+    //Settings controls
+
+    //Graphics controls
+
+    //Fullscreen images
+    [SerializeField] Image activeFullscreenImage;
+    [SerializeField] Image inactiveFullscreenImage;
+
+    //Other
+    [SerializeField] TMP_InputField screenHeightInput;
+    [SerializeField] TMP_InputField screenWidthInput;
+    [SerializeField] TMP_Dropdown outlineDropdown;
+
+    //Audio Controls
+    [SerializeField] TMP_InputField masterVolumeInput;
+    [SerializeField] Slider masterVolumeSlider;
+    [SerializeField] TMP_InputField musicVolumeInput;
+    [SerializeField] Slider musicVolumeSlider;
+    [SerializeField] TMP_InputField sfxVolumeInput;
+    [SerializeField] Slider sfxVolumeSlider;
+    [SerializeField] TMP_InputField musicFadeInput;
+    [SerializeField] Slider musicFadeSlider;
+
+    //Settings
+    bool fullscreen = true;
 
     //New game basic settings controls
     [SerializeField] TMP_InputField simplifiedSeedInput;
@@ -136,7 +163,7 @@ public class MenuManager : Singleton<MenuManager>
 
     //Holder variables to avoid update loops
     private bool[] freshesFloatRange = new bool[] { true, true, true, true, true, true, true, true, true, true, true, 
-        true, true, true, true, true, true, true, true, true, true, true, true };
+        true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true };
     private bool[] freshesFullInt = new bool[] { true, true, true, true, true, true, true, true, true, true };
 
     //Holder variables to store creation settings before they are passed into the GameManager
@@ -201,6 +228,20 @@ public class MenuManager : Singleton<MenuManager>
     //Loaded data storage
     GameData loadedData;
 
+    //Local tile manager reference for background
+    [SerializeField] LocalTileManager localTileManager;
+
+    //Menu background seeds
+    private uint menuTraversableSeedA;
+    private uint menuTraversableSeedB;
+    private uint menuTraversableSeedC;
+    private uint menuResourceSeedA;
+    private uint menuResourceSeedB;
+    private uint menuResourceSeedC;
+    private uint menuAestheticSeedA;
+    private uint menuAestheticSeedB;
+    private uint menuAestheticSeedC;
+
     //Called just before first Update() call
     private void Start()
     {
@@ -213,7 +254,7 @@ public class MenuManager : Singleton<MenuManager>
             playerCostsInput, playerEnergyProductionInput, playerEnergyUsageInput, mapScalingInput, 
             resourceScalingInput, aestheticScalingInput, mapCutoffInput, resourceCutoffInput, aestheticACutoffInput, 
             aestheticBCutoffInput, aestheticCCutoffInput, aestheticDCutoffInput, mapStartSizeInput, 
-            mapExpansionRateInput };
+            mapExpansionRateInput, masterVolumeInput, musicVolumeInput, sfxVolumeInput, musicFadeInput };
         inputFieldsFullInt = new TMP_InputField[] { simplifiedSeedInput, seedAInput, seedBInput, seedCInput, seedDInput,
             seedEInput, seedFInput, seedGInput, seedHInput, seedIInput};
         
@@ -223,7 +264,7 @@ public class MenuManager : Singleton<MenuManager>
             playerCostsSlider, playerEnergyProductionSlider, playerEnergyUsageSlider, mapScalingSlider, 
             resourceScalingSlider, aestheticScalingSlider, mapCutoffSlider, resourceCutoffSlider, aestheticACutoffSlider,
             aestheticBCutoffSlider, aestheticCCutoffSlider, aestheticDCutoffSlider, mapStartSizeSlider,
-            mapExpansionRateSlider };
+            mapExpansionRateSlider, masterVolumeSlider, musicVolumeSlider, sfxVolumeSlider, musicFadeSlider };
         slidersFullInt = new Slider[] { simplifiedSeedSlider, seedASlider, seedBSlider, seedCSlider, seedDSlider,
             seedESlider, seedFSlider, seedGSlider, seedHSlider, seedISlider };
 
@@ -232,6 +273,18 @@ public class MenuManager : Singleton<MenuManager>
 
         //Gets a random initial seed so that you don't have to come up with a new one by yourself
         simplifiedSeedSlider.value = UnityEngine.Random.Range((float)int.MinValue, (float)int.MaxValue);
+
+        //Initializes background seeds
+        System.Random rand = new System.Random();
+        menuTraversableSeedA = (uint)rand.Next();
+        menuTraversableSeedB = (uint)rand.Next();
+        menuTraversableSeedC = (uint)rand.Next();
+        menuResourceSeedA = (uint)rand.Next();
+        menuResourceSeedB = (uint)rand.Next();
+        menuResourceSeedC = (uint)rand.Next();
+        menuAestheticSeedA = (uint)rand.Next();
+        menuAestheticSeedB = (uint)rand.Next();
+        menuAestheticSeedC = (uint)rand.Next();
 
         //Load preferred camera up key
         gameManager.forwardKey = (KeyCode)PlayerPrefs.GetInt("cameraForwardKey");
@@ -390,11 +443,20 @@ public class MenuManager : Singleton<MenuManager>
         //}
 
         newGameMenu.enabled = false;
-        optionsMenu.enabled = false;
+        controlsMenu.enabled = false;
+        settingsMenu.enabled = false;
         basicSettings.enabled = false;
         advancedSettings.enabled = false;
         customSettings.enabled = false;
         creditsMenu.enabled = false;
+
+        outlineDropdown.value = PlayerPrefs.GetInt("OutlineType", 0);
+        screenHeightInput.text = PlayerPrefs.GetInt("ScreenHeight", 1920).ToString();
+        screenWidthInput.text = PlayerPrefs.GetInt("ScreenWidth", 1080).ToString();
+        fullscreen = PlayerPrefs.GetInt("Fullscreen", 0) == 0;
+        ToggleFullscreen();
+
+        loadBackground();
     }
 
     //Called every frame
@@ -708,7 +770,7 @@ public class MenuManager : Singleton<MenuManager>
             }
         }
         //Allow users to change hotkeys in the settings men by pressing the current hotkey for it
-        else if(optionsMenu.enabled)
+        else if(controlsMenu.enabled)
         {
             //Camera forward
             if (Input.GetKeyDown(gameManager.forwardKey))
@@ -892,7 +954,7 @@ public class MenuManager : Singleton<MenuManager>
         //Disable irrelevant menus
         basicSettings.enabled = false;
         advancedSettings.enabled = false;
-        optionsMenu.enabled = false;
+        controlsMenu.enabled = false;
 
         //Go to the scene with all of the in game data
         SceneManager.LoadScene("MainScene");
@@ -908,10 +970,10 @@ public class MenuManager : Singleton<MenuManager>
     }
 
     //Go to the menu where you change your hotkeys
-    public void EnterOptions()
+    public void EnterControls()
     {
         //Ensure that only the relevant menu is visible
-        optionsMenu.enabled = true;
+        controlsMenu.enabled = true;
         mainMenu.enabled = false;
         newGameMenu.enabled = false;
 
@@ -941,10 +1003,10 @@ public class MenuManager : Singleton<MenuManager>
     }
 
     //Return from the menu where you change your hotkeys
-    public void ExitOptions()
+    public void ExitControls()
     {
         //Ensure that only the relevant menu is visible
-        optionsMenu.enabled = false;
+        controlsMenu.enabled = false;
         mainMenu.enabled = true;
         newGameMenu.enabled = false;
 
@@ -963,7 +1025,7 @@ public class MenuManager : Singleton<MenuManager>
     public void ExitStartMenu()
     {
         //Ensure only the relevant menu is visible
-        optionsMenu.enabled = false;
+        controlsMenu.enabled = false;
         basicSettings.enabled = false;
         mainMenu.enabled = true;
         newGameMenu.enabled = false;
@@ -973,7 +1035,7 @@ public class MenuManager : Singleton<MenuManager>
     public void EnterStartMenu()
     {
         //Ensure that only the relevant menu is visible
-        optionsMenu.enabled = false;
+        controlsMenu.enabled = false;
         mainMenu.enabled = false;
         newGameMenu.enabled = true;
         BasicSettings();
@@ -1235,6 +1297,30 @@ public class MenuManager : Singleton<MenuManager>
                     expansionRate = (int)slidersFloatRange[setting].value;
                     break;
                 }
+            //Master Volume
+            case 22:
+                {
+                    MusicManager.Instance.UpdateMasterVolume(slidersFloatRange[setting].value);
+                    break;
+                }
+            //Music Volume
+            case 23:
+                {
+                    MusicManager.Instance.UpdateMusicVolume(slidersFloatRange[setting].value);
+                    break;
+                }
+            //SFX Volume
+            case 24:
+                {
+                    MusicManager.Instance.UpdateSFXVolume(slidersFloatRange[setting].value);
+                    break;
+                }
+            //Music Fade:
+            case 25:
+                {
+                    MusicManager.Instance.musicFadeTime = slidersFloatRange[setting].value;
+                    break;
+                }
         }
     }
 
@@ -1441,7 +1527,7 @@ public class MenuManager : Singleton<MenuManager>
         mainMenu.enabled = true;
         basicSettings.enabled = false;
         advancedSettings.enabled = false;
-        optionsMenu.enabled = false;
+        controlsMenu.enabled = false;
         newGameMenu.enabled = false;
 
         //Ensures that all settings inputs are reenabled after leaving the map
@@ -1475,5 +1561,82 @@ public class MenuManager : Singleton<MenuManager>
     {
         mainMenu.enabled = true;
         creditsMenu.enabled = false;
+    }
+
+    //Go to settings
+    public void EnterSettings()
+    {
+        mainMenu.enabled = false;
+        settingsMenu.enabled = true;
+    }
+
+    //Return to main menu from settings
+    public void ExitSettings()
+    {
+        mainMenu.enabled = true;
+        settingsMenu.enabled = false;
+        loadBackground();
+    }
+
+    //Turn fullscreen mode on and off
+    public void ToggleFullscreen()
+    {
+        //Store data for use
+        fullscreen = !fullscreen;
+
+        //Update UI
+        activeFullscreenImage.enabled = fullscreen;
+        inactiveFullscreenImage.enabled = !fullscreen;
+
+        //Change screen to match
+        UpdateResolution();
+    }
+
+    //Update screen to match new resolution settings
+    public void UpdateResolution()
+    {
+        Screen.SetResolution(int.Parse(screenWidthInput.text), int.Parse(screenHeightInput.text), fullscreen);
+
+        //Update saved settings
+        PlayerPrefs.SetInt("ScreenWidth", int.Parse(screenWidthInput.text));
+        PlayerPrefs.SetInt("ScreenHeight", int.Parse(screenHeightInput.text));
+        PlayerPrefs.SetInt("Fullscreen", fullscreen ? 1 : 0);
+        PlayerPrefs.Save();
+    }
+
+    //Update outline type
+    public void UpdateOutline()
+    {
+        GameManager.Instance.outlineType = outlineDropdown.value;
+
+        //Update saved settings
+        PlayerPrefs.SetInt("OutlineType", outlineDropdown.value);
+        PlayerPrefs.Save();
+    }
+
+    //Load background tiles
+    private void loadBackground()
+    {
+        localTileManager.PassTiles();
+        TileManager.Instance.size = 15;
+        TileManager.Instance.seedA = menuTraversableSeedA;
+        TileManager.Instance.seedB = menuTraversableSeedB;
+        TileManager.Instance.seedC = menuTraversableSeedC;
+        TileManager.Instance.seedD = menuResourceSeedA;
+        TileManager.Instance.seedE = menuResourceSeedB;
+        TileManager.Instance.seedF = menuResourceSeedC;
+        TileManager.Instance.seedG = menuAestheticSeedA;
+        TileManager.Instance.seedH = menuAestheticSeedB;
+        TileManager.Instance.seedI = menuAestheticSeedC;
+        TileManager.Instance.resourceScaling = 2.5f;
+        TileManager.Instance.aestheticScaling = 3.0f;
+        TileManager.Instance.traversableCutoff = 0.45f;
+        TileManager.Instance.resourceCutoff = 0.75f;
+        TileManager.Instance.aestheticACutoff = 0.2f;
+        TileManager.Instance.aestheticBCutoff = 0.4f;
+        TileManager.Instance.aestheticCCutoff = 0.6f;
+        TileManager.Instance.aestheticDCutoff = 0.8f;
+        TileManager.Instance.mapScaling = 300000000;
+        TileManager.Instance.Initialize();
     }
 }

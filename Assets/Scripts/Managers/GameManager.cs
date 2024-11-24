@@ -637,6 +637,8 @@ public class GameManager : Singleton<GameManager>
         //You cannot start a wave if you have not finished your current wave, might change this later
         if(betweenWaves)
         {
+            MusicManager.Instance.PlayClick();
+
             //Change music
             MusicManager.Instance.StopBetween();
             MusicManager.Instance.PlayBattle();
@@ -1203,7 +1205,7 @@ public class GameManager : Singleton<GameManager>
 
         //Add to the tracked building dictionary
         playerBuildings.Add(hoveredTile, go);
-
+        MusicManager.Instance.PlayClick();
     }
 
     //Changes the panel to reflect accurate building data

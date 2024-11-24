@@ -34,6 +34,8 @@ public class Wall : PlayerBuilding, IUpgradeable
     //Healing
     [SerializeField] SpriteRenderer healingCenter;
 
+    [SerializeField] AudioSource upgradeSource;
+
     //Add damager to damager list
     public override void AddDamager(IDamager damager)
     {
@@ -140,6 +142,8 @@ public class Wall : PlayerBuilding, IUpgradeable
     {
         //Take upgrade cost out of budget
         GameManager.Instance.budget -= GetUpgradeCost(type);
+
+        upgradeSource.PlayOneShot(upgradeSource.clip);
 
         cost += GetUpgradeCost(type);
 

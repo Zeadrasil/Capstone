@@ -45,8 +45,14 @@ public class LocalTileManager : MonoBehaviour
         TileManager.Instance.BlockerTilemap = BlockerTilemap;
         TileManager.Instance.TraversableTilemap = TraversableTilemap;
 
+        PassTiles();
+    }
+
+    public void PassTiles()
+    {
+
         //Pass tiles
-        switch(GameManager.Instance.outlineType)
+        switch (GameManager.Instance.outlineType)
         {
             //No outline
             case 0:
@@ -57,7 +63,7 @@ public class LocalTileManager : MonoBehaviour
                     TileManager.Instance.traversableResourceTiles = traversableResourceTilesBase;
                     break;
                 }
-                //Black outline
+            //Black outline
             case 1:
                 {
                     TileManager.Instance.blockerTiles = blackBlockerTiles;
@@ -66,7 +72,7 @@ public class LocalTileManager : MonoBehaviour
                     TileManager.Instance.traversableResourceTiles = blackTraversableResourceTiles;
                     break;
                 }
-                //White outline
+            //White outline
             case 2:
                 {
                     TileManager.Instance.blockerTiles = whiteBlockerTiles;
@@ -75,7 +81,7 @@ public class LocalTileManager : MonoBehaviour
                     TileManager.Instance.traversableResourceTiles = whiteTraversableResourceTiles;
                     break;
                 }
-                //Thick black outline
+            //Thick black outline
             case 3:
                 {
                     TileManager.Instance.blockerTiles = thickBlackBlockerTiles;
@@ -84,7 +90,7 @@ public class LocalTileManager : MonoBehaviour
                     TileManager.Instance.traversableResourceTiles = thickBlackTraversableResourceTiles;
                     break;
                 }
-                //Thick white outline
+            //Thick white outline
             case 4:
                 {
                     TileManager.Instance.blockerTiles = thickWhiteBlockerTiles;
