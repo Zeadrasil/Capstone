@@ -66993,6 +66993,7 @@ MonoBehaviour:
   creditsMenu: {fileID: 1731753278}
   settingsMenu: {fileID: 265025461}
   helpMenu: {fileID: 1441952836}
+  buildingInfo: {fileID: 1305407925}
   pauseMenu: {fileID: 0}
   turretMenu: {fileID: 0}
   repairMenu: {fileID: 0}
