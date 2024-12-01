@@ -234,6 +234,7 @@ public class RepairStation : PlayerBuilding, IDamageable, IUpgradeable
         rangeDotD.enabled = false;
 
         audioSource.volume = (MusicManager.Instance.masterVolume / 100) * (MusicManager.Instance.sfxVolume / 200);
+        upgradeSource.volume = (MusicManager.Instance.masterVolume / 100) * (MusicManager.Instance.sfxVolume / 100);
 
         //Skip applying difficulty modifiers if they were already applied due to load
         if (needsDifficultyModifiers)
@@ -496,6 +497,7 @@ public class RepairStation : PlayerBuilding, IDamageable, IUpgradeable
         finishedAligning = data.finishedAligning;
 
         //Energy management
+        //Disable();
         GameManager.Instance.energyDeficit += Disable();
         GameManager.Instance.ChangeEnergyUsage(energyCost);
     }

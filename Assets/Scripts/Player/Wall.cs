@@ -216,6 +216,9 @@ public class Wall : PlayerBuilding, IUpgradeable
         }
         //Update data for enemies
         GameManager.Instance.playerHealths.Add(location, health);
+
+        //Update upgrade sfx volume
+        upgradeSource.volume = (MusicManager.Instance.masterVolume / 100) * (MusicManager.Instance.sfxVolume / 100);
     }
 
     //Get energy required to upgrade stat

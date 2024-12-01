@@ -6,7 +6,7 @@ public abstract class PlayerBuilding : MonoBehaviour, IDamageable
     //Location data for referencing
     public Vector2Int location = Vector2Int.zero;
     [SerializeField] protected GameObject healthBar;
-    protected float cost;
+    public float cost;
 
     //Energy data
     public float energyCost = 1;

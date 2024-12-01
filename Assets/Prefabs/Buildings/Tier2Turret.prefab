@@ -529,7 +529,7 @@ MonoBehaviour:
   nextChanged: {fileID: 0}
   basicDescription: Tier One Turret
   firerate: 4
-  damage: 10
+  damage: 15
   baseHealth: 20
   range: 5
   upgradeLevels: 0000000000000000000000000000000000000000

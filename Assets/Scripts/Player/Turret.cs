@@ -131,14 +131,17 @@ public class Turret : PlayerBuilding, IDamager, IUpgradeable
             }
         }
         //Update data for enemies
-        GameManager.Instance.playerHealths.Add(location, health);
-        GameManager.Instance.playerDamageData.Add(location, range * damage * firerate * (splash ? Mathf.Pow(splashRange * 10, 2) * 5 : 1));
+        GameManager.Instance.playerHealths.TryAdd(location, health);
+        GameManager.Instance.playerDamageData.TryAdd(location, range * damage * firerate * (splash ? Mathf.Pow(splashRange * 10, 2) * 5 : 1));
+
+        //Update volume for upgrade sfx
+        upgradeSource.volume = (MusicManager.Instance.masterVolume / 100) * (MusicManager.Instance.sfxVolume / 100);
     }
 
     //Upgrade given stat
     public void Upgrade(int type)
     {
-        //Subtracts upgrade cost from yourbudget
+        //Subtracts upgrade cost from your budget
         GameManager.Instance.budget -= GetUpgradeCost(type);
 
         upgradeSource.PlayOneShot(upgradeSource.clip);
@@ -721,6 +724,7 @@ public class Turret : PlayerBuilding, IDamager, IUpgradeable
         finishedAligning = data.finishedAligning;
 
         //Energy management
+        //Disable();
         GameManager.Instance.energyDeficit += Disable();
         GameManager.Instance.ChangeEnergyUsage(energyCost);
     }

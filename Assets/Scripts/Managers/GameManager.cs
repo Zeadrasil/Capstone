@@ -481,6 +481,8 @@ public class GameManager : Singleton<GameManager>
         tileManager.seedG = data.seedG;
         tileManager.seedH = data.seedH;
         tileManager.seedI = data.seedI;
+        tileManager.size = data.startSize;
+        expansionRate = data.expansionRate;
 
         //Load difficulty settings
         enemyQuantity = data.enemyQuantity;
@@ -498,7 +500,6 @@ public class GameManager : Singleton<GameManager>
         usedEnergy = 0;
         income = 0;
         energyDeficit = 0;
-        mostRecentEnergyDecrease = null;
         playerBuildings.Clear();
         paused = false;
         selectedUpgrade = 0;
@@ -517,7 +518,6 @@ public class GameManager : Singleton<GameManager>
 
         //Main initilization phase
         Initialize();
-
         betweenWaves = true;
 
         //Load other data
@@ -525,7 +525,7 @@ public class GameManager : Singleton<GameManager>
         tileManager.subbedTiles = new List<Vector2Int>(data.swappedTiles);
         
         //Ensure that all tiles have been generated properly
-        for(int i = 0; i < wave; i++)
+        for(int i = 0; i < wave * expansionRate; i++)
         {
             tileManager.Next();
         }
@@ -536,15 +536,18 @@ public class GameManager : Singleton<GameManager>
             tileManager.Generate(tile);
         }
 
+        mostRecentEnergyDecrease = PlayerBase;
+        BuildingData[] buildingDataArray = data.buildings;
+
         //Go through all of the loaded buildings in order to place them on the map
-        foreach (BuildingData buildingData in data.buildings)
+        foreach (BuildingData buildingData in buildingDataArray)
         {
             //Create the gameObject and get the building from it
             GameObject go = Instantiate(buildings[buildingData.type + buildingData.maxAlignments], tileManager.TraversableTilemap.CellToWorld(new Vector3Int(buildingData.location.x, buildingData.location.y)), Quaternion.identity);
             PlayerBuilding pb = go.GetComponentInChildren<PlayerBuilding>();
 
             //Add to the very end of enabling queue
-            PlayerBuilding holder = mostRecentEnergyDecrease;
+                PlayerBuilding holder = mostRecentEnergyDecrease;
             while (holder.nextChanged != null)
             {
                 holder = holder.nextChanged;
@@ -558,6 +561,7 @@ public class GameManager : Singleton<GameManager>
             //Add to the tracked building dictionary
             playerBuildings.Add(buildingData.location, go);
         }
+        //updateEnergy();
     }
 
     //Initialize the manager since you cannot pass in most of the data until you open the main scene
@@ -1191,9 +1195,10 @@ public class GameManager : Singleton<GameManager>
             default:
                 return;
         }
-        //Sets the location so that the building can know where it is
+        //Sets the building information
         PlayerBuilding pb = go.GetComponentInChildren<PlayerBuilding>();
         pb.location = hoveredTile;
+        pb.cost = budgetCosts[selectedConstructionIndex];
 
         //Add to the very end of enabling queue
         PlayerBuilding holder = mostRecentEnergyDecrease;
@@ -1951,7 +1956,7 @@ public class GameManager : Singleton<GameManager>
         int type = building.GetBuildingType();
 
         //Reduce construction energy cost due to the building being destroyed
-        energyCosts[type] -= energyConsumption * 0.5f;
+        energyCosts[type] -= building.GetBuildingType() == 5 || building.GetBuildingType() == 6 ? 0 : energyConsumption * 0.5f;
 
         //Reduce energy costs of connected buildings after it is gone to ensure that they take the appropriate amount
         while (building.nextChanged != null)
@@ -1983,9 +1988,11 @@ public class GameManager : Singleton<GameManager>
         data.seedD = tileManager.seedD;
         data.seedE = tileManager.seedE;
         data.seedF = tileManager.seedF;
-        data.seedD = tileManager.seedG;
-        data.seedE = tileManager.seedH;
-        data.seedF = tileManager.seedI;
+        data.seedG = tileManager.seedG;
+        data.seedH = tileManager.seedH;
+        data.seedI = tileManager.seedI;
+        data.startSize = tileManager.size;
+        data.expansionRate = expansionRate;
 
         //Economy info
         data.budgetCosts = budgetCosts;

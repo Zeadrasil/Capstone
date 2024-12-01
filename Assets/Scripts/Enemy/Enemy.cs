@@ -54,7 +54,7 @@ public class Enemy : MonoBehaviour, IDamageable, IDamager
         //Apply difficulty scaling to enemy
         baseHealth *= GameManager.Instance.enemyStrength;
         damage *= GameManager.Instance.enemyStrength;
-        movementSpeed *= GameManager.Instance.enemyStrength;
+        movementSpeed *= (GameManager.Instance.enemyStrength - 1) * 0.1f + 1;
         firerate *= GameManager.Instance.enemyStrength;
 
         //Improve performance by spreading out collision checks over time
@@ -92,7 +92,7 @@ public class Enemy : MonoBehaviour, IDamageable, IDamager
         while (true)
         {
             //If not ranged or within range
-            if (!ranged || Vector3.Distance(transform.position, target.transform.position) <= range)
+            if (target != null && (!ranged || Vector3.Distance(transform.position, target.transform.position) <= range))
             {
                 target.TakeDamage(damage);
             }
@@ -486,8 +486,8 @@ public class Enemy : MonoBehaviour, IDamageable, IDamager
         if(health <= 0)
         {
             //Give budget based on max health
-            GameManager.Instance.budget += baseHealth * GameManager.Instance.playerIncome * 0.1f;
-
+            GameManager.Instance.budget += baseHealth * GameManager.Instance.playerIncome * 0.002f * movementSpeed * (ranged ? range * 0.5f : 1) * damage * firerate;
+            
             //Used to update wave progress
             GameManager.Instance.KillEnemy(this);
 

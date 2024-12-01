@@ -9,6 +9,8 @@ public class GameData
     //Seed data
     public uint seedA, seedB, seedC, seedD, seedE, seedF, seedG, seedH, seedI;
     public int simplifiedSeed;
+    public int startSize = 15;
+    public int expansionRate = 2;
 
     //Economy info
     public float[] budgetCosts;

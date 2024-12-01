@@ -35,10 +35,10 @@
         1.0,
         4.0
     ],
-    "budget": 63.58000183105469,
+    "budget": 13584300000000000000.59375,
     "wave": 9,
     "enemyQuantity": 1.0,
-    "enemyStrength": 3.0,
+    "enemyStrength": 1.0,
     "playerStrength": 1.0,
     "playerHealth": 1.0,
     "playerIncome": 1.0,
@@ -424,14 +424,14 @@
             "baseCooldown": 0,
             "healing": 0.0,
             "healingEffectiveness": 0.0,
-            "extractionRate": 0.2985984683036804,
-            "energyRate": 51.0,
-            "damageEffectiveness": 5.314409255981445,
+            "extractionRate": 0.10000000149011612,
+            "energyRate": 0.0,
+            "damageEffectiveness": 10.0,
             "range": 0.0,
-            "health": 29.859846115112306,
-            "baseHealth": 29.859846115112306,
-            "energyCost": 4.2999982833862309,
-            "cost": 9705748480.0,
+            "health": 10.0,
+            "baseHealth": 10.0,
+            "energyCost": 2.5,
+            "cost": 43.20000457763672,
             "location": {
                 "x": -10,
                 "y": 21
@@ -443,10 +443,10 @@
                 0.30000001192092898
             ],
             "upgradeLevels": [
-                6,
-                68,
-                6,
-                6
+                0,
+                0,
+                0,
+                0
             ],
             "maxAlignments": 2,
             "alignments": 0,
@@ -755,14 +755,14 @@
             "baseCooldown": 0,
             "healing": 0.0,
             "healingEffectiveness": 0.0,
-            "extractionRate": 0.2985984683036804,
-            "energyRate": 51.0,
-            "damageEffectiveness": 5.314409255981445,
+            "extractionRate": 0.10000000149011612,
+            "energyRate": 0.0,
+            "damageEffectiveness": 10.0,
             "range": 0.0,
-            "health": 35.831817626953128,
-            "baseHealth": 35.831817626953128,
-            "energyCost": 3.399998664855957,
-            "cost": 9705748480.0,
+            "health": 10.0,
+            "baseHealth": 10.0,
+            "energyCost": 1.5,
+            "cost": 30.000001907348634,
             "location": {
                 "x": -4,
                 "y": 19
@@ -774,10 +774,10 @@
                 0.30000001192092898
             ],
             "upgradeLevels": [
-                6,
-                68,
-                6,
-                7
+                0,
+                0,
+                0,
+                0
             ],
             "maxAlignments": 2,
             "alignments": 0,
@@ -794,14 +794,14 @@
             "baseCooldown": 0,
             "healing": 0.0,
             "healingEffectiveness": 0.0,
-            "extractionRate": 0.2985984683036804,
-            "energyRate": 51.0,
-            "damageEffectiveness": 5.314409255981445,
+            "extractionRate": 0.10000000149011612,
+            "energyRate": 28.5,
+            "damageEffectiveness": 10.0,
             "range": 0.0,
-            "health": 29.859846115112306,
-            "baseHealth": 29.859846115112306,
-            "energyCost": 5.2999982833862309,
-            "cost": 9705748480.0,
+            "health": 10.0,
+            "baseHealth": 10.0,
+            "energyCost": 3.5,
+            "cost": 3704383.25,
             "location": {
                 "x": 16,
                 "y": 27
@@ -813,10 +813,10 @@
                 0.30000001192092898
             ],
             "upgradeLevels": [
-                6,
-                68,
-                6,
-                6
+                0,
+                38,
+                0,
+                0
             ],
             "maxAlignments": 2,
             "alignments": 0,
@@ -833,14 +833,14 @@
             "baseCooldown": 0,
             "healing": 0.0,
             "healingEffectiveness": 0.0,
-            "extractionRate": 0.2985984683036804,
-            "energyRate": 51.0,
-            "damageEffectiveness": 5.314409255981445,
+            "extractionRate": 0.10000000149011612,
+            "energyRate": 0.0,
+            "damageEffectiveness": 10.0,
             "range": 0.0,
-            "health": 35.831817626953128,
-            "baseHealth": 35.831817626953128,
-            "energyCost": 3.899998188018799,
-            "cost": 9705748480.0,
+            "health": 10.0,
+            "baseHealth": 10.0,
+            "energyCost": 2.0,
+            "cost": 36.000003814697269,
             "location": {
                 "x": -4,
                 "y": 18
@@ -852,10 +852,10 @@
                 0.30000001192092898
             ],
             "upgradeLevels": [
-                6,
-                68,
-                6,
-                7
+                0,
+                0,
+                0,
+                0
             ],
             "maxAlignments": 2,
             "alignments": 0,
@@ -1209,14 +1209,14 @@
             "baseCooldown": 0,
             "healing": 0.0,
             "healingEffectiveness": 0.0,
-            "extractionRate": 0.2985984683036804,
-            "energyRate": 51.0,
-            "damageEffectiveness": 5.314409255981445,
+            "extractionRate": 0.10000000149011612,
+            "energyRate": 24.0,
+            "damageEffectiveness": 10.0,
             "range": 0.0,
-            "health": 29.859846115112306,
-            "baseHealth": 29.859846115112306,
-            "energyCost": 4.7999982833862309,
-            "cost": 9705748480.0,
+            "health": 10.0,
+            "baseHealth": 10.0,
+            "energyCost": 3.0,
+            "cost": 767361.75,
             "location": {
                 "x": 15,
                 "y": 27
@@ -1228,10 +1228,10 @@
                 0.30000001192092898
             ],
             "upgradeLevels": [
-                6,
-                68,
-                6,
-                6
+                0,
+                32,
+                0,
+                0
             ],
             "maxAlignments": 2,
             "alignments": 0,
@@ -1283,14 +1283,14 @@
             "baseCooldown": 0,
             "healing": 0.0,
             "healingEffectiveness": 0.0,
-            "extractionRate": 0.2985984683036804,
-            "energyRate": 51.0,
-            "damageEffectiveness": 5.314409255981445,
+            "extractionRate": 0.10000000149011612,
+            "energyRate": 0.0,
+            "damageEffectiveness": 10.0,
             "range": 0.0,
-            "health": 29.859846115112306,
-            "baseHealth": 29.859846115112306,
-            "energyCost": 2.799999475479126,
-            "cost": 9705748480.0,
+            "health": 10.0,
+            "baseHealth": 10.0,
+            "energyCost": 1.0,
+            "cost": 25.0,
             "location": {
                 "x": 13,
                 "y": -2
@@ -1302,10 +1302,10 @@
                 0.30000001192092898
             ],
             "upgradeLevels": [
-                6,
-                68,
-                6,
-                6
+                0,
+                0,
+                0,
+                0
             ],
             "maxAlignments": 2,
             "alignments": 0,

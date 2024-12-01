@@ -150,12 +150,15 @@ public class ResourceExtractor : PlayerBuilding, IUpgradeable
             }
 
             //Also apply resource production
-            GameManager.Instance.IncreaseIncome(extractionRate * Mathf.Pow(health, damageEffectiveness) / Mathf.Pow(baseHealth, damageEffectiveness));
-            GameManager.Instance.ChangeEnergyCap(energyRate * Mathf.Pow(health, damageEffectiveness) / Mathf.Pow(baseHealth, damageEffectiveness));
+            //GameManager.Instance.IncreaseIncome(extractionRate * Mathf.Pow(health, damageEffectiveness) / Mathf.Pow(baseHealth, damageEffectiveness));
+            //GameManager.Instance.ChangeEnergyCap(energyRate * Mathf.Pow(health, damageEffectiveness) / Mathf.Pow(baseHealth, damageEffectiveness));
         }
         //Update data for enemies
         GameManager.Instance.playerHealths.Add(location, health);
         GameManager.Instance.playerExtractionData.Add(location, (extractionRate * 40 + energyRate * 100) * damageEffectiveness);
+
+        //Update volume for upgrade sfx
+        upgradeSource.volume = (MusicManager.Instance.masterVolume / 100) * (MusicManager.Instance.sfxVolume / 100);
     }
 
     // Update is called once per frame
@@ -583,7 +586,7 @@ public class ResourceExtractor : PlayerBuilding, IUpgradeable
     //Loads data from a BuildingData object into the extractor
     public override void LoadData(BuildingData data)
     {
-        //Extractor date
+        //Extractor data
         extractionRate = data.extractionRate;
         energyRate = data.energyRate;
         damageEffectiveness = data.damageEffectiveness;
@@ -605,10 +608,13 @@ public class ResourceExtractor : PlayerBuilding, IUpgradeable
         alignments = data.alignments;
         finishedAligning = data.finishedAligning;
 
-        //Energy management
+        //Resource management
+        //Disable();
         GameManager.Instance.energyDeficit += Disable();
+        GameManager.Instance.IncreaseIncome(extractionRate);
         GameManager.Instance.ChangeEnergyUsage(energyCost);
         GameManager.Instance.ChangeEnergyCap(energyRate);
+
         if (energyRate >= energyCost)
         {
             Enable();

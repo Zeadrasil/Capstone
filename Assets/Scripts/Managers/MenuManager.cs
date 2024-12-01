@@ -986,11 +986,11 @@ public class MenuManager : Singleton<MenuManager>
         TileManager.Instance.BlockerTilemap.ClearAllTiles();
         TileManager.Instance.TraversableTilemap.ClearAllTiles();
 
-        //Go to the scene with all of the in game data
-        SceneManager.LoadScene("MainScene");
-
         //Deactivate audio listener in order to ensure proper one is active
         MusicManager.Instance.gameObject.GetComponent<AudioListener>().enabled = false;
+
+        //Go to the scene with all of the in game data
+        SceneManager.LoadScene("MainScene");
 
         //Queue up initialization of the game, allowing time for values to be passed into the GameManager
         queueInitialize = 1;
