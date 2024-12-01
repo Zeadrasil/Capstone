@@ -21,7 +21,7 @@ public class FileManager : Singleton<FileManager>
             Directory.CreateDirectory(defaultPath);
 
             //Gets the path that the user wishes to save their game at
-            string fullPath = StandaloneFileBrowser.SaveFilePanel("Save Game", defaultPath, $"{DateTime.Now.Year.ToString("0000")}-{DateTime.Now.Month.ToString("00")}-{DateTime.Now.Day.ToString("00")}-{DateTime.Now.Hour.ToString("00")}-{DateTime.Now.Minute.ToString("00")}-{DateTime.Now.Second.ToString("00")}", ".json");
+            string fullPath = StandaloneFileBrowser.SaveFilePanel("Save Game", defaultPath, $"{DateTime.Now.Year.ToString("0000")}-{DateTime.Now.Month.ToString("00")}-{DateTime.Now.Day.ToString("00")}-{DateTime.Now.Hour.ToString("00")}-{DateTime.Now.Minute.ToString("00")}-{DateTime.Now.Second.ToString("00")}", "json");
 
             //If not canceled, save
             if (fullPath.Length > 0)
@@ -51,6 +51,38 @@ public class FileManager : Singleton<FileManager>
         }
     }
 
+    public void AutoSave(int seed)
+    {
+        StreamWriter sw = null;
+        try
+        {
+            //Gets the default save path for the application
+            string defaultPath = Path.Combine(Application.dataPath, "Saves");
+
+            //Ensures that the default save path actually exists
+            Directory.CreateDirectory(defaultPath);
+
+            //Gets the path that the user wishes to save their game at
+            string fullPath = Path.Combine(defaultPath, $"autosave{seed}.json");
+
+            //Transforms the save data into JSON format
+            string data = JsonUtility.ToJson(GameManager.Instance.GetSaveData(), true);
+
+            //Creates a writer to write the data
+            sw = new StreamWriter(new FileStream(fullPath, FileMode.Create));
+
+            //Writes data
+            sw.Write(data);
+
+        }
+        finally
+        {
+            //Ensure that file gets closed
+            sw.Close();
+        }
+
+    }
+
     public GameData Load()
     {
         try
@@ -62,7 +94,7 @@ public class FileManager : Singleton<FileManager>
             Directory.CreateDirectory(defaultPath);
 
             //Get the actual path to the save that you are loading
-            string[] paths = StandaloneFileBrowser.OpenFilePanel("Load Save", defaultPath, ".json", false);
+            string[] paths = StandaloneFileBrowser.OpenFilePanel("Load Save", defaultPath, "json", false);
 
             //If not canceled, load
             if (paths.Length > 0)

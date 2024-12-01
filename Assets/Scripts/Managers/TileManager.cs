@@ -161,36 +161,37 @@ public class TileManager : Singleton<TileManager>
                     newExpansion.Add(adjacent);
                 }
             }
-
         }
-
         //Backup plan for if there are no generated spawnpoints
         if(potentialSpawns.Count == 0)
         {
             //Gets a navnode that following will create a path to a spawnpoint in the future
             NavNode foundNode = findPathFromNextValidSpawn(identifyNextValidSpawn(nextExpansion));
 
-            //Keep following nodes until you have gone the entire way
-            while(foundNode.parent != null)
+            if (foundNode != null)
             {
-                //Ensure that there is a stored spawnpoint at an appropriate spot
-                if (foundNode.parent.parent == null)
+                //Keep following nodes until you have gone the entire way
+                while (foundNode.parent != null)
                 {
-                    potentialSpawnpoints = new List<Vector2Int>() { foundNode.location };
-                }
-                //Follow node
-                foundNode = foundNode.parent;
+                    //Ensure that there is a stored spawnpoint at an appropriate spot
+                    if (foundNode.parent.parent == null)
+                    {
+                        potentialSpawnpoints = new List<Vector2Int>() { foundNode.location };
+                    }
+                    //Follow node
+                    foundNode = foundNode.parent;
 
-                //Add tile to subbed tiles
-                subbedTiles.Add(foundNode.location);
+                    //Add tile to subbed tiles
+                    subbedTiles.Add(foundNode.location);
 
-                //If it is a blocker tile then regenerate it as a traversable tile
-                if(BlockerTiles.Contains(foundNode.location))
-                {
-                    Generate(foundNode.location);
+                    //If it is a blocker tile then regenerate it as a traversable tile
+                    if (BlockerTiles.Contains(foundNode.location))
+                    {
+                        Generate(foundNode.location);
 
-                    //Removes from blocker tiles as it is now a traversable tile
-                    BlockerTiles.Remove(foundNode.location);
+                        //Removes from blocker tiles as it is now a traversable tile
+                        BlockerTiles.Remove(foundNode.location);
+                    }
                 }
             }
         }

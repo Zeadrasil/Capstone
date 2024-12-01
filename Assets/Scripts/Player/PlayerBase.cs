@@ -22,7 +22,7 @@ public class PlayerBase : PlayerBuilding
     private void Start()
     {
         baseHealth *= GameManager.Instance.playerHealth;
-        audioSource.volume = (MusicManager.Instance.masterVolume / 100) * (MusicManager.Instance.sfxVolume / 1000);
+        audioSource.volume = (MusicManager.Instance.masterVolume / 100) * (MusicManager.Instance.sfxVolume / 500);
         health = baseHealth;
     }
 
@@ -87,7 +87,8 @@ public class PlayerBase : PlayerBuilding
             damager.cancelAttack();
         }
         //Destroy self
-        Destroy(gameObject);
+        //Destroy(gameObject, GameManager.Instance.playerBuildings.Count * 0.2f + 1);
+        //Self gets destroyed in the deactivate function
 
         //Stop music
         MusicManager.Instance.StopBattle();

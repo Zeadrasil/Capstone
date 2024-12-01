@@ -362,7 +362,7 @@ public class GameManager : Singleton<GameManager>
 
         //Sets defaults
         wave = 0;
-        budgetCosts = new float[] { 10, 15, 25, 10, 15, 10, 15, 10, 15, 25 };
+        budgetCosts = new float[] { 10, 15, 25, 10, 15, 5, 7.5f, 10, 15, 25 };
         energyCosts = new float[] { 1, 1, 1, 1, 1, 0, 0, 1, 1, 1 };
         energy = 10;
         maxEnemiesThisWave = 1;
@@ -642,6 +642,8 @@ public class GameManager : Singleton<GameManager>
         //You cannot start a wave if you have not finished your current wave, might change this later
         if(betweenWaves)
         {
+            FileManager.Instance.AutoSave(simplifiedSeed);
+
             MusicManager.Instance.PlayClick();
 
             //Change music
@@ -1833,6 +1835,9 @@ public class GameManager : Singleton<GameManager>
         //Removes from stored enemies
         currentEnemies.Remove(enemy);
 
+        //Ensures no remaining null enemies
+        currentEnemies.RemoveAll(item => item == null);
+
         //Checks to see if the wave is over
         betweenWaves = currentEnemies.Count == 0;
 
@@ -1958,6 +1963,11 @@ public class GameManager : Singleton<GameManager>
                 ChangeEnergyUsage(-energyConsumption * 0.5f);
             }
         }
+        //Ensures that the reference to the most recent change is still valid
+        if(building.location == mostRecentEnergyDecrease.location)
+        {
+            mostRecentEnergyDecrease = mostRecentEnergyDecrease.previousChanged;
+        }
     }
 
     //Gets the data so that it can be saved
@@ -2011,6 +2021,7 @@ public class GameManager : Singleton<GameManager>
     public void Deactivate()
     {
         active = false;
+        Destroy(playerBuildings[new Vector2Int(0, 0)]);
 
         //Clear data
         playerBuildings.Clear();

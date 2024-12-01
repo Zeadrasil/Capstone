@@ -39,7 +39,7 @@ public class LocalTileManager : MonoBehaviour
     [SerializeField] TileBase[] thickBlackTraversableResourceTiles;
 
     // Start is called before the first frame update
-    void Start()
+    public void Start()
     {
         //Pass tilemaps
         TileManager.Instance.BlockerTilemap = BlockerTilemap;

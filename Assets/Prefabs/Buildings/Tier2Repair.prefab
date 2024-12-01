@@ -767,8 +767,8 @@ MonoBehaviour:
   nextChanged: {fileID: 0}
   basicDescription: Tier One Repair
   baseHealth: 2
-  healing: 5
-  range: 2
+  healing: 3
+  range: 2.5
   expenseModifiers:
   - 0.5
   - 0.5

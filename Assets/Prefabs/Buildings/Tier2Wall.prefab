@@ -578,7 +578,7 @@ MonoBehaviour:
   previousChanged: {fileID: 0}
   nextChanged: {fileID: 0}
   basicDescription: Tier One Wall
-  baseHealth: 100
+  baseHealth: 20
   healingEffectiveness: 1
   expenseModifiers:
   - 0.5

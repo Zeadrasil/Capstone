@@ -1,5 +1,6 @@
 using System;
 using TMPro;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
@@ -9,13 +10,22 @@ public class MenuManager : Singleton<MenuManager>
 {
     //Major menus
     [SerializeField] Canvas mainMenu;
-    [SerializeField] Canvas optionsmenu;
+    [SerializeField] Canvas optionsMenu;
     [SerializeField] Canvas controlsMenu;
     [SerializeField] Canvas newGameMenu;
     [SerializeField] Canvas creditsMenu;
     [SerializeField] Canvas settingsMenu;
     [SerializeField] Canvas helpMenu;
     [SerializeField] Canvas buildingInfo;
+    [SerializeField] Canvas enemyInfo;
+    [SerializeField] Canvas tileInfo;
+
+    //Tile help outline type storage
+    [SerializeField] Canvas noOutline;
+    [SerializeField] Canvas thinWhiteOutline;
+    [SerializeField] Canvas thickWhiteOutline;
+    [SerializeField] Canvas thinBlackOutline;
+    [SerializeField] Canvas thickBlackOutline;
 
     //In-game data
     public Canvas pauseMenu;
@@ -231,8 +241,9 @@ public class MenuManager : Singleton<MenuManager>
     //Loaded data storage
     GameData loadedData;
 
-    //Local tile manager reference for background
+    //Background helpers
     [SerializeField] LocalTileManager localTileManager;
+    bool loadBackgroundLater = true;
 
     //Menu background seeds
     private uint menuTraversableSeedA;
@@ -451,16 +462,23 @@ public class MenuManager : Singleton<MenuManager>
         advancedSettings.enabled = false;
         customSettings.enabled = false;
         creditsMenu.enabled = false;
-        optionsmenu.enabled = false;
+        optionsMenu.enabled = false;
         helpMenu.enabled = false;
+        controlsMenu.enabled = false;
+        buildingInfo.enabled = false;
+        enemyInfo.enabled = false;
+        tileInfo.enabled = false;
+        noOutline.enabled = false;
+        thickBlackOutline.enabled = false;
+        thickWhiteOutline.enabled = false;
+        thinBlackOutline.enabled = false;
+        thinWhiteOutline.enabled = false;
 
         outlineDropdown.value = PlayerPrefs.GetInt("OutlineType", 0);
         screenHeightInput.text = PlayerPrefs.GetInt("ScreenHeight", 1920).ToString();
         screenWidthInput.text = PlayerPrefs.GetInt("ScreenWidth", 1080).ToString();
-        fullscreen = PlayerPrefs.GetInt("Fullscreen", 0) == 0;
+        fullscreen = PlayerPrefs.GetInt("Fullscreen", 1) == 0;
         ToggleFullscreen();
-
-        loadBackground();
     }
 
     //Called every frame
@@ -926,6 +944,11 @@ public class MenuManager : Singleton<MenuManager>
                 queueInitialize--;
             }
         }
+        if(loadBackgroundLater)
+        {
+            loadBackground();
+            loadBackgroundLater = false;
+        }
     }
 
     //Finished deciding settings for new game so start creating it
@@ -958,10 +981,16 @@ public class MenuManager : Singleton<MenuManager>
         //Disable irrelevant menus
         basicSettings.enabled = false;
         advancedSettings.enabled = false;
-        optionsmenu.enabled = false;
+        optionsMenu.enabled = false;
+
+        TileManager.Instance.BlockerTilemap.ClearAllTiles();
+        TileManager.Instance.TraversableTilemap.ClearAllTiles();
 
         //Go to the scene with all of the in game data
         SceneManager.LoadScene("MainScene");
+
+        //Deactivate audio listener in order to ensure proper one is active
+        MusicManager.Instance.gameObject.GetComponent<AudioListener>().enabled = false;
 
         //Queue up initialization of the game, allowing time for values to be passed into the GameManager
         queueInitialize = 1;
@@ -979,8 +1008,6 @@ public class MenuManager : Singleton<MenuManager>
         //Ensure that only the relevant menu is visible
         controlsMenu.enabled = true;
         settingsMenu.enabled = false;
-
-        loadBackground();
 
         //Ensure that the listed hotkeys are accurate
         cameraForwardText.text = BasicUtils.TranslateKey(gameManager.forwardKey);
@@ -1503,7 +1530,7 @@ public class MenuManager : Singleton<MenuManager>
         //Update music
         MusicManager.Instance.PlayMenu();
 
-        //Clear out the building references to avoid memory leaks
+        //Clear out the building references to reduce memory leaks
         while (GameManager.Instance.mostRecentEnergyDecrease.nextChanged != null)
         {
             GameManager.Instance.mostRecentEnergyDecrease = GameManager.Instance.mostRecentEnergyDecrease.nextChanged;
@@ -1518,6 +1545,10 @@ public class MenuManager : Singleton<MenuManager>
 
         //Load the menu again
         SceneManager.LoadScene("MenuScene");
+
+        //Reactivate main menu listener
+        MusicManager.Instance.gameObject.GetComponent<AudioListener>().enabled = true;
+
         mainMenu.enabled = true;
         basicSettings.enabled = false;
         advancedSettings.enabled = false;
@@ -1541,6 +1572,7 @@ public class MenuManager : Singleton<MenuManager>
         {
             field.enabled = true;
         }
+        loadBackgroundLater = true;
     }
 
     //Go to credits
@@ -1599,13 +1631,16 @@ public class MenuManager : Singleton<MenuManager>
         //Update saved settings
         PlayerPrefs.SetInt("OutlineType", outlineDropdown.value);
         PlayerPrefs.Save();
+
+        //Update background
+        loadBackgroundLater = true;
     }
 
     //Load background tiles
     private void loadBackground()
     {
         //Set the tiles based on the outline settings
-        localTileManager.PassTiles();
+        localTileManager.Start();
         
         //Sets how much is generated, 15 is just large enough
         TileManager.Instance.size = 15;
@@ -1645,7 +1680,7 @@ public class MenuManager : Singleton<MenuManager>
     //Enter the combined options menus
     public void EnterOptions()
     {
-        optionsmenu.enabled = true;
+        optionsMenu.enabled = true;
         mainMenu.enabled = false;
         EnterControls();
     }
@@ -1653,7 +1688,7 @@ public class MenuManager : Singleton<MenuManager>
     //Exit the combined options menu
     public void ExitOptions()
     {
-        optionsmenu.enabled = false;
+        optionsMenu.enabled = false;
         settingsMenu.enabled = false;
         controlsMenu.enabled = false;
         mainMenu.enabled = true;
@@ -1665,7 +1700,46 @@ public class MenuManager : Singleton<MenuManager>
     {
         helpMenu.enabled = true;
         mainMenu.enabled = false;
+        EnterBuildingInfo();
+    }
+
+    //Enter the section of the help menu with the info about buildings
+    public void EnterBuildingInfo()
+    {
         buildingInfo.enabled = true;
+        enemyInfo.enabled = false;
+        tileInfo.enabled = false;
+        noOutline.enabled = false;
+        thickBlackOutline.enabled = false;
+        thickWhiteOutline.enabled = false;
+        thinBlackOutline.enabled = false;
+        thinWhiteOutline.enabled = false;
+    }
+
+    //Enter the section of the help menu with the info about buildings
+    public void EnterEnemyInfo()
+    {
+        buildingInfo.enabled = false;
+        enemyInfo.enabled = true;
+        tileInfo.enabled = false;
+        noOutline.enabled = false;
+        thickBlackOutline.enabled = false;
+        thickWhiteOutline.enabled = false;
+        thinBlackOutline.enabled = false;
+        thinWhiteOutline.enabled = false;
+    }
+
+    //Enter the section of the help menu with the info about buildings
+    public void EnterTileInfo()
+    {
+        buildingInfo.enabled = false;
+        enemyInfo.enabled = false;
+        tileInfo.enabled = true;
+        noOutline.enabled = GameManager.Instance.outlineType == 0;
+        thinBlackOutline.enabled = GameManager.Instance.outlineType == 1;
+        thinWhiteOutline.enabled = GameManager.Instance.outlineType == 2;
+        thickBlackOutline.enabled = GameManager.Instance.outlineType == 3;
+        thickWhiteOutline.enabled = GameManager.Instance.outlineType == 4;
     }
 
     //Exit help menu
@@ -1674,5 +1748,12 @@ public class MenuManager : Singleton<MenuManager>
         helpMenu.enabled = false;
         mainMenu.enabled = true;
         buildingInfo.enabled = false;
+        enemyInfo.enabled = false;
+        tileInfo.enabled = false;
+        noOutline.enabled = false;
+        thickBlackOutline.enabled = false;
+        thickWhiteOutline.enabled = false;
+        thinBlackOutline.enabled = false;
+        thinWhiteOutline.enabled = false;
     }
 }

@@ -125,7 +125,7 @@ public static class BasicUtils
         LineRenderer lineRenderer = gameObj.AddComponent<LineRenderer>();
 
         //If you want the line to gradually fade, make it do so
-        if(fade)
+        if (fade)
         {
             FadingRenderer fader = gameObj.AddComponent<FadingRenderer>();
             fader.renderer = lineRenderer;

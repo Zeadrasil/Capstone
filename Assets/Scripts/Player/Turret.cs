@@ -82,8 +82,6 @@ public class Turret : PlayerBuilding, IDamager, IUpgradeable
         healthArmorC.enabled = false;
         healthArmorD.enabled = false;
 
-        audioSource.volume = (MusicManager.Instance.masterVolume / 100) * (MusicManager.Instance.sfxVolume / 100);
-
         //Skip applying difficulty modifiers if already applied due to loading
         if (needsDifficultyModifiers)
         {
@@ -372,8 +370,12 @@ public class Turret : PlayerBuilding, IDamager, IUpgradeable
                 //Damage new target if it exists
                 if(target != null)
                 {
+                    audioSource.volume = (MusicManager.Instance.masterVolume / 100) * (MusicManager.Instance.sfxVolume / 100) * (5 / GameManager.Instance.Camera.orthographicSize);
                     audioSource.PlayOneShot(audioSource.clip); Vector2 relative = new Vector2(target.transform.position.x - transform.position.x, target.transform.position.y - transform.position.y);
                     rotationCenter.transform.rotation = Quaternion.AngleAxis(Mathf.Rad2Deg * Mathf.Atan2(relative.y, relative.x), new Vector3(0, 0, 1));
+
+                    //Fire Effects
+                    BasicUtils.DrawLine(damageTip.transform.position, target.transform.position, new Color(0, 1, 1, 0.75f), 0.5f, 0.1f, true);
 
                     //If it is splash hit everything within range
                     if (splash)
@@ -396,14 +398,12 @@ public class Turret : PlayerBuilding, IDamager, IUpgradeable
                     {
                         target.TakeDamage(damage);
                     }
-
-                    //Fire Effects
-                    BasicUtils.DrawLine(damageTip.transform.position, target.transform.position, new Color(0, 1, 1, 0.75f), 0.5f, 0.1f, true);
                 }
                 else
                 {
                     //Stop attacking if it does not exist
                     StopCoroutine(fireCoroutine);
+                    fireCoroutine = null;
                 }
             }
             else
@@ -411,12 +411,14 @@ public class Turret : PlayerBuilding, IDamager, IUpgradeable
                 Vector2 relative = new Vector2(target.transform.position.x - transform.position.x, target.transform.position.y - transform.position.y);
                 rotationCenter.transform.rotation = Quaternion.AngleAxis(Mathf.Rad2Deg * Mathf.Atan2(relative.y, relative.x), new Vector3(0, 0, 1));
 
+                //Fire Effects
+                audioSource.volume = (MusicManager.Instance.masterVolume / 100) * (MusicManager.Instance.sfxVolume / 100) * Mathf.Min(05f * damage / GameManager.Instance.Camera.orthographicSize, 1);
+                audioSource.PlayOneShot(audioSource.clip);
+                BasicUtils.DrawLine(damageTip.transform.position, target.transform.position, new Color(0, 1, 1, 0.75f), 0.5f, 0.1f, true);
+
                 //If it is attack it
                 target.TakeDamage(damage);
 
-                //Fire Effects
-                audioSource.PlayOneShot(audioSource.clip);
-                BasicUtils.DrawLine(damageTip.transform.position, target.transform.position, new Color(0, 1, 1, 0.75f), 0.5f, 0.1f, true);
             }
             //Wait until  time to fire again
             yield return new WaitForSeconds(10 / firerate);

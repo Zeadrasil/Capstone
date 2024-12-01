@@ -36,9 +36,6 @@ public class LocalMenuManager : MonoBehaviour
     //Relay for buttons in main scene to quit the map
     public void Quit()
     {
-        //Save
-        Save();
-
         //Stop music
         MusicManager.Instance.StopBetween();
 
@@ -57,5 +54,15 @@ public class LocalMenuManager : MonoBehaviour
     {
         Quit();
         //MenuManager.Instance.LoadData();
+    }
+
+    //Relay for save and exit
+
+    public void SaveAndExit()
+    {
+        if(FileManager.Instance.Save() == "Save Successful")
+        {
+            Quit();
+        }
     }
 }
