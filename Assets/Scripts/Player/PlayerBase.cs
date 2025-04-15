@@ -114,4 +114,14 @@ public class PlayerBase : PlayerBuilding
     {
         return -1;
     }
+
+    public override string GetDescription()
+    {
+        return "Player Base";
+    }
+
+    public override int GetConstructionType()
+    {
+        return -1;
+    }
 }

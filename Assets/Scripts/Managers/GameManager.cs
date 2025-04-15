@@ -9,36 +9,15 @@ using UnityEngine.Android;
 using UnityEngine.Tilemaps;
 using UnityEngine.UI;
 using static UnityEngine.EventSystems.EventTrigger;
+using static UnityEngine.GraphicsBuffer;
 
 //GameManager manages everything inside the game that is not directly related to the main menu or tiles
 public class GameManager : Singleton<GameManager>
 {
-    //Keeps track of upgrade related data
-    private int selectedUpgrade;
-    private GameObject selectedBuilding;
 
-    //Building array, null because prefabs are not yet passed in when this is created so it need to be done in Initialize()
-    private GameObject[] buildings = null;
-
-    //Other data
-    public PlayerBase PlayerBase;
     public GameObject EnemyCheckpointPrefab;
     public Camera Camera;
     public bool paused;
-
-    //Stores data for building new buildings
-    private GameObject selectedConstruction;
-    private int selectedConstructionIndex;
-
-    //Cost data for new buildings
-    public float[] budgetCosts;
-    public float[] energyCosts;
-
-    public Dictionary<Vector2Int, GameObject> playerBuildings = new Dictionary<Vector2Int, GameObject>();
-    public Dictionary<Vector2Int, float> playerHealths = new Dictionary<Vector2Int, float>();
-    public Dictionary<Vector2Int, float> playerExtractionData = new Dictionary<Vector2Int, float>();
-    public Dictionary<Vector2Int, float> playerDamageData = new Dictionary<Vector2Int, float>();
-    public Dictionary<Vector2Int, float> playerRepairData = new Dictionary<Vector2Int, float>();
 
     //Economy data
     public float budget;
@@ -60,9 +39,6 @@ public class GameManager : Singleton<GameManager>
     //Stores checkpoints so that they can be culled for the new wave
     public List<GameObject> checkpoints = new List<GameObject>();
     public bool betweenWaves = true;
-
-    //Stores TileManager instance because it is used very often and this is shorter to type
-    private TileManager tileManager;
 
     //Stores max enemies so that progress towards completion can be stored
     int maxEnemiesThisWave;
@@ -95,18 +71,6 @@ public class GameManager : Singleton<GameManager>
     public KeyCode confirmKey = KeyCode.Return;
 
     public TMP_Text nextWaveLabel;
-
-    //Building prefabs
-    public GameObject turretTierOne;
-    public GameObject turretTierTwo;
-    public GameObject turretTierThree;
-    public GameObject repairTierOne;
-    public GameObject repairTierTwo;
-    public GameObject wallTierOne;
-    public GameObject wallTierTwo;
-    public GameObject extractorTierOne;
-    public GameObject extractorTierTwo;
-    public GameObject extractorTierThree;
 
     //Enemy prefabs
     public GameObject baseEnemy;
@@ -334,7 +298,7 @@ public class GameManager : Singleton<GameManager>
     //Sets the TileManager instance
     void Start()
     {
-        tileManager = TileManager.Instance;
+
     }
 
     public void Initialize(int simplifiedSeed, float enemyDifficulty, float playerPower, float playerEconomy)
@@ -362,47 +326,35 @@ public class GameManager : Singleton<GameManager>
 
         //Sets defaults
         wave = 0;
-        budgetCosts = new float[] { 10, 15, 25, 10, 15, 5, 7.5f, 10, 15, 25 };
-        energyCosts = new float[] { 1, 1, 1, 1, 1, 0, 0, 1, 1, 1 };
         energy = 10;
         maxEnemiesThisWave = 1;
         usedEnergy = 0;
         income = 0;
         energyDeficit = 0;
         mostRecentEnergyDecrease = null;
-        playerBuildings.Clear();
         paused = false;
-        selectedUpgrade = 0;
-        selectedConstructionIndex = -1;
-        selectedBuilding = null;
-        selectedConstruction = null;
         budget = 100;
 
 
         //Generates the map seeds if applicable
         if (generateSeeds)
         {
-            tileManager.seedA = ((uint)BasicUtils.WrappedRandomRange(int.MinValue, int.MaxValue)) + int.MaxValue;
-            tileManager.seedB = ((uint)BasicUtils.WrappedRandomRange(int.MinValue, int.MaxValue)) + int.MaxValue;
-            tileManager.seedC = ((uint)BasicUtils.WrappedRandomRange(int.MinValue, int.MaxValue)) + int.MaxValue;
-            tileManager.seedD = ((uint)BasicUtils.WrappedRandomRange(int.MinValue, int.MaxValue)) + int.MaxValue;
-            tileManager.seedE = ((uint)BasicUtils.WrappedRandomRange(int.MinValue, int.MaxValue)) + int.MaxValue;
-            tileManager.seedF = ((uint)BasicUtils.WrappedRandomRange(int.MinValue, int.MaxValue)) + int.MaxValue;
-            tileManager.seedG = ((uint)BasicUtils.WrappedRandomRange(int.MinValue, int.MaxValue)) + int.MaxValue;
-            tileManager.seedH = ((uint)BasicUtils.WrappedRandomRange(int.MinValue, int.MaxValue)) + int.MaxValue;
-            tileManager.seedI = ((uint)BasicUtils.WrappedRandomRange(int.MinValue, int.MaxValue)) + int.MaxValue;
+            TileManager.Instance.seedA = ((uint)BasicUtils.WrappedRandomRange(int.MinValue, int.MaxValue)) + int.MaxValue;
+            TileManager.Instance.seedB = ((uint)BasicUtils.WrappedRandomRange(int.MinValue, int.MaxValue)) + int.MaxValue;
+            TileManager.Instance.seedC = ((uint)BasicUtils.WrappedRandomRange(int.MinValue, int.MaxValue)) + int.MaxValue;
+            TileManager.Instance.seedD = ((uint)BasicUtils.WrappedRandomRange(int.MinValue, int.MaxValue)) + int.MaxValue;
+            TileManager.Instance.seedE = ((uint)BasicUtils.WrappedRandomRange(int.MinValue, int.MaxValue)) + int.MaxValue;
+            TileManager.Instance.seedF = ((uint)BasicUtils.WrappedRandomRange(int.MinValue, int.MaxValue)) + int.MaxValue;
+            TileManager.Instance.seedG = ((uint)BasicUtils.WrappedRandomRange(int.MinValue, int.MaxValue)) + int.MaxValue;
+            TileManager.Instance.seedH = ((uint)BasicUtils.WrappedRandomRange(int.MinValue, int.MaxValue)) + int.MaxValue;
+            TileManager.Instance.seedI = ((uint)BasicUtils.WrappedRandomRange(int.MinValue, int.MaxValue)) + int.MaxValue;
         }
 
         //Modifies starting values by the difficulty modifiers
         budget *= playerIncome;
         energy *= energyProduction;
 
-        //Modifies building costs by difficulty modifier
-        for (int i = 0; i < budgetCosts.Length; i++)
-        {
-            budgetCosts[i] *= playerCosts;
-            energyCosts[i] *= energyConsumption;
-        }
+        BuildingManager.Instance.MidInit(playerCosts, energyConsumption);
 
         //Calls common initialization events
         Initialize();
@@ -472,16 +424,16 @@ public class GameManager : Singleton<GameManager>
     {
         //Load seed data
         simplifiedSeed = data.simplifiedSeed;
-        tileManager.seedA = data.seedA;
-        tileManager.seedB = data.seedB;
-        tileManager.seedC = data.seedC;
-        tileManager.seedD = data.seedD;
-        tileManager.seedE = data.seedE;
-        tileManager.seedF = data.seedF;
-        tileManager.seedG = data.seedG;
-        tileManager.seedH = data.seedH;
-        tileManager.seedI = data.seedI;
-        tileManager.size = data.startSize;
+        TileManager.Instance.seedA = data.seedA;
+        TileManager.Instance.seedB = data.seedB;
+        TileManager.Instance.seedC = data.seedC;
+        TileManager.Instance.seedD = data.seedD;
+        TileManager.Instance.seedE = data.seedE;
+        TileManager.Instance.seedF = data.seedF;
+        TileManager.Instance.seedG = data.seedG;
+        TileManager.Instance.seedH = data.seedH;
+        TileManager.Instance.seedI = data.seedI;
+        TileManager.Instance.size = data.startSize;
         expansionRate = data.expansionRate;
 
         //Load difficulty settings
@@ -500,17 +452,10 @@ public class GameManager : Singleton<GameManager>
         usedEnergy = 0;
         income = 0;
         energyDeficit = 0;
-        playerBuildings.Clear();
         paused = false;
-        selectedUpgrade = 0;
-        selectedConstructionIndex = -1;
-        selectedBuilding = null;
-        selectedConstruction = null;
 
         //Load economic data
         budget = data.budget;
-        budgetCosts = data.budgetCosts;
-        energyCosts = data.energyCosts;
 
         //Initiate RNG and move it to the appropriate RNG stream position
         BasicUtils.WrappedInitState(simplifiedSeed);
@@ -522,45 +467,22 @@ public class GameManager : Singleton<GameManager>
 
         //Load other data
         wave = data.wave;
-        tileManager.subbedTiles = new List<Vector2Int>(data.swappedTiles);
+        TileManager.Instance.subbedTiles = new List<Vector2Int>(data.swappedTiles);
         
         //Ensure that all tiles have been generated properly
         for(int i = 0; i < wave * expansionRate; i++)
         {
-            tileManager.Next();
+            TileManager.Instance.Next();
         }
 
         //Ensure that all subbed tiles have been properly placed
-        foreach(Vector2Int tile in tileManager.subbedTiles)
+        foreach(Vector2Int tile in TileManager.Instance.subbedTiles)
         {
-            tileManager.Generate(tile);
+            TileManager.Instance.Generate(tile);
         }
 
-        mostRecentEnergyDecrease = PlayerBase;
-        BuildingData[] buildingDataArray = data.buildings;
-
-        //Go through all of the loaded buildings in order to place them on the map
-        foreach (BuildingData buildingData in buildingDataArray)
-        {
-            //Create the gameObject and get the building from it
-            GameObject go = Instantiate(buildings[buildingData.type + buildingData.maxAlignments], tileManager.TraversableTilemap.CellToWorld(new Vector3Int(buildingData.location.x, buildingData.location.y)), Quaternion.identity);
-            PlayerBuilding pb = go.GetComponentInChildren<PlayerBuilding>();
-
-            //Add to the very end of enabling queue
-                PlayerBuilding holder = mostRecentEnergyDecrease;
-            while (holder.nextChanged != null)
-            {
-                holder = holder.nextChanged;
-            }
-            holder.nextChanged = pb;
-            pb.previousChanged = holder;
-
-            //Load saved data
-            pb.LoadData(buildingData);
-
-            //Add to the tracked building dictionary
-            playerBuildings.Add(buildingData.location, go);
-        }
+        mostRecentEnergyDecrease = BuildingManager.Instance.PlayerBase;
+        BuildingManager.Instance.InitializeLoad(data);
         //updateEnergy();
     }
 
@@ -626,18 +548,15 @@ public class GameManager : Singleton<GameManager>
         //Ensure that wave background indicates that you can start a new wave
         nextWaveBackground.color = new Color(availableColor.x, availableColor.y, availableColor.z);
 
-        //Sets the buildings array since the data has now been passed in
-        buildings = new GameObject[] { turretTierOne, turretTierTwo, turretTierThree, repairTierOne, repairTierTwo, wallTierOne, wallTierTwo, extractorTierOne, extractorTierTwo, extractorTierThree};
-
         betweenWaves = true;
 
         //Initialize the tilemanager for the same reason that this needs to be initialized
         TileManager.Instance.Initialize();
 
         //Sets the player base as the first item that is affecting energy
-        mostRecentEnergyDecrease = PlayerBase;
-        playerBuildings.Clear();
-        playerBuildings.Add(new Vector2Int(0, 0), PlayerBase.gameObject);
+        mostRecentEnergyDecrease = BuildingManager.Instance.PlayerBase;
+
+        BuildingManager.Instance.Initialize();
     }
 
     //Start a new wave
@@ -888,340 +807,92 @@ public class GameManager : Singleton<GameManager>
         tierThreeExtractorFrame.color = type == 9 ? selectedColor : unselectedColor;
         nextWaveFrame.color = type == 10 ? selectedColor : unselectedColor;
 
-        //Ensure that stored data is the same as the new type
-        selectedConstructionIndex = type;
+        BuildingManager.Instance.Build(type);
 
-        //Ensure that upgrades get cleared
-        selectedBuilding = null;
-        standardUpgradeEvents();
-
-        //Clear construction data
-        standardConstructionEvents();
-        //Do not try to instantiate a new wave or no selection
-        if (type != -1 && type != 10 && budget >= budgetCosts[type] && buildings[type] != null && betweenWaves)
-        {
-            //Create a building that will track your cursor to show what it will look like when you place it
-            selectedConstruction = Instantiate(buildings[type]);
-
-            //Ensures that there is no functionality to the building tracker
-            Destroy(selectedConstruction.GetComponentInChildren<PlayerBuilding>());
-        }
-        else if (type != 10 && type != -1)
-        {
-            Build(-1);
-        }
     }
 
-    //Clear out construction data
-    private void standardConstructionEvents()
+    public void OpenWindow(int type, PlayerBuilding building)
     {
-        //If a building is already being previewed, destroy it
-        if (selectedConstruction != null)
+        switch(type)
         {
-            Destroy(selectedConstruction);
-        }
-        //Set the building to null in order to ensure that there are no accidental references
-        selectedBuilding = null;
-    }
+            case 0:
+                {
+                    //Enables the turret upgrade window
+                    TurretUpgradeWindow.enabled = true;
 
-    //Updates the upgrade windows
-    private void standardUpgradeEvents()
-    {
-        //If no building is selected to upgrade, close the windows
-        if(selectedBuilding == null)
-        {
-            TurretUpgradeWindow.enabled = false;
-            RepairUpgradeWindow.enabled = false;
-            WallUpgradeWindow.enabled = false;
-            ExtractorUpgradeWindow.enabled = false;
-            SellWindow.enabled = false;
-        }
-        else
-        {
-            //Open the sell window
-            SellWindow.enabled = true;
+                    //Writes the description so you know what you have selected
+                    turretDescriptionText.text = building.GetDescription();
 
-            //Identifies what type of building you selected
-            Turret turret = selectedBuilding.GetComponentInChildren<Turret>();
-            if (turret != null)
-            {
-                //Enables the turret upgrade window
-                TurretUpgradeWindow.enabled = true;
-
-                //Writes the description so you know what you have selected
-                turretDescriptionText.text = turret.GetDescription();
-
-                //Ensures that all of the upgrade panels have accurate information
-                updateUpgradeCost(0, 0);
-                updateUpgradeCost(0, 1);
-                updateUpgradeCost(0, 2);
-                updateUpgradeCost(0, 3);
-                updateUpgradeCost(0, 4);
-            }
-            else
-            {
-                RepairStation repair = selectedBuilding.GetComponentInChildren<RepairStation>();
-                if (repair != null)
+                    //Ensures that all of the upgrade panels have accurate information
+                    UpdateUpgradeCost(0, 0);
+                    UpdateUpgradeCost(0, 1);
+                    UpdateUpgradeCost(0, 2);
+                    UpdateUpgradeCost(0, 3);
+                    UpdateUpgradeCost(0, 4);
+                    break;
+                }
+            case 1:
                 {
                     //Enables the repair station upgrade window
                     RepairUpgradeWindow.enabled = true;
 
                     //Writes the description so that you know what you have selected
-                    repairDescriptionText.text = repair.GetDescription();
+                    repairDescriptionText.text = building.GetDescription();
 
                     //Ensures that all of the upgrade panels have accurate information
-                    updateUpgradeCost(1, 0);
-                    updateUpgradeCost(1, 1);
-                    updateUpgradeCost(1, 2);
+                    UpdateUpgradeCost(1, 0);
+                    UpdateUpgradeCost(1, 1);
+                    UpdateUpgradeCost(1, 2);
+                    break;
                 }
-                else
-                {
-                    Wall wall = selectedBuilding.GetComponentInChildren<Wall>();
-                    if (wall != null)
-                    {
-                        //Enables the wall upgrade window
-                        WallUpgradeWindow.enabled = true;
-
-                        //Writes the description so that you know what you have selected
-                        wallDescriptionText.text = wall.GetDescription();
-
-                        //Ensures that all of the upgrade panels have accurate information
-                        updateUpgradeCost(2, 0);
-                        updateUpgradeCost(2, 1);
-                    }
-                    else
-                    {
-                        ResourceExtractor extractor = selectedBuilding.GetComponentInChildren<ResourceExtractor>();
-                        if(extractor != null)
-                        {
-                            //Enables the extractor upgrade window
-                            ExtractorUpgradeWindow.enabled = true;
-
-                            //Writes the description so that you know what you have selected
-                            extractorDescriptionText.text = extractor.GetDescription();
-
-                            //Ensures that all of the upgrade panels have accurate information
-                            updateUpgradeCost(3, 0);
-                            updateUpgradeCost(3, 1);
-                            updateUpgradeCost(3, 2);
-                            updateUpgradeCost(3, 3);
-                        }
-                        else
-                        {
-                            SellWindow.enabled = false;
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    //Upgrade a building
-    public void UpgradeBuilding(int type, int upgrade)
-    {
-        //Ensures that selection is up to date
-        selectedUpgrade = upgrade;
-        updateSelection();
-
-        //Gets the building to upgrade
-        IUpgradeable subject = selectedBuilding.GetComponentInChildren<IUpgradeable>();
-
-        //Ensure that alignment is finished processing
-        if (subject.IsAligned())
-        {
-            //Ensures tht you can afford the upgrade
-            if (budget >= subject.GetUpgradeCost(upgrade))
-            {
-                //Upgrade the building with the desired upgrade
-                subject.Upgrade(upgrade);
-
-                //Update the panel to show the new data
-                updateUpgradeCost(type, upgrade);
-            }
-        }
-        //If it is not, then this is going to be where it gets aligned
-        else
-        {
-            //Identify how many upgrades you will need to update after alignment
-            int maxTypes = 0;
-            switch(type)
-            {
-                case 0:
-                    {
-                        maxTypes = 5;
-                        break;
-                    }
-                case 1:
-                    {
-                        maxTypes = 3;
-                        break;
-                    }
-                case 2:
-                    {
-                        maxTypes = 2;
-                        break;
-                    }
-                case 3:
-                    {
-                        maxTypes = 4;
-                        break;
-                    }
-                default:
-                    {
-                        maxTypes = 0;
-                        break;
-                    }
-
-            }
-            //Align the building
-            subject.Align(upgrade);
-
-            //Update upgrades
-            for(int i = 0; i < maxTypes; i++)
-            {
-                updateUpgradeCost(type, i);
-            }
-        }
-    }
-
-    //Find if a spot is a valid place to put a given building
-    private bool checkPlacement(Vector2Int location)
-    {
-        //Use a switch depending on type of building
-        switch(selectedConstructionIndex)
-        {
-            //Turrets
-            case 0:
-            case 1:
             case 2:
                 {
-                    return tileManager.Check(location) >= tileManager.traversableCutoff && tileManager.CheckResource(location) < tileManager.resourceCutoff && !playerBuildings.ContainsKey(location);
+                    //Enables the wall upgrade window
+                    WallUpgradeWindow.enabled = true;
+
+                    //Writes the description so that you know what you have selected
+                    wallDescriptionText.text = building.GetDescription();
+
+                    //Ensures that all of the upgrade panels have accurate information
+                    UpdateUpgradeCost(2, 0);
+                    UpdateUpgradeCost(2, 1);
+                    break;
                 }
-            //Repair Stations
             case 3:
+                {
+                    //Enables the extractor upgrade window
+                    ExtractorUpgradeWindow.enabled = true;
+
+                    //Writes the description so that you know what you have selected
+                    extractorDescriptionText.text = building.GetDescription();
+
+                    //Ensures that all of the upgrade panels have accurate information
+                    UpdateUpgradeCost(3, 0);
+                    UpdateUpgradeCost(3, 1);
+                    UpdateUpgradeCost(3, 2);
+                    UpdateUpgradeCost(3, 3);
+                    break;
+                }
             case 4:
                 {
-                    return tileManager.CheckResource(location) < tileManager.resourceCutoff && !playerBuildings.ContainsKey(location);
+                    SellWindow.enabled = true;
+                    break;
                 }
-            //Walls
-            case 5:
-            case 6:
-                {
-                    return tileManager.Check(location) >= tileManager.traversableCutoff && tileManager.CheckResource(location) < tileManager.resourceCutoff && !playerBuildings.ContainsKey(location);
-                }
-            //Resource Extractors
-            case 7:
-            case 8:
-            case 9:
-                {
-                    return tileManager.CheckResource(location) >= tileManager.resourceCutoff && !playerBuildings.ContainsKey(location);
-                }
-            //If none of these, it is not a valid building so you cannot place it
             default:
-                return false;
+                {
+                    TurretUpgradeWindow.enabled = false;
+                    RepairUpgradeWindow.enabled = false;
+                    WallUpgradeWindow.enabled = false;
+                    ExtractorUpgradeWindow.enabled = false;
+                    SellWindow.enabled = false;
+                    break;
+                }
         }
     }
 
-    //Build a building
-    private void placeBuilding(Vector2Int hoveredTile)
-    {
-        //Stores the created building
-        GameObject go;
-        
-        //Creates the selected building
-        switch(selectedConstructionIndex)
-        {
-            //Tier One Turret
-            case 0:
-                {
-                    go = Instantiate(turretTierOne, tileManager.TraversableTilemap.CellToWorld(new Vector3Int(hoveredTile.x, hoveredTile.y)), Quaternion.identity);
-                    break;
-                }
-            //Tier Two Turret
-            case 1:
-                {
-                    go = Instantiate(turretTierTwo, tileManager.TraversableTilemap.CellToWorld(new Vector3Int(hoveredTile.x, hoveredTile.y)), Quaternion.identity);
-                    break;
-                }
-            //Tier Three Turret
-            case 2:
-                {
-                    go = Instantiate(turretTierThree, tileManager.TraversableTilemap.CellToWorld(new Vector3Int(hoveredTile.x, hoveredTile.y)), Quaternion.identity);
-                    break;
-                }
-            //Tier One Repair Station
-            case 3:
-                {
-                    go = Instantiate(repairTierOne, tileManager.TraversableTilemap.CellToWorld(new Vector3Int(hoveredTile.x, hoveredTile.y)), Quaternion.identity);
-                    break;
-                }
-            //Tier Two Repair Station
-            case 4:
-                {
-                    go = Instantiate(repairTierTwo, tileManager.TraversableTilemap.CellToWorld(new Vector3Int(hoveredTile.x, hoveredTile.y)), Quaternion.identity);
-                    break;
-                }
-            //Tier One Wall
-            case 5:
-                {
-                    go = Instantiate(wallTierOne, tileManager.TraversableTilemap.CellToWorld(new Vector3Int(hoveredTile.x, hoveredTile.y)), Quaternion.identity);
-                    break;
-                }
-            //Tier Two Wall
-            case 6:
-                {
-                    go = Instantiate(wallTierTwo, tileManager.TraversableTilemap.CellToWorld(new Vector3Int(hoveredTile.x, hoveredTile.y)), Quaternion.identity);
-                    break;
-                }
-            //Tier One Resource Extractor
-            case 7:
-                {
-                    go = Instantiate(extractorTierOne, tileManager.TraversableTilemap.CellToWorld(new Vector3Int(hoveredTile.x, hoveredTile.y)), Quaternion.identity);
-                    break;
-                }
-            //Tier Two Resource Extractor
-            case 8:
-                {
-                    go = Instantiate(extractorTierTwo, tileManager.TraversableTilemap.CellToWorld(new Vector3Int(hoveredTile.x, hoveredTile.y)), Quaternion.identity);
-                    break;
-                }
-            //Tier Three Resource Extractor
-            case 9:
-                {
-                    go = Instantiate(extractorTierThree, tileManager.TraversableTilemap.CellToWorld(new Vector3Int(hoveredTile.x, hoveredTile.y)), Quaternion.identity);
-                    break;
-                }
-            //Not a valid building, so just skip the rest
-            default:
-                return;
-        }
-        //Sets the building information
-        PlayerBuilding pb = go.GetComponentInChildren<PlayerBuilding>();
-        pb.location = hoveredTile;
-        pb.cost = budgetCosts[selectedConstructionIndex];
-
-        //Add to the very end of enabling queue
-        PlayerBuilding holder = mostRecentEnergyDecrease;
-        while (holder.nextChanged != null)
-        {
-            holder = holder.nextChanged;
-        }
-        holder.nextChanged = pb;
-        pb.previousChanged = holder;
-
-        //Energy management
-        pb.energyCost = energyCosts[pb.GetBuildingType()];
-        energyCosts[pb.GetBuildingType()] += pb.GetBuildingType() == 5 || pb.GetBuildingType() == 6 ? 0 :energyConsumption * 0.5f;
-        energyDeficit += pb.Disable();
-        ChangeEnergyUsage(pb.energyCost);
-
-        //Add to the tracked building dictionary
-        playerBuildings.Add(hoveredTile, go);
-        MusicManager.Instance.PlayClick();
-    }
-
+    
     //Changes the panel to reflect accurate building data
-    private void updateUpgradeCost(int buildingType, int upgradeType)
+    public void UpdateUpgradeCost(int buildingType, int upgradeType)
     {
         //Ensures that it is updating the correct building type's panel
         switch(buildingType)
@@ -1230,7 +901,7 @@ public class GameManager : Singleton<GameManager>
             case 0:
                 {
                     //Grabs the exact turret that you want to get data from
-                    Turret turret = selectedBuilding.GetComponentInChildren<Turret>();
+                    Turret turret = BuildingManager.Instance.selectedBuilding.GetComponentInChildren<Turret>();
 
                     //Switch based on the specific data you want to update
                     switch(upgradeType)
@@ -1273,7 +944,7 @@ public class GameManager : Singleton<GameManager>
             case 1:
                 {
                     //Grabs the exact repair station that you want to get data from
-                    RepairStation repairStation = selectedBuilding.GetComponentInChildren<RepairStation>();
+                    RepairStation repairStation = BuildingManager.Instance.selectedBuilding.GetComponentInChildren<RepairStation>();
 
                     //Switch based on the specific data you want to update
                     switch(upgradeType)
@@ -1303,7 +974,7 @@ public class GameManager : Singleton<GameManager>
             case 2:
                 {
                     //Grabs the exact wall you want to get data from
-                    Wall wall = selectedBuilding.GetComponentInChildren<Wall>();
+                    Wall wall = BuildingManager.Instance.selectedBuilding.GetComponentInChildren<Wall>();
 
                     //Only two upgrade options, so I am using an if instead of a switch
                     //Health
@@ -1322,7 +993,7 @@ public class GameManager : Singleton<GameManager>
             case 3:
                 {
                     //Grabs the exact extractor that you want to get data from
-                    ResourceExtractor extractor = selectedBuilding.GetComponentInChildren<ResourceExtractor>();
+                    ResourceExtractor extractor = BuildingManager.Instance.selectedBuilding.GetComponentInChildren<ResourceExtractor>();
 
                     //Switch based on the specific data you want to update
                     switch (upgradeType)
@@ -1358,48 +1029,48 @@ public class GameManager : Singleton<GameManager>
     }
 
     //Updates the upgrade panels to show which upgrade you have selected
-    private void updateSelection()
+    public void UpdateSelection(int selection, GameObject building)
     {
         //Identifies type of building you are upgrading
-        Turret turret = selectedBuilding.GetComponentInChildren<Turret>();
+        Turret turret = building.GetComponentInChildren<Turret>();
         if (turret != null)
         {
             //Goes through all of the turret upgrade panel frames and sets them to the appropriate color
-            turretSplashFrame.color = selectedUpgrade == 0 ? selectedColor : unselectedColor;
-            turretRangeFrame.color = selectedUpgrade == 1 ? selectedColor : unselectedColor;
-            turretDamageFrame.color = selectedUpgrade == 2 ? selectedColor : unselectedColor;
-            turretFirerateFrame.color = selectedUpgrade == 3 ? selectedColor : unselectedColor;
-            turretHealthFrame.color = selectedUpgrade == 4 ? selectedColor : unselectedColor;
+            turretSplashFrame.color = selection == 0 ? selectedColor : unselectedColor;
+            turretRangeFrame.color = selection == 1 ? selectedColor : unselectedColor;
+            turretDamageFrame.color = selection == 2 ? selectedColor : unselectedColor;
+            turretFirerateFrame.color = selection == 3 ? selectedColor : unselectedColor;
+            turretHealthFrame.color = selection == 4 ? selectedColor : unselectedColor;
         }
         else
         {
-            RepairStation repair = selectedBuilding.GetComponentInChildren<RepairStation>();
+            RepairStation repair = building.GetComponentInChildren<RepairStation>();
             if (repair != null)
             {
                 //Goes through all of the repair station upgrade panel frames and sets them to the appropriate color
-                repairRangeFrame.color = selectedUpgrade == 0 ? selectedColor : unselectedColor;
-                repairHealingFrame.color = selectedUpgrade == 1 ? selectedColor : unselectedColor;
-                repairHealthFrame.color = selectedUpgrade == 2 ? selectedColor : unselectedColor;
+                repairRangeFrame.color = selection == 0 ? selectedColor : unselectedColor;
+                repairHealingFrame.color = selection == 1 ? selectedColor : unselectedColor;
+                repairHealthFrame.color = selection == 2 ? selectedColor : unselectedColor;
             }
             else
             {
-                Wall wall = selectedBuilding.GetComponentInChildren<Wall>();
+                Wall wall = building.GetComponentInChildren<Wall>();
                 if (wall != null)
                 {
                     //Goes through all of the wall upgrade panel frames and sets them to the appropriate color
-                    wallHealthFrame.color = selectedUpgrade == 0 ? selectedColor : unselectedColor;
-                    wallHealingFrame.color = selectedUpgrade == 1 ? selectedColor : unselectedColor;
+                    wallHealthFrame.color = selection == 0 ? selectedColor : unselectedColor;
+                    wallHealingFrame.color = selection == 1 ? selectedColor : unselectedColor;
                 }
                 else
                 {
-                    ResourceExtractor extractor = selectedBuilding.GetComponentInChildren<ResourceExtractor>();
+                    ResourceExtractor extractor = building.GetComponentInChildren<ResourceExtractor>();
                     if(extractor != null)
                     {
                         //Goes through all of the extractor upgrade panel frames and sets them to the appropriate color
-                        extractorExtractionFrame.color = selectedUpgrade == 0 ? selectedColor : unselectedColor;
-                        extractorEnergyFrame.color = selectedUpgrade == 1 ? selectedColor : unselectedColor;
-                        extractorProtectionFrame.color = selectedUpgrade == 2 ? selectedColor : unselectedColor;
-                        extractorHealthFrame.color = selectedUpgrade == 3 ? selectedColor : unselectedColor;
+                        extractorExtractionFrame.color = selection == 0 ? selectedColor : unselectedColor;
+                        extractorEnergyFrame.color = selection == 1 ? selectedColor : unselectedColor;
+                        extractorProtectionFrame.color = selection == 2 ? selectedColor : unselectedColor;
+                        extractorHealthFrame.color = selection == 3 ? selectedColor : unselectedColor;
                     }
                 }
             }
@@ -1414,22 +1085,22 @@ public class GameManager : Singleton<GameManager>
         if (active)
         {
             //Sets the colors of the backgrounds to show you how close you are to being able to afford them
-            tierOneTurretBackground.color = new Color(Mathf.Lerp(unavailableColor.x, availableColor.x, Mathf.Clamp(budget / budgetCosts[0], 0, 1)), Mathf.Lerp(unavailableColor.y, availableColor.y, Mathf.Clamp(budget / budgetCosts[0], 0, 1)), Mathf.Lerp(unavailableColor.z, availableColor.z, Mathf.Clamp(budget / budgetCosts[0], 0, 1)));
-            tierTwoTurretBackground.color = new Color(Mathf.Lerp(unavailableColor.x, availableColor.x, Mathf.Clamp(budget / budgetCosts[1], 0, 1)), Mathf.Lerp(unavailableColor.y, availableColor.y, Mathf.Clamp(budget / budgetCosts[1], 0, 1)), Mathf.Lerp(unavailableColor.z, availableColor.z, Mathf.Clamp(budget / budgetCosts[1], 0, 1)));
-            tierThreeTurretBackground.color = new Color(Mathf.Lerp(unavailableColor.x, availableColor.x, Mathf.Clamp(budget / budgetCosts[2], 0, 1)), Mathf.Lerp(unavailableColor.y, availableColor.y, Mathf.Clamp(budget / budgetCosts[2], 0, 1)), Mathf.Lerp(unavailableColor.z, availableColor.z, Mathf.Clamp(budget / budgetCosts[2], 0, 1)));
-            tierOneRepairBackground.color = new Color(Mathf.Lerp(unavailableColor.x, availableColor.x, Mathf.Clamp(budget / budgetCosts[3], 0, 1)), Mathf.Lerp(unavailableColor.y, availableColor.y, Mathf.Clamp(budget / budgetCosts[3], 0, 1)), Mathf.Lerp(unavailableColor.z, availableColor.z, Mathf.Clamp(budget / budgetCosts[3], 0, 1)));
-            tierTwoRepairBackground.color = new Color(Mathf.Lerp(unavailableColor.x, availableColor.x, Mathf.Clamp(budget / budgetCosts[4], 0, 1)), Mathf.Lerp(unavailableColor.y, availableColor.y, Mathf.Clamp(budget / budgetCosts[4], 0, 1)), Mathf.Lerp(unavailableColor.z, availableColor.z, Mathf.Clamp(budget / budgetCosts[4], 0, 1)));
-            tierOneWallBackground.color = new Color(Mathf.Lerp(unavailableColor.x, availableColor.x, Mathf.Clamp(budget / budgetCosts[5], 0, 1)), Mathf.Lerp(unavailableColor.y, availableColor.y, Mathf.Clamp(budget / budgetCosts[5], 0, 1)), Mathf.Lerp(unavailableColor.z, availableColor.z, Mathf.Clamp(budget / budgetCosts[5], 0, 1)));
-            tierTwoWallBackground.color = new Color(Mathf.Lerp(unavailableColor.x, availableColor.x, Mathf.Clamp(budget / budgetCosts[6], 0, 1)), Mathf.Lerp(unavailableColor.y, availableColor.y, Mathf.Clamp(budget / budgetCosts[6], 0, 1)), Mathf.Lerp(unavailableColor.z, availableColor.z, Mathf.Clamp(budget / budgetCosts[6], 0, 1)));
-            tierOneExtractorBackground.color = new Color(Mathf.Lerp(unavailableColor.x, availableColor.x, Mathf.Clamp(budget / budgetCosts[7], 0, 1)), Mathf.Lerp(unavailableColor.y, availableColor.y, Mathf.Clamp(budget / budgetCosts[7], 0, 1)), Mathf.Lerp(unavailableColor.z, availableColor.z, Mathf.Clamp(budget / budgetCosts[7], 0, 1)));
-            tierTwoExtractorBackground.color = new Color(Mathf.Lerp(unavailableColor.x, availableColor.x, Mathf.Clamp(budget / budgetCosts[8], 0, 1)), Mathf.Lerp(unavailableColor.y, availableColor.y, Mathf.Clamp(budget / budgetCosts[8], 0, 1)), Mathf.Lerp(unavailableColor.z, availableColor.z, Mathf.Clamp(budget / budgetCosts[8], 0, 1)));
-            tierThreeExtractorBackground.color = new Color(Mathf.Lerp(unavailableColor.x, availableColor.x, Mathf.Clamp(budget / budgetCosts[9], 0, 1)), Mathf.Lerp(unavailableColor.y, availableColor.y, Mathf.Clamp(budget / budgetCosts[9], 0, 1)), Mathf.Lerp(unavailableColor.z, availableColor.z, Mathf.Clamp(budget / budgetCosts[9], 0, 1)));
+            tierOneTurretBackground.color = new Color(Mathf.Lerp(unavailableColor.x, availableColor.x, Mathf.Clamp(budget / BuildingManager.Instance.budgetCosts[0], 0, 1)), Mathf.Lerp(unavailableColor.y, availableColor.y, Mathf.Clamp(budget / BuildingManager.Instance.budgetCosts[0], 0, 1)), Mathf.Lerp(unavailableColor.z, availableColor.z, Mathf.Clamp(budget / BuildingManager.Instance.budgetCosts[0], 0, 1)));
+            tierTwoTurretBackground.color = new Color(Mathf.Lerp(unavailableColor.x, availableColor.x, Mathf.Clamp(budget / BuildingManager.Instance.budgetCosts[1], 0, 1)), Mathf.Lerp(unavailableColor.y, availableColor.y, Mathf.Clamp(budget / BuildingManager.Instance.budgetCosts[1], 0, 1)), Mathf.Lerp(unavailableColor.z, availableColor.z, Mathf.Clamp(budget / BuildingManager.Instance.budgetCosts[1], 0, 1)));
+            tierThreeTurretBackground.color = new Color(Mathf.Lerp(unavailableColor.x, availableColor.x, Mathf.Clamp(budget / BuildingManager.Instance.budgetCosts[2], 0, 1)), Mathf.Lerp(unavailableColor.y, availableColor.y, Mathf.Clamp(budget / BuildingManager.Instance.budgetCosts[2], 0, 1)), Mathf.Lerp(unavailableColor.z, availableColor.z, Mathf.Clamp(budget / BuildingManager.Instance.budgetCosts[2], 0, 1)));
+            tierOneRepairBackground.color = new Color(Mathf.Lerp(unavailableColor.x, availableColor.x, Mathf.Clamp(budget / BuildingManager.Instance.budgetCosts[3], 0, 1)), Mathf.Lerp(unavailableColor.y, availableColor.y, Mathf.Clamp(budget / BuildingManager.Instance.budgetCosts[3], 0, 1)), Mathf.Lerp(unavailableColor.z, availableColor.z, Mathf.Clamp(budget / BuildingManager.Instance.budgetCosts[3], 0, 1)));
+            tierTwoRepairBackground.color = new Color(Mathf.Lerp(unavailableColor.x, availableColor.x, Mathf.Clamp(budget / BuildingManager.Instance.budgetCosts[4], 0, 1)), Mathf.Lerp(unavailableColor.y, availableColor.y, Mathf.Clamp(budget / BuildingManager.Instance.budgetCosts[4], 0, 1)), Mathf.Lerp(unavailableColor.z, availableColor.z, Mathf.Clamp(budget / BuildingManager.Instance.budgetCosts[4], 0, 1)));
+            tierOneWallBackground.color = new Color(Mathf.Lerp(unavailableColor.x, availableColor.x, Mathf.Clamp(budget / BuildingManager.Instance.budgetCosts[5], 0, 1)), Mathf.Lerp(unavailableColor.y, availableColor.y, Mathf.Clamp(budget / BuildingManager.Instance.budgetCosts[5], 0, 1)), Mathf.Lerp(unavailableColor.z, availableColor.z, Mathf.Clamp(budget / BuildingManager.Instance.budgetCosts[5], 0, 1)));
+            tierTwoWallBackground.color = new Color(Mathf.Lerp(unavailableColor.x, availableColor.x, Mathf.Clamp(budget / BuildingManager.Instance.budgetCosts[6], 0, 1)), Mathf.Lerp(unavailableColor.y, availableColor.y, Mathf.Clamp(budget / BuildingManager.Instance.budgetCosts[6], 0, 1)), Mathf.Lerp(unavailableColor.z, availableColor.z, Mathf.Clamp(budget / BuildingManager.Instance.budgetCosts[6], 0, 1)));
+            tierOneExtractorBackground.color = new Color(Mathf.Lerp(unavailableColor.x, availableColor.x, Mathf.Clamp(budget / BuildingManager.Instance.budgetCosts[7], 0, 1)), Mathf.Lerp(unavailableColor.y, availableColor.y, Mathf.Clamp(budget / BuildingManager.Instance.budgetCosts[7], 0, 1)), Mathf.Lerp(unavailableColor.z, availableColor.z, Mathf.Clamp(budget / BuildingManager.Instance.budgetCosts[7], 0, 1)));
+            tierTwoExtractorBackground.color = new Color(Mathf.Lerp(unavailableColor.x, availableColor.x, Mathf.Clamp(budget / BuildingManager.Instance.budgetCosts[8], 0, 1)), Mathf.Lerp(unavailableColor.y, availableColor.y, Mathf.Clamp(budget / BuildingManager.Instance.budgetCosts[8], 0, 1)), Mathf.Lerp(unavailableColor.z, availableColor.z, Mathf.Clamp(budget / BuildingManager.Instance.budgetCosts[8], 0, 1)));
+            tierThreeExtractorBackground.color = new Color(Mathf.Lerp(unavailableColor.x, availableColor.x, Mathf.Clamp(budget / BuildingManager.Instance.budgetCosts[9], 0, 1)), Mathf.Lerp(unavailableColor.y, availableColor.y, Mathf.Clamp(budget / BuildingManager.Instance.budgetCosts[9], 0, 1)), Mathf.Lerp(unavailableColor.z, availableColor.z, Mathf.Clamp(budget / BuildingManager.Instance.budgetCosts[9], 0, 1)));
 
             //Only bother updating the turret upgrade backgrounds if you have the window open
             if (TurretUpgradeWindow.enabled)
             {
                 //Gets a reference to the specific turret you have selected
-                Turret turret = selectedBuilding.GetComponentInChildren<Turret>();
+                Turret turret = BuildingManager.Instance.selectedBuilding.GetComponentInChildren<Turret>();
 
                 //Sets the background color based on how close you are to being able to afford it
                 turretSplashBackground.color = new Color(Mathf.Lerp(unavailableColor.x, availableColor.x, Mathf.Clamp(budget / turret.GetUpgradeCost(0), 0, 1)), Mathf.Lerp(unavailableColor.y, availableColor.y, Mathf.Clamp(budget / turret.GetUpgradeCost(0), 0, 1)), Mathf.Lerp(unavailableColor.z, availableColor.z, Mathf.Clamp(budget / turret.GetUpgradeCost(0), 0, 1)));
@@ -1442,7 +1113,7 @@ public class GameManager : Singleton<GameManager>
             else if (RepairUpgradeWindow.enabled)
             {
                 //Gets a reference to the specific repair station you have selected
-                RepairStation repair = selectedBuilding.GetComponentInChildren<RepairStation>();
+                RepairStation repair = BuildingManager.Instance.selectedBuilding.GetComponentInChildren<RepairStation>();
 
                 //Sets the background color based on how close you are to being able to afford it
                 repairRangeBackground.color = new Color(Mathf.Lerp(unavailableColor.x, availableColor.x, Mathf.Clamp(budget / repair.GetUpgradeCost(0), 0, 1)), Mathf.Lerp(unavailableColor.y, availableColor.y, Mathf.Clamp(budget / repair.GetUpgradeCost(0), 0, 1)), Mathf.Lerp(unavailableColor.z, availableColor.z, Mathf.Clamp(budget / repair.GetUpgradeCost(0), 0, 1)));
@@ -1453,7 +1124,7 @@ public class GameManager : Singleton<GameManager>
             else if (WallUpgradeWindow.enabled)
             {
                 //Gets a reference to the specific wall you have selected
-                Wall wall = selectedBuilding.GetComponentInChildren<Wall>();
+                Wall wall = BuildingManager.Instance.selectedBuilding.GetComponentInChildren<Wall>();
 
                 //Sets the background color based on how close you are to being able to afford it
                 wallHealthBackground.color = new Color(Mathf.Lerp(unavailableColor.x, availableColor.x, Mathf.Clamp(budget / wall.GetUpgradeCost(0), 0, 1)), Mathf.Lerp(unavailableColor.y, availableColor.y, Mathf.Clamp(budget / wall.GetUpgradeCost(0), 0, 1)), Mathf.Lerp(unavailableColor.z, availableColor.z, Mathf.Clamp(budget / wall.GetUpgradeCost(0), 0, 1)));
@@ -1463,7 +1134,7 @@ public class GameManager : Singleton<GameManager>
             else if (ExtractorUpgradeWindow.enabled)
             {
                 //Gets a regerence to the specific extractor you have selected
-                ResourceExtractor extractor = selectedBuilding.GetComponentInChildren<ResourceExtractor>();
+                ResourceExtractor extractor = BuildingManager.Instance.selectedBuilding.GetComponentInChildren<ResourceExtractor>();
 
                 //Sets the backgroun color based on how close you are to being able to afford it
                 extractorExtractionBackground.color = new Color(Mathf.Lerp(unavailableColor.x, availableColor.x, Mathf.Clamp(budget / extractor.GetUpgradeCost(0), 0, 1)), Mathf.Lerp(unavailableColor.y, availableColor.y, Mathf.Clamp(budget / extractor.GetUpgradeCost(0), 0, 1)), Mathf.Lerp(unavailableColor.z, availableColor.z, Mathf.Clamp(budget / extractor.GetUpgradeCost(0), 0, 1)));
@@ -1509,7 +1180,7 @@ public class GameManager : Singleton<GameManager>
             if (betweenWaves)
             {
                 //Pause menu
-                if(Input.GetKeyDown(cancelKey) && selectedConstruction == null && selectedBuilding == null)
+                if(Input.GetKeyDown(cancelKey) && BuildingManager.Instance.selectedConstruction == null && BuildingManager.Instance.selectedBuilding == null)
                 {
                     if(paused)
                     {
@@ -1523,22 +1194,17 @@ public class GameManager : Singleton<GameManager>
                 if (!paused)
                 {
                     //Allows you to cancel construction
-                    if (selectedConstruction != null && (Input.GetKeyDown(cancelKey) || budget < budgetCosts[selectedConstructionIndex]))
+                    if (BuildingManager.Instance.selectedConstruction != null && (Input.GetKeyDown(cancelKey) || budget < BuildingManager.Instance.budgetCosts[BuildingManager.Instance.selectedConstructionIndex]))
                     {
-                        //Ensure that all construction data is cleared
-                        selectedConstructionIndex = -1;
-                        Destroy(selectedConstruction);
-                        selectedConstruction = null;
+                        BuildingManager.Instance.CancelConstruction();
                     }
                     //Allows you to close the upgrade window
-                    if ((Input.GetKeyDown(cancelKey) || Input.GetMouseButtonDown(1)) && selectedBuilding != null)
+                    if ((Input.GetKeyDown(cancelKey) || Input.GetMouseButtonDown(1)) && BuildingManager.Instance.selectedBuilding != null)
                     {
-                        //Clear all of the selected building data
-                        selectedBuilding = null;
-                        standardUpgradeEvents();
+                        BuildingManager.Instance.CancelUpgrade();
                     }
                     //Allows you to start the next wave with hotkeys
-                    if (Input.GetKeyDown(nextWaveKey) || (selectedConstructionIndex == 10 && Input.GetKeyDown(confirmKey)))
+                    if (Input.GetKeyDown(nextWaveKey) || (BuildingManager.Instance.selectedConstructionIndex == 10 && Input.GetKeyDown(confirmKey)))
                     {
                         NextWave();
                         Debug.Log("Finished starting wave");
@@ -1546,225 +1212,62 @@ public class GameManager : Singleton<GameManager>
                     //Move the selected construction one to the right
                     if (Input.GetKeyDown(moveSelectionRightKey))
                     {
-                        //Increase selected index
-                        selectedConstructionIndex++;
-
-                        //New wave is not construction, but on the bar so it has an index
-                        if (selectedConstructionIndex == 10)
-                        {
-                            //Next Wave stuff here later
-                        }
-                        //Loop back around to no selection
-                        else if (selectedConstructionIndex == 11)
-                        {
-                            selectedConstructionIndex = -1;
-                        }
-                        //Update selected construction data
-                        Build(selectedConstructionIndex);
+                        BuildingManager.Instance.ChangeConstructionSelection(1);
                     }
                     //Move the selected construction one to the left
                     if (Input.GetKeyDown(moveSelectionLeftKey))
                     {
-                        //Decrease selected index
-                        selectedConstructionIndex--;
-
-                        //Loop back around to new wave
-                        if (selectedConstructionIndex == -2)
-                        {
-                            //Next Wave stuff here later
-                            selectedConstructionIndex = 10;
-                        }
-                        //Update selected construction data
-                        Build(selectedConstructionIndex);
+                        BuildingManager.Instance.ChangeConstructionSelection(-1);
                     }
                     //Stores the tile that your mouse is above
-                    Vector2Int hoveredTile = (Vector2Int)tileManager.TraversableTilemap.WorldToCell(Camera.ScreenToWorldPoint(Input.mousePosition));
+                    Vector2Int hoveredTile = (Vector2Int)TileManager.Instance.TraversableTilemap.WorldToCell(Camera.ScreenToWorldPoint(Input.mousePosition));
 
                     //Actions for when you have a selected building
-                    if (selectedBuilding != null)
+                    if (BuildingManager.Instance.selectedBuilding != null)
                     {
                         //Moves selected upgrade down when you use your down navigation key
                         if (Input.GetKeyDown(moveSelectionDownKey))
                         {
-                            //Sets the number of different upgrades based on the type of building
-                            int cap = 0;
-
-                            //Turret has 5 upgrades, subtract one due to zero based index
-                            Turret turret = selectedBuilding.GetComponentInChildren<Turret>();
-                            if (turret != null)
-                            {
-                                cap = 5;
-                            }
-                            else
-                            {
-                                //Repair Station has 3 upgrade, subtract one due to zero based index
-                                RepairStation repair = selectedBuilding.GetComponentInChildren<RepairStation>();
-                                if (repair != null)
-                                {
-                                    cap = 3;
-                                }
-                                else
-                                {
-                                    //Wall has 2 upgrades, subtract one due to zreo based index
-                                    Wall wall = selectedBuilding.GetComponentInChildren<Wall>();
-                                    if (wall != null)
-                                    {
-                                        cap = 2;
-                                    }
-                                    else
-                                    {
-                                        //Resource Extractor has 4 upgrades, subtract one due to zero based index
-                                        ResourceExtractor extractor = selectedBuilding.GetComponentInChildren<ResourceExtractor>();
-                                        if (extractor != null)
-                                        {
-                                            cap = 4;
-                                        }
-                                    }
-                                }
-                            }
-                            //Increase the index of the selected upgrade
-                            selectedUpgrade++;
-
-                            //Wrap around based on the cap
-                            if (selectedUpgrade == cap)
-                            {
-                                selectedUpgrade = 0;
-                            }
-                            //Update the shown data to reflect new selection
-                            updateSelection();
+                            BuildingManager.Instance.ChangeUpgradeSelection(1);
                         }
                         //Moves selected upgrade up when you use your up navigation key
                         if (Input.GetKeyDown(moveSelectionUpKey))
                         {
-                            //Sets the number of different upgrades based on the type of building
-                            int cap = 0;
-
-                            //Turret has 5 upgrades, subtract one due to zero based index
-                            Turret turret = selectedBuilding.GetComponentInChildren<Turret>();
-                            if (turret != null)
-                            {
-                                cap = 4;
-                            }
-                            else
-                            {
-                                //Repair Station has 3 upgrade, subtract one due to zero based index
-                                RepairStation repair = selectedBuilding.GetComponentInChildren<RepairStation>();
-                                if (repair != null)
-                                {
-                                    cap = 2;
-                                }
-                                else
-                                {
-                                    //Wall has 2 upgrades, subtract one due to zreo based index
-                                    Wall wall = selectedBuilding.GetComponentInChildren<Wall>();
-                                    if (wall != null)
-                                    {
-                                        cap = 1;
-                                    }
-                                    else
-                                    {
-                                        //Resource Extractor has 4 upgrades, subtract one due to zero based index
-                                        ResourceExtractor extractor = selectedBuilding.GetComponentInChildren<ResourceExtractor>();
-                                        if (extractor != null)
-                                        {
-                                            cap = 3;
-                                        }
-                                    }
-                                }
-                            }
-                            //Decrease the index of the selected upgrade
-                            selectedUpgrade--;
-
-                            //Wrap around based on the cap
-                            if (selectedUpgrade == -1)
-                            {
-                                selectedUpgrade = cap;
-                            }
-                            //Update the shown data to reflect new data
-                            updateSelection();
+                            BuildingManager.Instance.ChangeUpgradeSelection(-1);
                         }
                         //Allows you to upgrade using hotkeys
                         if (Input.GetKeyDown(confirmKey))
                         {
-                            //Identify building type that you are trying to upgrade
-                            Turret turret = selectedBuilding.GetComponentInChildren<Turret>();
-                            if (turret != null)
-                            {
-                                //Upgrade turret with selected upgrade
-                                UpgradeBuilding(0, selectedUpgrade);
-                            }
-                            else
-                            {
-                                RepairStation repair = selectedBuilding.GetComponentInChildren<RepairStation>();
-                                if (repair != null)
-                                {
-                                    //upgrade repair station with selected upgrade
-                                    UpgradeBuilding(1, selectedUpgrade);
-                                }
-                                else
-                                {
-                                    Wall wall = selectedBuilding.GetComponentInChildren<Wall>();
-                                    if (wall != null)
-                                    {
-                                        //Upgrade wall with selected upgrade
-                                        UpgradeBuilding(2, selectedUpgrade);
-                                    }
-                                    else
-                                    {
-                                        ResourceExtractor extractor = selectedBuilding.GetComponentInChildren<ResourceExtractor>();
-                                        if (extractor != null)
-                                        {
-                                            //Upgrade Extractor with selected upgrade
-                                            UpgradeBuilding(3, selectedUpgrade);
-                                        }
-                                    }
-                                }
-                            }
+                            BuildingManager.Instance.Upgrade();
                         }
                         //Allows you to sell buildings with hotkeys
                         if (Input.GetKeyDown(sellKey))
                         {
-                            Sell();
+                            BuildingManager.Instance.Sell();
                         }
                     }
                     //Do things if you either have left clicked or used the confirm button and you are not above the construction panel
                     if ((Input.GetMouseButtonDown(0) || Input.GetKeyDown(confirmKey)) && Input.mousePosition.y > Screen.height * 0.1851851852 && betweenWaves)
                     {
                         //Checks the place you are over to see if there is a building there, also ensures that you are not changing selections when upgrading with mouse
-                        if (playerBuildings.TryGetValue(hoveredTile, out GameObject building) && (Input.GetMouseButtonDown(0) || selectedBuilding == null) && Input.mousePosition.x < Screen.width - Screen.width * 0.2375)
+                        if (BuildingManager.Instance.playerBuildings.TryGetValue(hoveredTile, out GameObject building) && (Input.GetMouseButtonDown(0) || BuildingManager.Instance.selectedBuilding == null) && Input.mousePosition.x < Screen.width - Screen.width * 0.2375)
                         {
                             //Clears building data
                             Build(-1);
-
-                            //Updates upgrade data
-                            selectedUpgrade = 0;
-                            selectedBuilding = building;
-                            standardUpgradeEvents();
-                            updateSelection();
+                            BuildingManager.Instance.SelectBuilding(building);
                         }
                         //If you can place a building, do so
-                        else if (checkPlacement(hoveredTile))
+                        else
                         {
-                            placeBuilding(hoveredTile);
-                            budget -= budgetCosts[selectedConstructionIndex];
-
-                            //Increases price of new building of that tier in order to encourage using a variety of tiers and upgrading things
-                            budgetCosts[selectedConstructionIndex] *= 1.2f;
+                            BuildingManager.Instance.AttemptPlacement(hoveredTile);
                         }
                     }
                     //Allows you to cancel constructions using right click
                     if (Input.GetMouseButtonDown(1))
                     {
-                        //Clears all construction data
-                        selectedConstructionIndex = -1;
-                        Build(-1);
+                        BuildingManager.Instance.CancelConstruction();
                     }
-                    //Makes the building preview follow the mouse if it exists
-                    if (selectedConstruction != null)
-                    {
-                        //Snaps the position to be centered on the tilemap's hexagonal grid
-                        selectedConstruction.transform.position = tileManager.TraversableTilemap.CellToWorld(new Vector3Int(hoveredTile.x, hoveredTile.y));
-                    }
+                    BuildingManager.Instance.TriggerFollow(hoveredTile);
                     //Select tier one turret with hotkey
                     if (Input.GetKeyDown(tierOneTurretKey))
                     {
@@ -1857,25 +1360,6 @@ public class GameManager : Singleton<GameManager>
         nextWaveBackground.color = new Color(Mathf.Lerp(unavailableColor.x, availableColor.x, 1 - Mathf.Clamp(currentEnemies.Count / (float)maxEnemiesThisWave, 0, 1)), Mathf.Lerp(unavailableColor.y, availableColor.y, 1 - Mathf.Clamp(currentEnemies.Count / (float)maxEnemiesThisWave, 0, 1)), Mathf.Lerp(unavailableColor.z, availableColor.z, 1 - Mathf.Clamp(currentEnemies.Count / (float)maxEnemiesThisWave, 0, 1)));
     }
 
-    //Function to remove a building
-    public void Sell()
-    {
-        //Do not attempt to remove a building if you do not have a building selected
-        if(selectedBuilding != null)
-        {
-            //Checks to see if you can remove the building
-            PlayerBuilding building = selectedBuilding.GetComponentInChildren<PlayerBuilding>();
-            if (building)
-            {
-                if (building.Sell())
-                {
-                    //Clears building selection
-                    selectedBuilding = null;
-                    standardUpgradeEvents();
-                }
-            }
-        }
-    }
 
     //Incrase or decrease max energy
     public void ChangeEnergyCap(float difference)
@@ -1924,57 +1408,7 @@ public class GameManager : Singleton<GameManager>
             updateEnergy();
         }
     }
-    //Events for building removal
-    public void RemoveBuilding(PlayerBuilding building)
-    {
-        //Ensures that the previous changed building does not lose its next link
-        if (building.previousChanged != null)
-        {
-            building.previousChanged.nextChanged = building.nextChanged;
-        }
-        //Ensures that the next changed building does not lose its previous link
-        if (building.nextChanged != null)
-        {
-            building.nextChanged.previousChanged = building.previousChanged;
-        }
-        //Updates energy data
-        if (building.active)
-        {
-            //If it is an active building remove the energy cost from it
-            ChangeEnergyUsage(-building.energyCost);
-
-            //Ensure that all economy data from extractors is cleared
-            if(building.GetBuildingType() >= 7)
-            {
-                ResourceExtractor extractor = building.gameObject.GetComponentInChildren<ResourceExtractor>();
-                IncreaseIncome(-extractor.extractionRate);
-                ChangeEnergyCap(-extractor.energyRate);
-            }
-        }
-        //Remove from building tracker
-        playerBuildings.Remove(building.location);
-        int type = building.GetBuildingType();
-
-        //Reduce construction energy cost due to the building being destroyed
-        energyCosts[type] -= building.GetBuildingType() == 5 || building.GetBuildingType() == 6 ? 0 : energyConsumption * 0.5f;
-
-        //Reduce energy costs of connected buildings after it is gone to ensure that they take the appropriate amount
-        while (building.nextChanged != null)
-        {
-            building = building.nextChanged;
-            if (type == building.GetBuildingType())
-            {
-                building.energyCost -= energyConsumption * 0.5f;
-                ChangeEnergyUsage(-energyConsumption * 0.5f);
-            }
-        }
-        //Ensures that the reference to the most recent change is still valid
-        if(building.location == mostRecentEnergyDecrease.location)
-        {
-            mostRecentEnergyDecrease = mostRecentEnergyDecrease.previousChanged;
-        }
-    }
-
+    
     //Gets the data so that it can be saved
     public GameData GetSaveData()
     {
@@ -1982,27 +1416,28 @@ public class GameManager : Singleton<GameManager>
 
         //Seed data
         data.simplifiedSeed = simplifiedSeed;
-        data.seedA = tileManager.seedA;
-        data.seedB = tileManager.seedB;
-        data.seedC = tileManager.seedC;
-        data.seedD = tileManager.seedD;
-        data.seedE = tileManager.seedE;
-        data.seedF = tileManager.seedF;
-        data.seedG = tileManager.seedG;
-        data.seedH = tileManager.seedH;
-        data.seedI = tileManager.seedI;
-        data.startSize = tileManager.size;
+        data.seedA = TileManager.Instance.seedA;
+        data.seedB = TileManager.Instance.seedB;
+        data.seedC = TileManager.Instance.seedC;
+        data.seedD = TileManager.Instance.seedD;
+        data.seedE = TileManager.Instance.seedE;
+        data.seedF = TileManager.Instance.seedF;
+        data.seedG = TileManager.Instance.seedG;
+        data.seedH = TileManager.Instance.seedH;
+        data.seedI = TileManager.Instance.seedI;
+        data.startSize = TileManager.Instance.size;
         data.expansionRate = expansionRate;
 
+
+        //Apply building data
+
         //Economy info
-        data.budgetCosts = budgetCosts;
         data.budget = budget;
-        data.energyCosts = energyCosts;
 
         //Other
         data.wave = wave;
         data.generatedNumbers = BasicUtils.generatedNumbers;
-        data.swappedTiles = tileManager.subbedTiles.ToArray();
+        data.swappedTiles = TileManager.Instance.subbedTiles.ToArray();
 
         //Difficulty
         data.enemyQuantity = enemyQuantity;
@@ -2014,13 +1449,6 @@ public class GameManager : Singleton<GameManager>
         data.energyProduction = energyProduction;
         data.energyConsumption = energyConsumption;
 
-        //Buildings
-        data.buildings = new BuildingData[playerBuildings.Count - 1];
-        GameObject[] buildingArray = playerBuildings.Values.ToArray();
-        for(int i = 0; i < data.buildings.Length; i++)
-        {
-            data.buildings[i] = buildingArray[i + 1].GetComponentInChildren<PlayerBuilding>().GetAsData();
-        }
         return data;
     }
 
@@ -2028,14 +1456,7 @@ public class GameManager : Singleton<GameManager>
     public void Deactivate()
     {
         active = false;
-        Destroy(playerBuildings[new Vector2Int(0, 0)]);
-
-        //Clear data
-        playerBuildings.Clear();
-        playerHealths.Clear();
-        playerExtractionData.Clear();
-        playerDamageData.Clear();
-        playerRepairData.Clear();
+        BuildingManager.Instance.Deactivate();
         TileManager.Instance.Deactivate();
     }
 }

@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.IO;
 using TMPro;
 using UnityEngine;
-
+[DefaultExecutionOrder(-20)]
 //Manages saving and loading
 public class MusicManager : Singleton<MusicManager>
 {
@@ -34,6 +34,9 @@ public class MusicManager : Singleton<MusicManager>
         musicVolume = PlayerPrefs.GetFloat("MusicVolume", 100);
         sfxVolume = PlayerPrefs.GetFloat("SFXVolume", 100);
 
+        MenuManager.Instance.masterVolumeSlider.value = masterVolume;
+        MenuManager.Instance.musicVolumeSlider.value = musicVolume;
+        MenuManager.Instance.sfxVolumeSlider.value = sfxVolume;
 
         //Start the menu music since that is where you load in
         PlayMenu();
@@ -305,5 +308,7 @@ public class MusicManager : Singleton<MusicManager>
     {
         sfxVolume = newVolume;
         clickFX.volume = (newVolume / 100) * (masterVolume / 100);
+        PlayerPrefs.SetFloat("SFXVolume", newVolume);
+        PlayerPrefs.Save();
     }
 }

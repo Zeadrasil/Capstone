@@ -131,8 +131,8 @@ public class Turret : PlayerBuilding, IDamager, IUpgradeable
             }
         }
         //Update data for enemies
-        GameManager.Instance.playerHealths.TryAdd(location, health);
-        GameManager.Instance.playerDamageData.TryAdd(location, range * damage * firerate * (splash ? Mathf.Pow(splashRange * 10, 2) * 5 : 1));
+        BuildingManager.Instance.playerHealths.TryAdd(location, health);
+        BuildingManager.Instance.playerDamageData.TryAdd(location, range * damage * firerate * (splash ? Mathf.Pow(splashRange * 10, 2) * 5 : 1));
 
         //Update volume for upgrade sfx
         upgradeSource.volume = (MusicManager.Instance.masterVolume / 100) * (MusicManager.Instance.sfxVolume / 100);
@@ -161,7 +161,7 @@ public class Turret : PlayerBuilding, IDamager, IUpgradeable
                     splashRange *= upgradeEffects[0] * GameManager.Instance.playerStrength;
 
                     //Update data for enemies
-                    GameManager.Instance.playerDamageData[location] = range * damage * firerate * (splash ? Mathf.Pow(splashRange * 10, 2) * 5 : 1);
+                    BuildingManager.Instance.playerDamageData[location] = range * damage * firerate * (splash ? Mathf.Pow(splashRange * 10, 2) * 5 : 1);
                     break;
                 }
             //Turret range
@@ -171,7 +171,7 @@ public class Turret : PlayerBuilding, IDamager, IUpgradeable
                     range *= upgradeEffects[1] * GameManager.Instance.playerStrength;
 
                     //Update data for enemies
-                    GameManager.Instance.playerDamageData[location] = range * damage * firerate * (splash ? Mathf.Pow(splashRange * 10, 2) * 5 : 1);
+                    BuildingManager.Instance.playerDamageData[location] = range * damage * firerate * (splash ? Mathf.Pow(splashRange * 10, 2) * 5 : 1);
                     break;
                 }
             //Damage
@@ -181,7 +181,7 @@ public class Turret : PlayerBuilding, IDamager, IUpgradeable
                     damage *= upgradeEffects[2] * GameManager.Instance.playerStrength;
 
                     //Update data for enemies
-                    GameManager.Instance.playerDamageData[location] = range * damage * firerate * (splash ? Mathf.Pow(splashRange * 10, 2) * 5 : 1);
+                    BuildingManager.Instance.playerDamageData[location] = range * damage * firerate * (splash ? Mathf.Pow(splashRange * 10, 2) * 5 : 1);
                     break;
                 }
             //Firerate
@@ -191,7 +191,7 @@ public class Turret : PlayerBuilding, IDamager, IUpgradeable
                     firerate *= upgradeEffects[3] * GameManager.Instance.playerStrength;
 
                     //Update data for enemies
-                    GameManager.Instance.playerDamageData[location] = range * damage * firerate * (splash ? Mathf.Pow(splashRange * 10, 2) * 5 : 1);
+                    BuildingManager.Instance.playerDamageData[location] = range * damage * firerate * (splash ? Mathf.Pow(splashRange * 10, 2) * 5 : 1);
                     break;
                 }
             //Building health
@@ -202,7 +202,7 @@ public class Turret : PlayerBuilding, IDamager, IUpgradeable
                     health += upgradeEffects[4] * GameManager.Instance.playerHealth;
 
                     //Update data for enemies
-                    GameManager.Instance.playerHealths[location] = health;
+                    BuildingManager.Instance.playerHealths[location] = health;
                     break;
                 }
         }
@@ -290,7 +290,7 @@ public class Turret : PlayerBuilding, IDamager, IUpgradeable
     }
 
     //Get the description and location of the building
-    public string GetDescription()
+    public override string GetDescription()
     {
         return $"{basicDescription}\n({location.x}, {location.y})";
     }
@@ -333,7 +333,7 @@ public class Turret : PlayerBuilding, IDamager, IUpgradeable
         healthBar.transform.localPosition = new Vector3((-1 + health / baseHealth) * 0.5f, -0.4f, 0);
 
         //Update data for enemies
-        GameManager.Instance.playerHealths[location] = health;
+        BuildingManager.Instance.playerHealths[location] = health;
 
         //If out of health
         if (health <= 0)
@@ -492,7 +492,7 @@ public class Turret : PlayerBuilding, IDamager, IUpgradeable
         healthBar.transform.localPosition = new Vector3((-1 + health / baseHealth) * 0.5f, -0.4f, 0);
 
         //Update data for enemies
-        GameManager.Instance.playerHealths[location] = health;
+        BuildingManager.Instance.playerHealths[location] = health;
     }
 
     //Sell building
@@ -539,11 +539,11 @@ public class Turret : PlayerBuilding, IDamager, IUpgradeable
         killed = true;
 
         //Remove building
-        GameManager.Instance.RemoveBuilding(this);
+        BuildingManager.Instance.RemoveBuilding(this);
 
         //Update data for enemies
-        GameManager.Instance.playerHealths.Remove(location);
-        GameManager.Instance.playerDamageData.Remove(location);
+        BuildingManager.Instance.playerHealths.Remove(location);
+        BuildingManager.Instance.playerDamageData.Remove(location);
 
         //If there is a target remove self from target's damagers
         if (target != null)
@@ -733,5 +733,10 @@ public class Turret : PlayerBuilding, IDamager, IUpgradeable
     public override int GetBuildingType()
     {
         return maxAlignments;
+    }
+
+    public override int GetConstructionType()
+    {
+        return 0;
     }
 }

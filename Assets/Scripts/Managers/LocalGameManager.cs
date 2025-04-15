@@ -8,17 +8,6 @@ public class LocalGameManager : MonoBehaviour
 {
     [SerializeField] TMP_Text nextWaveLabel;
 
-    //Building prefabs
-    [SerializeField] GameObject turretTierOne;
-    [SerializeField] GameObject turretTierTwo;
-    [SerializeField] GameObject turretTierThree;
-    [SerializeField] GameObject repairTierOne;
-    [SerializeField] GameObject repairTierTwo;
-    [SerializeField] GameObject wallTierOne;
-    [SerializeField] GameObject wallTierTwo;
-    [SerializeField] GameObject extractorTierOne;
-    [SerializeField] GameObject extractorTierTwo;
-    [SerializeField] GameObject extractorTierThree;
 
     //Enemy prefabs
     [SerializeField] GameObject enemyCheckpointPrefab;
@@ -137,7 +126,6 @@ public class LocalGameManager : MonoBehaviour
 
     //Other data
     [SerializeField] Camera camera;
-    [SerializeField] PlayerBase playerBase;
 
     //Selling data
     [SerializeField] Canvas SellWindow;
@@ -226,17 +214,6 @@ public class LocalGameManager : MonoBehaviour
     {
         GameManager.Instance.nextWaveLabel = nextWaveLabel;
 
-        //Pass building prefabs
-        GameManager.Instance.turretTierOne = turretTierOne;
-        GameManager.Instance.turretTierTwo = turretTierTwo;
-        GameManager.Instance.turretTierThree = turretTierThree;
-        GameManager.Instance.repairTierOne = repairTierOne;
-        GameManager.Instance.repairTierTwo = repairTierTwo;
-        GameManager.Instance.wallTierOne = wallTierOne;
-        GameManager.Instance.wallTierTwo = wallTierTwo;
-        GameManager.Instance.extractorTierOne = extractorTierOne;
-        GameManager.Instance.extractorTierTwo = extractorTierTwo;
-        GameManager.Instance.extractorTierThree = extractorTierThree;
 
         //Pass enemy prefabs
         GameManager.Instance.baseEnemy = baseEnemy;
@@ -355,7 +332,6 @@ public class LocalGameManager : MonoBehaviour
 
         //Pass other data
         GameManager.Instance.Camera = camera;
-        GameManager.Instance.PlayerBase = playerBase;
 
         //Pass sell data
         GameManager.Instance.SellWindow = SellWindow;
@@ -425,34 +401,10 @@ public class LocalGameManager : MonoBehaviour
     {
         GameManager.Instance.Build(building);
     }
-    //Relay for turret upgrades using buttons
-    public void UpgradeTurret(int upgrade)
-    {
-        GameManager.Instance.UpgradeBuilding(0, upgrade);
-    }
-    //Relay for repair station upgrades using buttons
-    public void UpgradeRepairStation(int upgrade)
-    {
-        GameManager.Instance.UpgradeBuilding(1, upgrade);
-    }
-    //Relay for wall upgrades using buttons
-    public void UpgradeWall(int upgrade)
-    {
-        GameManager.Instance.UpgradeBuilding(2, upgrade);
-    }
-    //Relay for extractor upgrades using buttons
-    public void UpgradeExtractor(int upgrade)
-    {
-        GameManager.Instance.UpgradeBuilding(3, upgrade);
-    }
+    
     //Relay for spawning a new wave using buttons
     public void NextWave()
     {
         GameManager.Instance.NextWave();
-    }
-    //Relay for selling buildings using buttons
-    public void Sell()
-    {
-        GameManager.Instance.Sell();
     }
 }

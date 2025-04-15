@@ -61,7 +61,7 @@ public class RepairStation : PlayerBuilding, IDamageable, IUpgradeable
     }
 
     //Get the description and location of the building
-    public string GetDescription()
+    public override string GetDescription()
     {
         return $"{basicDescription}\n({location.x}, {location.y})";
     }
@@ -130,7 +130,7 @@ public class RepairStation : PlayerBuilding, IDamageable, IUpgradeable
         healthBar.transform.localPosition = new Vector3((-1 + health / baseHealth) * 0.5f, -0.4f, 0);
 
         //Update data for enemies
-        GameManager.Instance.playerHealths[location] = health;
+        BuildingManager.Instance.playerHealths[location] = health;
     }
 
     //Remove damager from damager list
@@ -149,7 +149,7 @@ public class RepairStation : PlayerBuilding, IDamageable, IUpgradeable
         healthBar.transform.localPosition = new Vector3((-1 + health / baseHealth) * 0.5f, -0.4f, 0);
 
         //Update data for enemies
-        GameManager.Instance.playerHealths[location] = health;
+        BuildingManager.Instance.playerHealths[location] = health;
 
         //If health is at or below 0
         if (health <= 0)
@@ -184,7 +184,7 @@ public class RepairStation : PlayerBuilding, IDamageable, IUpgradeable
                     range *= upgradeEffects[0] * GameManager.Instance.playerStrength;
 
                     //Update data for enemies
-                    GameManager.Instance.playerRepairData[location] = healing * range;
+                    BuildingManager.Instance.playerRepairData[location] = healing * range;
                     break;
                 }
             //Healing power
@@ -194,7 +194,7 @@ public class RepairStation : PlayerBuilding, IDamageable, IUpgradeable
                     healing *= upgradeEffects[1] * GameManager.Instance.playerStrength;
 
                     //Update data for enemies
-                    GameManager.Instance.playerRepairData[location] = healing * range;
+                    BuildingManager.Instance.playerRepairData[location] = healing * range;
                     break;
                 }
             //Building Health
@@ -205,7 +205,7 @@ public class RepairStation : PlayerBuilding, IDamageable, IUpgradeable
                     health += upgradeEffects[2] * GameManager.Instance.playerHealth;
 
                     //Update data for enemies
-                    GameManager.Instance.playerHealths[location] = health;
+                    BuildingManager.Instance.playerHealths[location] = health;
                     break;
                 }
         }
@@ -233,7 +233,6 @@ public class RepairStation : PlayerBuilding, IDamageable, IUpgradeable
         rangeDotC.enabled = false;
         rangeDotD.enabled = false;
 
-        audioSource.volume = (MusicManager.Instance.masterVolume / 100) * (MusicManager.Instance.sfxVolume / 200);
         upgradeSource.volume = (MusicManager.Instance.masterVolume / 100) * (MusicManager.Instance.sfxVolume / 100);
 
         //Skip applying difficulty modifiers if they were already applied due to load
@@ -272,8 +271,8 @@ public class RepairStation : PlayerBuilding, IDamageable, IUpgradeable
             }
         }
         //Update data for enemies
-        GameManager.Instance.playerHealths.Add(location, health);
-        GameManager.Instance.playerRepairData.Add(location, healing * range);
+        BuildingManager.Instance.playerHealths.Add(location, health);
+        BuildingManager.Instance.playerRepairData.Add(location, healing * range);
     }
 
     // Update is called once per frame
@@ -297,6 +296,7 @@ public class RepairStation : PlayerBuilding, IDamageable, IUpgradeable
                         building.Heal(healing * 0.2f);
                     }
                 }
+                audioSource.volume = (MusicManager.Instance.masterVolume / 100) * (MusicManager.Instance.sfxVolume /300) * (5 / GameManager.Instance.Camera.orthographicSize);
                 audioSource.PlayOneShot(audioSource.clip);
 
                 GameObject go = Instantiate(repairVFX, transform.position, transform.rotation);
@@ -355,11 +355,11 @@ public class RepairStation : PlayerBuilding, IDamageable, IUpgradeable
     protected override void Remove()
     {
         //Call GameManager removal
-        GameManager.Instance.RemoveBuilding(this);
+        BuildingManager.Instance.RemoveBuilding(this);
 
         //Update data for enemies
-        GameManager.Instance.playerHealths.Remove(location);
-        GameManager.Instance.playerRepairData.Remove(location);
+        BuildingManager.Instance.playerHealths.Remove(location);
+        BuildingManager.Instance.playerRepairData.Remove(location);
 
         //Tell all damagers to find something else
         foreach (IDamager damager in currentDamagers)
@@ -506,5 +506,10 @@ public class RepairStation : PlayerBuilding, IDamageable, IUpgradeable
     public override int GetBuildingType()
     {
         return 3 + maxAlignments;
+    }
+
+    public override int GetConstructionType()
+    {
+        return 1;
     }
 }

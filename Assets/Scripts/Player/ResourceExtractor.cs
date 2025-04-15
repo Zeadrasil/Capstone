@@ -66,7 +66,7 @@ public class ResourceExtractor : PlayerBuilding, IUpgradeable
         health -= damage;
 
         //Update data for enemies
-        GameManager.Instance.playerHealths[location] = health;
+        BuildingManager.Instance.playerHealths[location] = health;
 
         //Update healthbar
         healthBar.transform.localScale = new Vector3(health / baseHealth, 0.1f, 1);
@@ -154,8 +154,8 @@ public class ResourceExtractor : PlayerBuilding, IUpgradeable
             //GameManager.Instance.ChangeEnergyCap(energyRate * Mathf.Pow(health, damageEffectiveness) / Mathf.Pow(baseHealth, damageEffectiveness));
         }
         //Update data for enemies
-        GameManager.Instance.playerHealths.Add(location, health);
-        GameManager.Instance.playerExtractionData.Add(location, (extractionRate * 40 + energyRate * 100) * damageEffectiveness);
+        BuildingManager.Instance.playerHealths.Add(location, health);
+        BuildingManager.Instance.playerExtractionData.Add(location, (extractionRate * 40 + energyRate * 100) * damageEffectiveness);
 
         //Update volume for upgrade sfx
         upgradeSource.volume = (MusicManager.Instance.masterVolume / 100) * (MusicManager.Instance.sfxVolume / 100);
@@ -215,7 +215,7 @@ public class ResourceExtractor : PlayerBuilding, IUpgradeable
         healthBar.transform.localPosition = new Vector3((-1 + health / baseHealth) * 0.5f, -0.55f, 0);
 
         //Update data for enemies
-        GameManager.Instance.playerHealths[location] = health;
+        BuildingManager.Instance.playerHealths[location] = health;
         if (active)
         {
             GameManager.Instance.IncreaseIncome(extractionRate * Mathf.Pow(health, damageEffectiveness) / Mathf.Pow(baseHealth, damageEffectiveness));
@@ -254,7 +254,7 @@ public class ResourceExtractor : PlayerBuilding, IUpgradeable
                     }
 
                     //Update data for enemies
-                    GameManager.Instance.playerExtractionData[location] = (extractionRate * 40 + energyRate * 100) * damageEffectiveness;
+                    BuildingManager.Instance.playerExtractionData[location] = (extractionRate * 40 + energyRate * 100) * damageEffectiveness;
                     break;
                 }
             //Increase energy production
@@ -275,7 +275,7 @@ public class ResourceExtractor : PlayerBuilding, IUpgradeable
                     }
 
                     //Update data for enemies
-                    GameManager.Instance.playerExtractionData[location] = (extractionRate * 40 + energyRate * 100) * damageEffectiveness;
+                    BuildingManager.Instance.playerExtractionData[location] = (extractionRate * 40 + energyRate * 100) * damageEffectiveness;
                     break;
                 }
             //Increase protection
@@ -287,7 +287,7 @@ public class ResourceExtractor : PlayerBuilding, IUpgradeable
                     TakeDamage(0);
 
                     //Update data for enemies
-                    GameManager.Instance.playerExtractionData[location] = (extractionRate * 40 + energyRate * 100) * damageEffectiveness;
+                    BuildingManager.Instance.playerExtractionData[location] = (extractionRate * 40 + energyRate * 100) * damageEffectiveness;
                     break;
                 }
             //Increase health
@@ -298,7 +298,7 @@ public class ResourceExtractor : PlayerBuilding, IUpgradeable
                     health *= upgradeEffects[type] * GameManager.Instance.playerHealth;
 
                     //Update data for enemies
-                    GameManager.Instance.playerHealths[location] = health;
+                    BuildingManager.Instance.playerHealths[location] = health;
                     break;
                 }
             default:
@@ -389,7 +389,7 @@ public class ResourceExtractor : PlayerBuilding, IUpgradeable
         }
     }
     //Get the description and location of the building
-    public string GetDescription()
+    public override string GetDescription()
     {
         return $"{basicDescription}\n({location.x}, {location.y})";
     }
@@ -447,11 +447,11 @@ public class ResourceExtractor : PlayerBuilding, IUpgradeable
     protected override void Remove()
     {
         //Remove building
-        GameManager.Instance.RemoveBuilding(this);
+        BuildingManager.Instance.RemoveBuilding(this);
 
         //Update data for enemies
-        GameManager.Instance.playerHealths.Remove(location);
-        GameManager.Instance.playerExtractionData.Remove(location);
+        BuildingManager.Instance.playerHealths.Remove(location);
+        BuildingManager.Instance.playerExtractionData.Remove(location);
 
         //Tell all damagers to stop attacking this
         foreach (IDamager damager in currentDamagers)
@@ -625,5 +625,10 @@ public class ResourceExtractor : PlayerBuilding, IUpgradeable
     public override int GetBuildingType()
     {
         return 7 + maxAlignments;
+    }
+
+    public override int GetConstructionType()
+    {
+        return 3;
     }
 }

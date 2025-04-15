@@ -161,27 +161,27 @@ public class Enemy : MonoBehaviour, IDamageable, IDamager
 
                 //Destroy resource extractors if it is worthwhile
                 float resourceDenialModifier = 0;
-                if (GameManager.Instance.playerBuildings.TryGetValue(adjacentNode.location, out GameObject holder))
+                if (BuildingManager.Instance.playerBuildings.TryGetValue(adjacentNode.location, out GameObject holder))
                 {
                     //Update health
-                    healthCost = GameManager.Instance.playerHealths.GetValueOrDefault(adjacentNode.location);
+                    healthCost = BuildingManager.Instance.playerHealths.GetValueOrDefault(adjacentNode.location);
 
                     //Check if turret
-                    if (GameManager.Instance.playerDamageData.TryGetValue(adjacentNode.location, out float baseDamageModifier))
+                    if (BuildingManager.Instance.playerDamageData.TryGetValue(adjacentNode.location, out float baseDamageModifier))
                     {
                         //If turret apply desire to destroy to prevent damage
                         damagePreventionModifier = baseDamageModifier / (healthCost);
                     }
 
                     //Check if repair station
-                    if (GameManager.Instance.playerRepairData.TryGetValue(adjacentNode.location, out float baseRepairModifier))
+                    if (BuildingManager.Instance.playerRepairData.TryGetValue(adjacentNode.location, out float baseRepairModifier))
                     {
                         //If repair station apply desire to destroy to prevent it from repairing structures you want to destroy
                         repairPreventionModifier = baseRepairModifier * 10 / healthCost;
                     }
 
                     //Check if resource extractor
-                    if (GameManager.Instance.playerExtractionData.TryGetValue(adjacentNode.location, out float baseExtractionModifier))
+                    if (BuildingManager.Instance.playerExtractionData.TryGetValue(adjacentNode.location, out float baseExtractionModifier))
                     {
                         //If resource extractor apply desire to destroy to prevent the player from getting resources
                         resourceDenialModifier = baseExtractionModifier / healthCost;
@@ -309,7 +309,7 @@ public class Enemy : MonoBehaviour, IDamageable, IDamager
             else if (pitbullMode)
             {
                 //Move straight to player base
-                transform.parent.position += (Singleton<GameManager>.Instance.PlayerBase.transform.position - transform.position).normalized * Mathf.Max(movementSpeed * 0.02f - offset, 0);
+                transform.parent.position += (BuildingManager.Instance.PlayerBase.transform.position - transform.position).normalized * Mathf.Max(movementSpeed * 0.02f - offset, 0);
                 offset = Mathf.Max(offset - movementSpeed, 0);
             }
         }

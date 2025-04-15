@@ -405,6 +405,7 @@ public class TileManager : Singleton<TileManager>
     {
         //Gets the traversability rating of the tile
         float tileValue = Check(x, y);
+
         //If it is not sufficiently traversable and it has not been subbed
         if (tileValue < traversableCutoff && !subbedTiles.Contains(new Vector2Int(x, y)))
         {

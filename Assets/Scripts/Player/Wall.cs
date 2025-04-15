@@ -43,7 +43,7 @@ public class Wall : PlayerBuilding, IUpgradeable
     }
 
     //Get description and location of the building
-    public string GetDescription()
+    public override string GetDescription()
     {
         return $"{basicDescription}\n({location.x}, {location.y})";
     }
@@ -94,7 +94,7 @@ public class Wall : PlayerBuilding, IUpgradeable
         healthBar.transform.localPosition = new Vector3((-1 + health / baseHealth) * 0.5f, -0.65f, 0);
 
         //Update data for enemies
-        GameManager.Instance.playerHealths[location] = health;
+        BuildingManager.Instance.playerHealths[location] = health;
     }
 
     //Remove damager from damager list
@@ -126,7 +126,7 @@ public class Wall : PlayerBuilding, IUpgradeable
         healthBar.transform.localPosition = new Vector3((-1 + health / baseHealth) * 0.5f, -0.65f, 0);
         
         //Update data for enemies
-        GameManager.Instance.playerHealths[location] = health;
+        BuildingManager.Instance.playerHealths[location] = health;
         
         //If out of health
         if (health <= 0)
@@ -161,7 +161,7 @@ public class Wall : PlayerBuilding, IUpgradeable
                     health *= upgradeEffects[0] * GameManager.Instance.playerHealth;
 
                     //Update data for enemies
-                    GameManager.Instance.playerHealths[location] = health;
+                    BuildingManager.Instance.playerHealths[location] = health;
                     break;
                 }
             //Healing effectiveness
@@ -215,7 +215,7 @@ public class Wall : PlayerBuilding, IUpgradeable
             }
         }
         //Update data for enemies
-        GameManager.Instance.playerHealths.Add(location, health);
+        BuildingManager.Instance.playerHealths.Add(location, health);
 
         //Update upgrade sfx volume
         upgradeSource.volume = (MusicManager.Instance.masterVolume / 100) * (MusicManager.Instance.sfxVolume / 100);
@@ -243,10 +243,10 @@ public class Wall : PlayerBuilding, IUpgradeable
     protected override void Remove()
     {
         //Remove building
-        GameManager.Instance.RemoveBuilding(this);
+        BuildingManager.Instance.RemoveBuilding(this);
 
         //Update data for enemies
-        GameManager.Instance.playerHealths.Remove(location);
+        BuildingManager.Instance.playerHealths.Remove(location);
 
         //Tell all damagers to find something else to attack
         foreach (IDamager damager in currentDamagers)
@@ -349,5 +349,10 @@ public class Wall : PlayerBuilding, IUpgradeable
     public override int GetBuildingType()
     {
         return 5 + maxAlignments;
+    }
+
+    public override int GetConstructionType()
+    {
+        return 2;
     }
 }

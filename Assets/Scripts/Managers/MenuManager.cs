@@ -5,6 +5,7 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
+[DefaultExecutionOrder(-30)]
 //MenuManager manages the main menu before you start a run
 public class MenuManager : Singleton<MenuManager>
 {
@@ -77,11 +78,11 @@ public class MenuManager : Singleton<MenuManager>
 
     //Audio Controls
     [SerializeField] TMP_InputField masterVolumeInput;
-    [SerializeField] Slider masterVolumeSlider;
+    public Slider masterVolumeSlider;
     [SerializeField] TMP_InputField musicVolumeInput;
-    [SerializeField] Slider musicVolumeSlider;
+    public Slider musicVolumeSlider;
     [SerializeField] TMP_InputField sfxVolumeInput;
-    [SerializeField] Slider sfxVolumeSlider;
+    public Slider sfxVolumeSlider;
     [SerializeField] TMP_InputField musicFadeInput;
     [SerializeField] Slider musicFadeSlider;
 
@@ -193,7 +194,7 @@ public class MenuManager : Singleton<MenuManager>
 
     //Basic
     float enemyDifficulty = 1;
-    float playerPower = 1;
+    float playerPower = 3;
     float playerEconomy = 1;
 
     //Advanced

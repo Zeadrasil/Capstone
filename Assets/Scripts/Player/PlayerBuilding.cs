@@ -56,4 +56,8 @@ public abstract class PlayerBuilding : MonoBehaviour, IDamageable
     //Shortcut for identifying building type
     public abstract int GetBuildingType();
 
+    public abstract string GetDescription();
+
+    public abstract int GetConstructionType();
+
 }
