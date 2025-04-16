@@ -76,7 +76,7 @@ public class RepairStation : PlayerBuilding, IDamageable, IUpgradeable
     public float GetUpgradeCost(int type)
     {
         //Applies various modifiers to the expense to get the cost
-        return baseUpgradeCost * Mathf.Pow(1 + expenseModifiers[type] * GameManager.Instance.playerCosts, upgradeLevels[type]) * (1 + expenseModifiers[type]) * GameManager.Instance.playerCosts;
+        return baseUpgradeCost * Mathf.Pow(1 + expenseModifiers[type] * EconomyManager.Instance.playerCosts, upgradeLevels[type]) * (1 + expenseModifiers[type]) * EconomyManager.Instance.playerCosts;
     }
 
     //Gets a string representing the potential changes of an upgrade
@@ -165,7 +165,7 @@ public class RepairStation : PlayerBuilding, IDamageable, IUpgradeable
     public void Upgrade(int type)
     {
         //Subtract the cost of the upgrade from player budget
-        GameManager.Instance.budget -= GetUpgradeCost(type);
+        EconomyManager.Instance.budget -= GetUpgradeCost(type);
 
         upgradeSource.PlayOneShot(upgradeSource.clip);
 
@@ -215,9 +215,9 @@ public class RepairStation : PlayerBuilding, IDamageable, IUpgradeable
         //If the building is not active update the energy deficit before notifying the manager of the energy usage increase
         if (!active)
         {
-            GameManager.Instance.energyDeficit -= GetUpgradeEnergy(type);
+            EconomyManager.Instance.energyDeficit -= GetUpgradeEnergy(type);
         }
-        GameManager.Instance.ChangeEnergyUsage(GetUpgradeEnergy(type));
+        EconomyManager.Instance.ChangeEnergyUsage(GetUpgradeEnergy(type));
     }
 
     // Start is called before the first frame update
@@ -320,7 +320,7 @@ public class RepairStation : PlayerBuilding, IDamageable, IUpgradeable
     public override bool Sell()
     {
         //Refund part of build cost
-        GameManager.Instance.budget += cost * 0.5f * health / baseHealth;
+        EconomyManager.Instance.budget += cost * 0.5f * health / baseHealth;
 
         //Do removal events
         Remove();
@@ -332,7 +332,7 @@ public class RepairStation : PlayerBuilding, IDamageable, IUpgradeable
     //Get energy required to upgrade stat
     public float GetUpgradeEnergy(int type)
     {
-        return energyCosts[type] * GameManager.Instance.playerCosts;
+        return energyCosts[type] * EconomyManager.Instance.playerCosts;
     }
 
     //Disable repair station to save energy
@@ -498,18 +498,13 @@ public class RepairStation : PlayerBuilding, IDamageable, IUpgradeable
 
         //Energy management
         //Disable();
-        GameManager.Instance.energyDeficit += Disable();
-        GameManager.Instance.ChangeEnergyUsage(energyCost);
+        EconomyManager.Instance.energyDeficit += Disable();
+        EconomyManager.Instance.ChangeEnergyUsage(energyCost);
     }
 
     //Return type for use in identify what to do with this
     public override int GetBuildingType()
     {
         return 3 + maxAlignments;
-    }
-
-    public override int GetConstructionType()
-    {
-        return 1;
     }
 }

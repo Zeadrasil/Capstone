@@ -57,7 +57,7 @@ public class Wall : PlayerBuilding, IUpgradeable
     //Get the cost of a specific stat upgrade
     public float GetUpgradeCost(int type)
     {
-        return baseUpgradeCost * Mathf.Pow(1 + expenseModifiers[type] * GameManager.Instance.playerCosts, upgradeLevels[type]) * (1 + expenseModifiers[type]) * GameManager.Instance.playerCosts;
+        return baseUpgradeCost * Mathf.Pow(1 + expenseModifiers[type] * EconomyManager.Instance.playerCosts, upgradeLevels[type]) * (1 + expenseModifiers[type]) * EconomyManager.Instance.playerCosts;
     }
 
     //Get the potential effects of upgrading a specific stat
@@ -107,7 +107,7 @@ public class Wall : PlayerBuilding, IUpgradeable
     public override bool Sell()
     {
         //Refund part of build cost
-        GameManager.Instance.budget += cost * 0.5f * health / baseHealth;
+        EconomyManager.Instance.budget += cost * 0.5f * health / baseHealth;
 
         //Call remove events
         Remove();
@@ -141,7 +141,7 @@ public class Wall : PlayerBuilding, IUpgradeable
     public void Upgrade(int type)
     {
         //Take upgrade cost out of budget
-        GameManager.Instance.budget -= GetUpgradeCost(type);
+        EconomyManager.Instance.budget -= GetUpgradeCost(type);
 
         upgradeSource.PlayOneShot(upgradeSource.clip);
 
@@ -342,17 +342,12 @@ public class Wall : PlayerBuilding, IUpgradeable
         finishedAligning = data.finishedAligning;
 
         //Energy management
-        GameManager.Instance.ChangeEnergyUsage(energyCost);
+        EconomyManager.Instance.ChangeEnergyUsage(energyCost);
     }
 
     //Return type for use in identify what to do with this
     public override int GetBuildingType()
     {
         return 5 + maxAlignments;
-    }
-
-    public override int GetConstructionType()
-    {
-        return 2;
     }
 }

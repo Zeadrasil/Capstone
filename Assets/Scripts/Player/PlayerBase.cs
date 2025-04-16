@@ -120,8 +120,4 @@ public class PlayerBase : PlayerBuilding
         return "Player Base";
     }
 
-    public override int GetConstructionType()
-    {
-        return -1;
-    }
 }

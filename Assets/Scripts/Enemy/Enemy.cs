@@ -486,7 +486,7 @@ public class Enemy : MonoBehaviour, IDamageable, IDamager
         if(health <= 0)
         {
             //Give budget based on max health
-            GameManager.Instance.budget += baseHealth * GameManager.Instance.playerIncome * 0.002f * movementSpeed * (ranged ? range * 0.5f : 1) * damage * firerate;
+            EconomyManager.Instance.budget += baseHealth * EconomyManager.Instance.playerIncome * 0.002f * movementSpeed * (ranged ? range * 0.25f + 1: 1) * damage * firerate;
             
             //Used to update wave progress
             GameManager.Instance.KillEnemy(this);

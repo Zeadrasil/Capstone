@@ -142,7 +142,7 @@ public class Turret : PlayerBuilding, IDamager, IUpgradeable
     public void Upgrade(int type)
     {
         //Subtracts upgrade cost from your budget
-        GameManager.Instance.budget -= GetUpgradeCost(type);
+        EconomyManager.Instance.budget -= GetUpgradeCost(type);
 
         upgradeSource.PlayOneShot(upgradeSource.clip);
 
@@ -207,20 +207,20 @@ public class Turret : PlayerBuilding, IDamager, IUpgradeable
                 }
         }
         //Increase energy cost by proper amount for the upgrade
-        energyCost += GetUpgradeEnergy(type) * GameManager.Instance.energyConsumption;
+        energyCost += GetUpgradeEnergy(type) * EconomyManager.Instance.energyConsumption;
 
         //If the building is not active update the energy deficit before notifying the manager of the energy usage increase
         if (!active)
         {
-            GameManager.Instance.energyDeficit -= GetUpgradeEnergy(type) * GameManager.Instance.energyConsumption;
+            EconomyManager.Instance.energyDeficit -= GetUpgradeEnergy(type) * EconomyManager.Instance.energyConsumption;
         }
-        GameManager.Instance.ChangeEnergyUsage(GetUpgradeEnergy(type) * GameManager.Instance.energyConsumption);
+        EconomyManager.Instance.ChangeEnergyUsage(GetUpgradeEnergy(type) * EconomyManager.Instance.energyConsumption);
     }
 
     //Gets the cost of upgrading a specific stat
     public float GetUpgradeCost(int type)
     {
-        return baseUpgradeCost * Mathf.Pow(1 + expenseModifiers[type] * GameManager.Instance.playerCosts, upgradeLevels[type]) * (1 + expenseModifiers[type]) * GameManager.Instance.playerCosts;
+        return baseUpgradeCost * Mathf.Pow(1 + expenseModifiers[type] * EconomyManager.Instance.playerCosts, upgradeLevels[type]) * (1 + expenseModifiers[type]) * EconomyManager.Instance.playerCosts;
     }
 
     //Gets the potential effects of upgrading a specific stat
@@ -502,7 +502,7 @@ public class Turret : PlayerBuilding, IDamager, IUpgradeable
         Remove();
 
         //Refund part of build cost
-        GameManager.Instance.budget += cost * 0.5f * health / baseHealth;
+        EconomyManager.Instance.budget += cost * 0.5f * health / baseHealth;
 
         //Ensures that it is known that building was successfully sold
         return true;
@@ -725,18 +725,13 @@ public class Turret : PlayerBuilding, IDamager, IUpgradeable
 
         //Energy management
         //Disable();
-        GameManager.Instance.energyDeficit += Disable();
-        GameManager.Instance.ChangeEnergyUsage(energyCost);
+        EconomyManager.Instance.energyDeficit += Disable();
+        EconomyManager.Instance.ChangeEnergyUsage(energyCost);
     }
 
     //Return type for use in identify what to do with this
     public override int GetBuildingType()
     {
         return maxAlignments;
-    }
-
-    public override int GetConstructionType()
-    {
-        return 0;
     }
 }

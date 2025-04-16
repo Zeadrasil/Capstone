@@ -19,13 +19,6 @@ public class GameManager : Singleton<GameManager>
     public Camera Camera;
     public bool paused;
 
-    //Economy data
-    public float budget;
-    private float income;
-    public float energy { get; private set; }
-    public float usedEnergy { get; private set; }
-    public float energyDeficit;
-    public PlayerBuilding mostRecentEnergyDecrease;
 
     //Map data
     int expansionRate = 2;
@@ -198,10 +191,6 @@ public class GameManager : Singleton<GameManager>
     public float enemyStrength = 1;
     public float playerStrength = 1;
     public float playerHealth = 1;
-    public float playerIncome = 1;
-    public float playerCosts = 1;
-    public float energyProduction = 1;
-    public float energyConsumption = 1;
 
     //Prevents exceptions due to data for in-game updates not being passed in yet
     private bool active = false;
@@ -295,12 +284,6 @@ public class GameManager : Singleton<GameManager>
     GameObject[] tierFourEnemies;
     GameObject[] tierFiveEnemies;
 
-    //Sets the TileManager instance
-    void Start()
-    {
-
-    }
-
     public void Initialize(int simplifiedSeed, float enemyDifficulty, float playerPower, float playerEconomy)
     {
         //Sets the passed in data
@@ -309,10 +292,8 @@ public class GameManager : Singleton<GameManager>
         enemyStrength = enemyDifficulty;
         playerStrength = playerPower;
         playerHealth = playerPower;
-        playerIncome = playerEconomy;
-        playerCosts = 1 / playerEconomy;
-        energyConsumption = 1 / playerEconomy;
-        energyProduction = playerEconomy;
+
+        EconomyManager.Instance.Initialize(playerEconomy);
 
         //Further events are identical between advanced and basic, so pass to another function
         midInit();
@@ -326,14 +307,8 @@ public class GameManager : Singleton<GameManager>
 
         //Sets defaults
         wave = 0;
-        energy = 10;
         maxEnemiesThisWave = 1;
-        usedEnergy = 0;
-        income = 0;
-        energyDeficit = 0;
-        mostRecentEnergyDecrease = null;
         paused = false;
-        budget = 100;
 
 
         //Generates the map seeds if applicable
@@ -351,10 +326,8 @@ public class GameManager : Singleton<GameManager>
         }
 
         //Modifies starting values by the difficulty modifiers
-        budget *= playerIncome;
-        energy *= energyProduction;
-
-        BuildingManager.Instance.MidInit(playerCosts, energyConsumption);
+        EconomyManager.Instance.MidInit();
+        BuildingManager.Instance.MidInit();
 
         //Calls common initialization events
         Initialize();
@@ -369,10 +342,7 @@ public class GameManager : Singleton<GameManager>
         this.enemyStrength = enemyStrength;
         this.playerStrength = playerStrength;
         this.playerHealth = playerHealth;
-        this.playerIncome = playerIncome;
-        this.playerCosts = playerCosts;
-        this.energyConsumption = energyConsumption;
-        this.energyProduction = energyProduction;
+        EconomyManager.Instance.Initialize(playerIncome, playerCosts, energyConsumption, energyProduction);
 
         //Further events are identical between advanced and basic, so pass to another function
         midInit(generateSeeds);
@@ -441,21 +411,13 @@ public class GameManager : Singleton<GameManager>
         enemyStrength = data.enemyStrength;
         playerStrength = data.playerStrength;
         playerHealth = data.playerHealth;
-        playerCosts = data.playerCosts;
-        playerIncome = data.playerIncome;
-        energyProduction = data.energyProduction;
-        energyConsumption = data.energyConsumption;
 
         //Default values
-        energy = 10;
-        maxEnemiesThisWave = 1;
-        usedEnergy = 0;
-        income = 0;
-        energyDeficit = 0;
         paused = false;
+        maxEnemiesThisWave = 1;
 
         //Load economic data
-        budget = data.budget;
+        EconomyManager.Instance.InitializeLoad(data);
 
         //Initiate RNG and move it to the appropriate RNG stream position
         BasicUtils.WrappedInitState(simplifiedSeed);
@@ -481,7 +443,6 @@ public class GameManager : Singleton<GameManager>
             TileManager.Instance.Generate(tile);
         }
 
-        mostRecentEnergyDecrease = BuildingManager.Instance.PlayerBase;
         BuildingManager.Instance.InitializeLoad(data);
         //updateEnergy();
     }
@@ -553,8 +514,6 @@ public class GameManager : Singleton<GameManager>
         //Initialize the tilemanager for the same reason that this needs to be initialized
         TileManager.Instance.Initialize();
 
-        //Sets the player base as the first item that is affecting energy
-        mostRecentEnergyDecrease = BuildingManager.Instance.PlayerBase;
 
         BuildingManager.Instance.Initialize();
     }
@@ -1084,17 +1043,19 @@ public class GameManager : Singleton<GameManager>
         //Most actions only happen once you start a map
         if (active)
         {
+            float budget = EconomyManager.Instance.budget;
+
             //Sets the colors of the backgrounds to show you how close you are to being able to afford them
-            tierOneTurretBackground.color = new Color(Mathf.Lerp(unavailableColor.x, availableColor.x, Mathf.Clamp(budget / BuildingManager.Instance.budgetCosts[0], 0, 1)), Mathf.Lerp(unavailableColor.y, availableColor.y, Mathf.Clamp(budget / BuildingManager.Instance.budgetCosts[0], 0, 1)), Mathf.Lerp(unavailableColor.z, availableColor.z, Mathf.Clamp(budget / BuildingManager.Instance.budgetCosts[0], 0, 1)));
-            tierTwoTurretBackground.color = new Color(Mathf.Lerp(unavailableColor.x, availableColor.x, Mathf.Clamp(budget / BuildingManager.Instance.budgetCosts[1], 0, 1)), Mathf.Lerp(unavailableColor.y, availableColor.y, Mathf.Clamp(budget / BuildingManager.Instance.budgetCosts[1], 0, 1)), Mathf.Lerp(unavailableColor.z, availableColor.z, Mathf.Clamp(budget / BuildingManager.Instance.budgetCosts[1], 0, 1)));
-            tierThreeTurretBackground.color = new Color(Mathf.Lerp(unavailableColor.x, availableColor.x, Mathf.Clamp(budget / BuildingManager.Instance.budgetCosts[2], 0, 1)), Mathf.Lerp(unavailableColor.y, availableColor.y, Mathf.Clamp(budget / BuildingManager.Instance.budgetCosts[2], 0, 1)), Mathf.Lerp(unavailableColor.z, availableColor.z, Mathf.Clamp(budget / BuildingManager.Instance.budgetCosts[2], 0, 1)));
-            tierOneRepairBackground.color = new Color(Mathf.Lerp(unavailableColor.x, availableColor.x, Mathf.Clamp(budget / BuildingManager.Instance.budgetCosts[3], 0, 1)), Mathf.Lerp(unavailableColor.y, availableColor.y, Mathf.Clamp(budget / BuildingManager.Instance.budgetCosts[3], 0, 1)), Mathf.Lerp(unavailableColor.z, availableColor.z, Mathf.Clamp(budget / BuildingManager.Instance.budgetCosts[3], 0, 1)));
-            tierTwoRepairBackground.color = new Color(Mathf.Lerp(unavailableColor.x, availableColor.x, Mathf.Clamp(budget / BuildingManager.Instance.budgetCosts[4], 0, 1)), Mathf.Lerp(unavailableColor.y, availableColor.y, Mathf.Clamp(budget / BuildingManager.Instance.budgetCosts[4], 0, 1)), Mathf.Lerp(unavailableColor.z, availableColor.z, Mathf.Clamp(budget / BuildingManager.Instance.budgetCosts[4], 0, 1)));
-            tierOneWallBackground.color = new Color(Mathf.Lerp(unavailableColor.x, availableColor.x, Mathf.Clamp(budget / BuildingManager.Instance.budgetCosts[5], 0, 1)), Mathf.Lerp(unavailableColor.y, availableColor.y, Mathf.Clamp(budget / BuildingManager.Instance.budgetCosts[5], 0, 1)), Mathf.Lerp(unavailableColor.z, availableColor.z, Mathf.Clamp(budget / BuildingManager.Instance.budgetCosts[5], 0, 1)));
-            tierTwoWallBackground.color = new Color(Mathf.Lerp(unavailableColor.x, availableColor.x, Mathf.Clamp(budget / BuildingManager.Instance.budgetCosts[6], 0, 1)), Mathf.Lerp(unavailableColor.y, availableColor.y, Mathf.Clamp(budget / BuildingManager.Instance.budgetCosts[6], 0, 1)), Mathf.Lerp(unavailableColor.z, availableColor.z, Mathf.Clamp(budget / BuildingManager.Instance.budgetCosts[6], 0, 1)));
-            tierOneExtractorBackground.color = new Color(Mathf.Lerp(unavailableColor.x, availableColor.x, Mathf.Clamp(budget / BuildingManager.Instance.budgetCosts[7], 0, 1)), Mathf.Lerp(unavailableColor.y, availableColor.y, Mathf.Clamp(budget / BuildingManager.Instance.budgetCosts[7], 0, 1)), Mathf.Lerp(unavailableColor.z, availableColor.z, Mathf.Clamp(budget / BuildingManager.Instance.budgetCosts[7], 0, 1)));
-            tierTwoExtractorBackground.color = new Color(Mathf.Lerp(unavailableColor.x, availableColor.x, Mathf.Clamp(budget / BuildingManager.Instance.budgetCosts[8], 0, 1)), Mathf.Lerp(unavailableColor.y, availableColor.y, Mathf.Clamp(budget / BuildingManager.Instance.budgetCosts[8], 0, 1)), Mathf.Lerp(unavailableColor.z, availableColor.z, Mathf.Clamp(budget / BuildingManager.Instance.budgetCosts[8], 0, 1)));
-            tierThreeExtractorBackground.color = new Color(Mathf.Lerp(unavailableColor.x, availableColor.x, Mathf.Clamp(budget / BuildingManager.Instance.budgetCosts[9], 0, 1)), Mathf.Lerp(unavailableColor.y, availableColor.y, Mathf.Clamp(budget / BuildingManager.Instance.budgetCosts[9], 0, 1)), Mathf.Lerp(unavailableColor.z, availableColor.z, Mathf.Clamp(budget / BuildingManager.Instance.budgetCosts[9], 0, 1)));
+            tierOneTurretBackground.color = new Color(Mathf.Lerp(unavailableColor.x, availableColor.x, Mathf.Clamp(budget / EconomyManager.Instance.budgetCosts[0], 0, 1)), Mathf.Lerp(unavailableColor.y, availableColor.y, Mathf.Clamp(budget / EconomyManager.Instance.budgetCosts[0], 0, 1)), Mathf.Lerp(unavailableColor.z, availableColor.z, Mathf.Clamp(budget / EconomyManager.Instance.budgetCosts[0], 0, 1)));
+            tierTwoTurretBackground.color = new Color(Mathf.Lerp(unavailableColor.x, availableColor.x, Mathf.Clamp(budget / EconomyManager.Instance.budgetCosts[1], 0, 1)), Mathf.Lerp(unavailableColor.y, availableColor.y, Mathf.Clamp(budget / EconomyManager.Instance.budgetCosts[1], 0, 1)), Mathf.Lerp(unavailableColor.z, availableColor.z, Mathf.Clamp(budget / EconomyManager.Instance.budgetCosts[1], 0, 1)));
+            tierThreeTurretBackground.color = new Color(Mathf.Lerp(unavailableColor.x, availableColor.x, Mathf.Clamp(budget / EconomyManager.Instance.budgetCosts[2], 0, 1)), Mathf.Lerp(unavailableColor.y, availableColor.y, Mathf.Clamp(budget / EconomyManager.Instance.budgetCosts[2], 0, 1)), Mathf.Lerp(unavailableColor.z, availableColor.z, Mathf.Clamp(budget / EconomyManager.Instance.budgetCosts[2], 0, 1)));
+            tierOneRepairBackground.color = new Color(Mathf.Lerp(unavailableColor.x, availableColor.x, Mathf.Clamp(budget / EconomyManager.Instance.budgetCosts[3], 0, 1)), Mathf.Lerp(unavailableColor.y, availableColor.y, Mathf.Clamp(budget / EconomyManager.Instance.budgetCosts[3], 0, 1)), Mathf.Lerp(unavailableColor.z, availableColor.z, Mathf.Clamp(budget / EconomyManager.Instance.budgetCosts[3], 0, 1)));
+            tierTwoRepairBackground.color = new Color(Mathf.Lerp(unavailableColor.x, availableColor.x, Mathf.Clamp(budget / EconomyManager.Instance.budgetCosts[4], 0, 1)), Mathf.Lerp(unavailableColor.y, availableColor.y, Mathf.Clamp(budget / EconomyManager.Instance.budgetCosts[4], 0, 1)), Mathf.Lerp(unavailableColor.z, availableColor.z, Mathf.Clamp(budget / EconomyManager.Instance.budgetCosts[4], 0, 1)));
+            tierOneWallBackground.color = new Color(Mathf.Lerp(unavailableColor.x, availableColor.x, Mathf.Clamp(budget / EconomyManager.Instance.budgetCosts[5], 0, 1)), Mathf.Lerp(unavailableColor.y, availableColor.y, Mathf.Clamp(budget / EconomyManager.Instance.budgetCosts[5], 0, 1)), Mathf.Lerp(unavailableColor.z, availableColor.z, Mathf.Clamp(budget / EconomyManager.Instance.budgetCosts[5], 0, 1)));
+            tierTwoWallBackground.color = new Color(Mathf.Lerp(unavailableColor.x, availableColor.x, Mathf.Clamp(budget / EconomyManager.Instance.budgetCosts[6], 0, 1)), Mathf.Lerp(unavailableColor.y, availableColor.y, Mathf.Clamp(budget / EconomyManager.Instance.budgetCosts[6], 0, 1)), Mathf.Lerp(unavailableColor.z, availableColor.z, Mathf.Clamp(budget / EconomyManager.Instance.budgetCosts[6], 0, 1)));
+            tierOneExtractorBackground.color = new Color(Mathf.Lerp(unavailableColor.x, availableColor.x, Mathf.Clamp(budget / EconomyManager.Instance.budgetCosts[7], 0, 1)), Mathf.Lerp(unavailableColor.y, availableColor.y, Mathf.Clamp(budget / EconomyManager.Instance.budgetCosts[7], 0, 1)), Mathf.Lerp(unavailableColor.z, availableColor.z, Mathf.Clamp(budget / EconomyManager.Instance.budgetCosts[7], 0, 1)));
+            tierTwoExtractorBackground.color = new Color(Mathf.Lerp(unavailableColor.x, availableColor.x, Mathf.Clamp(budget / EconomyManager.Instance.budgetCosts[8], 0, 1)), Mathf.Lerp(unavailableColor.y, availableColor.y, Mathf.Clamp(budget / EconomyManager.Instance.budgetCosts[8], 0, 1)), Mathf.Lerp(unavailableColor.z, availableColor.z, Mathf.Clamp(budget / EconomyManager.Instance.budgetCosts[8], 0, 1)));
+            tierThreeExtractorBackground.color = new Color(Mathf.Lerp(unavailableColor.x, availableColor.x, Mathf.Clamp(budget / EconomyManager.Instance.budgetCosts[9], 0, 1)), Mathf.Lerp(unavailableColor.y, availableColor.y, Mathf.Clamp(budget / EconomyManager.Instance.budgetCosts[9], 0, 1)), Mathf.Lerp(unavailableColor.z, availableColor.z, Mathf.Clamp(budget / EconomyManager.Instance.budgetCosts[9], 0, 1)));
 
             //Only bother updating the turret upgrade backgrounds if you have the window open
             if (TurretUpgradeWindow.enabled)
@@ -1194,7 +1155,7 @@ public class GameManager : Singleton<GameManager>
                 if (!paused)
                 {
                     //Allows you to cancel construction
-                    if (BuildingManager.Instance.selectedConstruction != null && (Input.GetKeyDown(cancelKey) || budget < BuildingManager.Instance.budgetCosts[BuildingManager.Instance.selectedConstructionIndex]))
+                    if (BuildingManager.Instance.selectedConstruction != null && (Input.GetKeyDown(cancelKey) || budget < EconomyManager.Instance.budgetCosts[BuildingManager.Instance.selectedConstructionIndex]))
                     {
                         BuildingManager.Instance.CancelConstruction();
                     }
@@ -1323,19 +1284,10 @@ public class GameManager : Singleton<GameManager>
             //Only apply income if you are actively in a wave
             else
             {
-                budget += income * Time.deltaTime;
+                EconomyManager.Instance.TickIncome();
             }
         }
 	}
-
-    //Function to increase income in order to improve performance of constant checks
-    public void IncreaseIncome(float increase)
-    {
-        //Increase/decrease income
-        income += increase;
-        //Update income text to reflect the updated income
-        incomeText.text = $"Income: {income:F2} / second";
-    }
 
     //Function to remove an enemy in order to improve performance of constant checks
     public void KillEnemy(Enemy enemy)
@@ -1360,55 +1312,6 @@ public class GameManager : Singleton<GameManager>
         nextWaveBackground.color = new Color(Mathf.Lerp(unavailableColor.x, availableColor.x, 1 - Mathf.Clamp(currentEnemies.Count / (float)maxEnemiesThisWave, 0, 1)), Mathf.Lerp(unavailableColor.y, availableColor.y, 1 - Mathf.Clamp(currentEnemies.Count / (float)maxEnemiesThisWave, 0, 1)), Mathf.Lerp(unavailableColor.z, availableColor.z, 1 - Mathf.Clamp(currentEnemies.Count / (float)maxEnemiesThisWave, 0, 1)));
     }
 
-
-    //Incrase or decrease max energy
-    public void ChangeEnergyCap(float difference)
-    {
-        energy += difference;
-        updateEnergy();
-    }
-
-    //Increase or decrease energy usage
-    public void ChangeEnergyUsage(float difference)
-    {
-        usedEnergy += difference;
-        updateEnergy();
-    }
-
-    //Update all of the energy details
-    private void updateEnergy()
-    {
-        //Update UI
-        energyText.text = $"Energy Usage: {usedEnergy:F2} / {energy:F2}";
-
-        //If you are now in an energy deficit not already accounted for
-        if(energy - usedEnergy < energyDeficit)
-        {
-            //Disables one building if possible and runs through checks again
-            if (mostRecentEnergyDecrease != null)
-            {
-                energyDeficit += mostRecentEnergyDecrease.Disable();
-                mostRecentEnergyDecrease = mostRecentEnergyDecrease.previousChanged;
-                updateEnergy();
-            }
-        }
-        //Otherwise if you have enough energy to reenable a building
-        else if(mostRecentEnergyDecrease.nextChanged != null && energy - (usedEnergy + mostRecentEnergyDecrease.nextChanged.energyCost) >= energyDeficit /*- (mostRecentEnergyDecrease.nextChanged.gameObject.TryGetComponent(out ResourceExtractor ext) ? ext.energyRate : 0)*/)
-        {
-            //Reenable a building and run through checks again
-            energyDeficit += mostRecentEnergyDecrease.nextChanged.Enable();
-            mostRecentEnergyDecrease = mostRecentEnergyDecrease.nextChanged;
-            updateEnergy();
-        }
-        //Should only run on the very first building as it checks to see if there is no previous or next, which should only happen then
-        //Enables the building if it runs
-        else if(mostRecentEnergyDecrease.nextChanged == null && mostRecentEnergyDecrease.previousChanged == null && energy - usedEnergy >= mostRecentEnergyDecrease.energyCost && energyDeficit < 0)
-        {
-            energyDeficit += mostRecentEnergyDecrease.Enable();
-            updateEnergy();
-        }
-    }
-    
     //Gets the data so that it can be saved
     public GameData GetSaveData()
     {
@@ -1430,10 +1333,9 @@ public class GameManager : Singleton<GameManager>
 
 
         //Apply building data
-
+        BuildingManager.Instance.GetSaveData(ref data);
         //Economy info
-        data.budget = budget;
-
+        EconomyManager.Instance.GetSaveData(ref data);
         //Other
         data.wave = wave;
         data.generatedNumbers = BasicUtils.generatedNumbers;
@@ -1444,10 +1346,6 @@ public class GameManager : Singleton<GameManager>
         data.enemyStrength = enemyStrength;
         data.playerStrength = playerStrength;
         data.playerHealth = playerHealth;
-        data.playerIncome = playerIncome;
-        data.playerCosts = playerCosts;
-        data.energyProduction = energyProduction;
-        data.energyConsumption = energyConsumption;
 
         return data;
     }
@@ -1456,6 +1354,8 @@ public class GameManager : Singleton<GameManager>
     public void Deactivate()
     {
         active = false;
+
+        EconomyManager.Instance.Deactivate();
         BuildingManager.Instance.Deactivate();
         TileManager.Instance.Deactivate();
     }

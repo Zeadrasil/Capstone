@@ -16,9 +16,6 @@ public class BuildingManager : Singleton<BuildingManager>
     public GameObject selectedConstruction;
     public int selectedConstructionIndex;
 
-    //Cost data for new buildings
-    public float[] budgetCosts;
-    public float[] energyCosts;
 
     public Dictionary<Vector2Int, GameObject> playerBuildings = new Dictionary<Vector2Int, GameObject>();
     public Dictionary<Vector2Int, float> playerHealths = new Dictionary<Vector2Int, float>();
@@ -42,20 +39,11 @@ public class BuildingManager : Singleton<BuildingManager>
     public GameObject selectedBuilding;
     private int selectedUpgrade;
 
-    public void MidInit(float playerCosts, float energyConsumption)
+    public void MidInit()
     {
-        budgetCosts = new float[] { 10, 15, 25, 10, 15, 5, 7.5f, 10, 15, 25 };
-        energyCosts = new float[] { 1, 1, 1, 1, 1, 0, 0, 1, 1, 1 };
         playerBuildings.Clear();
         selectedConstructionIndex = -1;
         selectedConstruction = null;
-
-        //Modifies building costs by difficulty modifier
-        for (int i = 0; i < budgetCosts.Length; i++)
-        {
-            budgetCosts[i] *= playerCosts;
-            energyCosts[i] *= energyConsumption;
-        }
     }
 
     public void InitializeLoad(GameData data)
@@ -63,8 +51,6 @@ public class BuildingManager : Singleton<BuildingManager>
         playerBuildings.Clear();
         selectedConstructionIndex = -1;
         selectedConstruction = null;
-        budgetCosts = data.budgetCosts;
-        energyCosts = data.energyCosts;
 
         BuildingData[] buildingDataArray = data.buildings;
 
@@ -76,7 +62,7 @@ public class BuildingManager : Singleton<BuildingManager>
             PlayerBuilding pb = go.GetComponentInChildren<PlayerBuilding>();
 
             //Add to the very end of enabling queue
-            PlayerBuilding holder = GameManager.Instance.mostRecentEnergyDecrease;
+            PlayerBuilding holder = EconomyManager.Instance.mostRecentEnergyDecrease;
             while (holder.nextChanged != null)
             {
                 holder = holder.nextChanged;
@@ -117,7 +103,7 @@ public class BuildingManager : Singleton<BuildingManager>
         //Clear construction data
         standardConstructionEvents();
         //Do not try to instantiate a new wave or no selection
-        if (type != -1 && type != 10 && GameManager.Instance.budget >= budgetCosts[type] && buildings[type] != null && GameManager.Instance.betweenWaves)
+        if (type != -1 && type != 10 && EconomyManager.Instance.CanAffordBuilding(type) && buildings[type] != null && GameManager.Instance.betweenWaves)
         {
             //Create a building that will track your cursor to show what it will look like when you place it
             selectedConstruction = Instantiate(buildings[type]);
@@ -211,7 +197,7 @@ public class BuildingManager : Singleton<BuildingManager>
         if (subject.IsAligned())
         {
             //Ensures tht you can afford the upgrade
-            if (GameManager.Instance.budget >= subject.GetUpgradeCost(upgrade))
+            if (EconomyManager.Instance.budget >= subject.GetUpgradeCost(upgrade))
             {
                 //Upgrade the building with the desired upgrade
                 subject.Upgrade(upgrade);
@@ -380,22 +366,7 @@ public class BuildingManager : Singleton<BuildingManager>
         //Sets the building information
         PlayerBuilding pb = go.GetComponentInChildren<PlayerBuilding>();
         pb.location = hoveredTile;
-        pb.cost = budgetCosts[selectedConstructionIndex];
-
-        //Add to the very end of enabling queue
-        PlayerBuilding holder = GameManager.Instance.mostRecentEnergyDecrease;
-        while (holder.nextChanged != null)
-        {
-            holder = holder.nextChanged;
-        }
-        holder.nextChanged = pb;
-        pb.previousChanged = holder;
-
-        //Energy management
-        pb.energyCost = energyCosts[pb.GetBuildingType()];
-        energyCosts[pb.GetBuildingType()] += pb.GetBuildingType() == 5 || pb.GetBuildingType() == 6 ? 0 : GameManager.Instance.energyConsumption * 0.5f;
-        GameManager.Instance.energyDeficit += pb.Disable();
-        GameManager.Instance.ChangeEnergyUsage(pb.energyCost);
+        EconomyManager.Instance.PlaceBuilding(ref pb);
 
         //Add to the tracked building dictionary
         playerBuildings.Add(hoveredTile, go);
@@ -488,7 +459,7 @@ public class BuildingManager : Singleton<BuildingManager>
             selectedUpgrade = cap - 1;
         }
         //Update the shown data to reflect new selection
-        GameManager.Instance.UpdateSelection(selectedBuilding.GetComponentInChildren<PlayerBuilding>().GetConstructionType(), selectedBuilding);
+        GameManager.Instance.UpdateSelection(selectedUpgrade, selectedBuilding);
     }
 
     public void Upgrade()
@@ -535,7 +506,7 @@ public class BuildingManager : Singleton<BuildingManager>
         selectedUpgrade = 0;
         selectedBuilding = building;
         standardUpgradeEvents();
-        GameManager.Instance.UpdateSelection(building.GetComponentInChildren<PlayerBuilding>().GetConstructionType(), selectedBuilding);
+        GameManager.Instance.UpdateSelection(selectedUpgrade, selectedBuilding);
     }
 
     public void AttemptPlacement(Vector2Int hoveredTile)
@@ -543,10 +514,6 @@ public class BuildingManager : Singleton<BuildingManager>
         if (checkPlacement(hoveredTile))
         {
             placeBuilding(hoveredTile);
-            GameManager.Instance.budget -= budgetCosts[selectedConstructionIndex];
-
-            //Increases price of new building of that tier in order to encourage using a variety of tiers and upgrading things
-            budgetCosts[selectedConstructionIndex] *= 1.2f;
         }
     }
 
@@ -598,44 +565,24 @@ public class BuildingManager : Singleton<BuildingManager>
         if (building.active)
         {
             //If it is an active building remove the energy cost from it
-            GameManager.Instance.ChangeEnergyUsage(-building.energyCost);
+            EconomyManager.Instance.ChangeEnergyUsage(-building.energyCost);
 
             //Ensure that all economy data from extractors is cleared
             if (building.GetBuildingType() >= 7)
             {
                 ResourceExtractor extractor = building.gameObject.GetComponentInChildren<ResourceExtractor>();
-                GameManager.Instance.IncreaseIncome(-extractor.extractionRate);
-                GameManager.Instance.ChangeEnergyCap(-extractor.energyRate);
+                EconomyManager.Instance.IncreaseIncome(-extractor.extractionRate);
+                EconomyManager.Instance.ChangeEnergyCap(-extractor.energyRate);
             }
         }
         //Remove from building tracker
         playerBuildings.Remove(building.location);
-        int type = building.GetBuildingType();
 
-        //Reduce construction energy cost due to the building being destroyed
-        energyCosts[type] -= building.GetBuildingType() == 5 || building.GetBuildingType() == 6 ? 0 : GameManager.Instance.energyConsumption * 0.5f;
-
-        //Reduce energy costs of connected buildings after it is gone to ensure that they take the appropriate amount
-        while (building.nextChanged != null)
-        {
-            building = building.nextChanged;
-            if (type == building.GetBuildingType())
-            {
-                building.energyCost -= GameManager.Instance.energyConsumption * 0.5f;
-                GameManager.Instance.ChangeEnergyUsage(-GameManager.Instance.energyConsumption * 0.5f);
-            }
-        }
-        //Ensures that the reference to the most recent change is still valid
-        if (building.location == GameManager.Instance.mostRecentEnergyDecrease.location)
-        {
-            GameManager.Instance.mostRecentEnergyDecrease = GameManager.Instance.mostRecentEnergyDecrease.previousChanged;
-        }
+        EconomyManager.Instance.RemoveBuilding(building);
     }
 
     public void GetSaveData(ref GameData data)
     {
-        data.budgetCosts = budgetCosts;
-        data.energyCosts = energyCosts;
         data.buildings = new BuildingData[playerBuildings.Count - 1];
         GameObject[] buildingArray = playerBuildings.Values.ToArray();
         //Buildings

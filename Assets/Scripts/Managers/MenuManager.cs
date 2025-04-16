@@ -1531,16 +1531,6 @@ public class MenuManager : Singleton<MenuManager>
         //Update music
         MusicManager.Instance.PlayMenu();
 
-        //Clear out the building references to reduce memory leaks
-        while (GameManager.Instance.mostRecentEnergyDecrease.nextChanged != null)
-        {
-            GameManager.Instance.mostRecentEnergyDecrease = GameManager.Instance.mostRecentEnergyDecrease.nextChanged;
-        }
-        while (GameManager.Instance.mostRecentEnergyDecrease.previousChanged != null)
-        {
-            Destroy(GameManager.Instance.mostRecentEnergyDecrease.transform.parent.gameObject);
-            GameManager.Instance.mostRecentEnergyDecrease = GameManager.Instance.mostRecentEnergyDecrease.previousChanged;
-        }
         //Deactivate GameManager while in menu
         GameManager.Instance.Deactivate();
 

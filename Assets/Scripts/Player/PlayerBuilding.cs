@@ -58,6 +58,4 @@ public abstract class PlayerBuilding : MonoBehaviour, IDamageable
 
     public abstract string GetDescription();
 
-    public abstract int GetConstructionType();
-
 }
