@@ -26,13 +26,14 @@ public class Enemy : MonoBehaviour, IDamageable, IDamager
     protected float rangedSearchCooldown = 0;
     protected float baseRangedSearchCooldown = 9;
     [SerializeField] protected float radius;
-    protected float offset = 0;
     protected float offsetDistance = 0;
     protected List<IDamager> currentDamagers = new List<IDamager>();
     [SerializeField] GameObject healthBar;
     Coroutine fireCoroutine;
     protected int collisionDetectionCooldown = 0;
     protected int baseCollisionDetectionCooldown = 9;
+
+    private (int, bool) movementTriggerInfo = (-1, false);
 
     protected Task<(bool, Dictionary<Vector2Int, NavNode>)> findPathTask;
 
@@ -303,14 +304,39 @@ public class Enemy : MonoBehaviour, IDamageable, IDamager
             if (!pitbullMode)
             {
                 //Move according to direction
-                transform.parent.position += Mathf.Max(movementSpeed * 0.02f - offset, 0) * transform.right.normalized;
-                offset = Mathf.Max(offset - movementSpeed, 0);
+                if(movementTriggerInfo.Item1 == -1 || movementTriggerInfo.Item1 > 0)
+                {
+                    transform.parent.position += movementSpeed * 0.02f * transform.right.normalized;
+                    movementTriggerInfo.Item1 -= movementTriggerInfo.Item1 == -1 ? 0 : 1;
+                }
+                else if(movementTriggerInfo.Item1 == 0)
+                {
+                    movementTriggerInfo.Item1--;
+                    if(movementTriggerInfo.Item2)
+                    {
+                        pitbullMode = currentGuide.next == null;
+                        if (!pitbullMode)
+                        {
+                            currentGuide = currentGuide.next;
+                            transform.rotation = currentGuide.transform.rotation;
+                            runCollision(movementSpeed * 0.02f * (collisionDetectionCooldown + 1));
+                        }
+                    }
+                    else
+                    {
+                        blocked = true;
+                        attackMode = true;
+                        fireCoroutine ??= StartCoroutine(fireLoop());
+                    }
+                    FixedUpdate();
+                    return;
+                }
+                
             }
             else if (pitbullMode)
             {
                 //Move straight to player base
-                transform.parent.position += (BuildingManager.Instance.PlayerBase.transform.position - transform.position).normalized * Mathf.Max(movementSpeed * 0.02f - offset, 0);
-                offset = Mathf.Max(offset - movementSpeed, 0);
+                transform.parent.position += (BuildingManager.Instance.PlayerBase.transform.position - transform.position).normalized * movementSpeed * 0.02f;
             }
         }
         //If searching for a new path
@@ -363,10 +389,9 @@ public class Enemy : MonoBehaviour, IDamageable, IDamager
         {
             if (collisionDetectionCooldown == 0)
             {
-                runCollision(movementSpeed * 0.02f * (baseCollisionDetectionCooldown + 1));
-
                 //Reset collision detection cooldown
                 collisionDetectionCooldown = baseCollisionDetectionCooldown;
+                runCollision(movementSpeed * 0.02f * (collisionDetectionCooldown + 1));
             }
             else
             {
@@ -394,8 +419,6 @@ public class Enemy : MonoBehaviour, IDamageable, IDamager
                 if (tags.Tags.Contains("PlayerBuilding"))
                 {
                     transform.parent.position = hit.point;
-                    blocked = true;
-                    attackMode = true;
                     //If you are already attacking a different building due to ranged, stop attacking it
                     if (ranged && target != hit.collider.gameObject.GetComponent<PlayerBuilding>())
                     {
@@ -406,11 +429,8 @@ public class Enemy : MonoBehaviour, IDamageable, IDamager
                     {
                         target = hit.collider.gameObject.GetComponent<PlayerBuilding>();
                         target.AddDamager(this);
-                        if (fireCoroutine == null)
-                        {
-                            fireCoroutine = StartCoroutine(fireLoop());
-                        }
                     }
+                    movementTriggerInfo = ((int)(hit.distance / movementSpeed * 0.02f), false);
                     return;
                 }
                 //If it is a blocking terrain tile, generate a new path since this means that you are off of the path
@@ -429,24 +449,27 @@ public class Enemy : MonoBehaviour, IDamageable, IDamager
                 //Check to see if you have a guiding checkpoint, and if so check to see if the checkpoint you just hit is the checkpoint that is currently guiding you
                 if (currentGuide != null && checkpoint.id == currentGuide.id)
                 {
-                    //If your current guide has a next guide
-                    if (currentGuide.next != null)
-                    {
-                        //Change guides to the next guide
-                        currentGuide = currentGuide.next;
+                    movementTriggerInfo = ((int)(hit.distance / movementSpeed * 0.02f), true);
+                    //Deprecated due to new offset system
+                    ////If your current guide has a next guide
+                    //if (currentGuide.next != null)
+                    //{
+                    //    //Change guides to the next guide
+                    //    currentGuide = currentGuide.next;
 
-                        //Progress enemy forward to ensure that minor positioning changes do not add up over time
-                        transform.parent.position += transform.right.normalized * hit.distance;
-                        transform.rotation = currentGuide.transform.rotation;
-                        offset += hit.distance;
-                        runCollision(forLength - hit.distance);
-                        return;
-                    }
-                    else
-                    {
-                        //If there is no next guide go into pitbull mode
-                        pitbullMode = true;
-                    }
+                    //    //Progress enemy forward to ensure that minor positioning changes do not add up over time
+                    //    transform.parent.position += transform.right.normalized * hit.distance;
+                    //    transform.rotation = currentGuide.transform.rotation;
+                    //    offset += hit.distance;
+                    //    runCollision(forLength - hit.distance);
+                    //    return;
+                    //}
+                    //else
+                    //{
+                    //    //If there is no next guide go into pitbull mode
+                    //    pitbullMode = true;
+                    //}
+                    return;
                 }
             }
         }
