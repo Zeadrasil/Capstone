@@ -575,6 +575,7 @@ public class TileManager : Singleton<TileManager>
     {
         //Destroys tilemap GameObject to avoid duplicates
         Destroy(BlockerTilemap.transform.parent.gameObject);
+        Destroy(TraversableTilemap.transform.parent.gameObject);
     }
 
     //Creates a copy of all of the adjacencies, created to allow multithreading

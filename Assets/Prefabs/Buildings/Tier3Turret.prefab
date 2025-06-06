@@ -366,6 +366,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   location: {x: 0, y: 0}
   healthBar: {fileID: 2355942953785155904}
+  cost: 0
   energyCost: 1
   active: 1
   previousChanged: {fileID: 0}

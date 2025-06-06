@@ -144,8 +144,6 @@ public class MusicManager : Singleton<MusicManager>
                 }
             }
         }
-
-        Debug.Log(actualMusicVolume);
     }
 
 
@@ -218,11 +216,14 @@ public class MusicManager : Singleton<MusicManager>
     {
         //Determine which music to play based off of which bonuses enemies get (determine by wave number)
         selectedBattle = 0;
-        selectedBattle += GameManager.Instance.wave % 5 == 0 ? 1 : 0;
-        selectedBattle += GameManager.Instance.wave % 7 == 0 ? 1 : 0;
-        selectedBattle += GameManager.Instance.wave % 9 == 0 ? 1 : 0;
-        selectedBattle += GameManager.Instance.wave % 11 == 0 ? 1 : 0;
-        selectedBattle += GameManager.Instance.wave % 13 == 0 ? 1 : 0;
+        if (GameManager.Instance.wave != 0)
+        {
+            selectedBattle += GameManager.Instance.wave % 5 == 0 ? 1 : 0;
+            selectedBattle += GameManager.Instance.wave % 7 == 0 ? 1 : 0;
+            selectedBattle += GameManager.Instance.wave % 9 == 0 ? 1 : 0;
+            selectedBattle += GameManager.Instance.wave % 11 == 0 ? 1 : 0;
+            selectedBattle += GameManager.Instance.wave % 13 == 0 ? 1 : 0;
+        }
 
         //If music fade is enabled do it
         if (musicFadeTime > 0)

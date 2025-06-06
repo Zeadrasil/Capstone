@@ -321,6 +321,13 @@ public class Enemy : MonoBehaviour, IDamageable, IDamager
                             transform.rotation = currentGuide.transform.rotation;
                             runCollision(movementSpeed * 0.02f * (collisionDetectionCooldown + 1));
                         }
+                        else
+                        {
+                            transform.rotation = 
+                                Quaternion.LookRotation(Vector3.forward, 
+                                Quaternion.Euler(0, 0, 90) * 
+                                (BuildingManager.Instance.PlayerBase.transform.position - transform.position));
+                        }
                     }
                     else
                     {
@@ -336,7 +343,24 @@ public class Enemy : MonoBehaviour, IDamageable, IDamager
             else if (pitbullMode)
             {
                 //Move straight to player base
-                transform.parent.position += (BuildingManager.Instance.PlayerBase.transform.position - transform.position).normalized * movementSpeed * 0.02f;
+                if (movementTriggerInfo.Item1 == -1 || movementTriggerInfo.Item1 > 0)
+                {
+                    transform.parent.position += movementSpeed * 0.02f * 
+                        (BuildingManager.Instance.PlayerBase.transform.position - transform.position).normalized;
+                    if (movementTriggerInfo.Item1 != -1)
+                    {
+                        movementTriggerInfo.Item1--;
+                    }
+                }
+                else if (movementTriggerInfo.Item1 == 0)
+                {
+                    movementTriggerInfo.Item1--;
+                    blocked = true;
+                    attackMode = true;
+                    fireCoroutine ??= StartCoroutine(fireLoop());
+                    FixedUpdate();
+                    return;
+                }
             }
         }
         //If searching for a new path
@@ -407,7 +431,7 @@ public class Enemy : MonoBehaviour, IDamageable, IDamager
 
         //Check in front of enemy and get all collisions shortly ahead
         RaycastHit2D[] hits = Physics2D.RaycastAll(transform.position, transform.right, forLength, LayerMask.GetMask(new string[] { "EnemyBlockers" }));
-        Debug.DrawLine(transform.position, transform.position + transform.right.normalized * forLength);
+        Debug.DrawLine(transform.position, transform.position + transform.right.normalized * forLength, Color.blue, 2);
 
         //Go through each collision and figure out what to do with them
         foreach (RaycastHit2D hit in hits)
@@ -433,18 +457,21 @@ public class Enemy : MonoBehaviour, IDamageable, IDamager
                     movementTriggerInfo = ((int)(hit.distance / movementSpeed * 0.02f), false);
                     return;
                 }
-                //If it is a blocking terrain tile, generate a new path since this means that you are off of the path
-                else if (tags.Tags.Contains("Ground"))
+                else if (!pitbullMode)
                 {
-                    Vector2Int goal = (Vector2Int)TileManager.Instance.TraversableTilemap.WorldToCell(transform.position);
-                    Vector3 currentPosition = transform.position;
-                    findPathTask = Task<(bool, Dictionary<Vector2Int, NavNode>)>.Factory.StartNew(() => FindPath(goal, movementSpeed, damage, firerate, currentPosition));
-                    blocked = true;
-                    currentGuide = null;
+                    //If it is a blocking terrain tile, generate a new path since this means that you are off of the path
+                    if (tags.Tags.Contains("Ground"))
+                    {
+                        Vector2Int goal = (Vector2Int)TileManager.Instance.TraversableTilemap.WorldToCell(transform.position);
+                        Vector3 currentPosition = transform.position;
+                        findPathTask = Task<(bool, Dictionary<Vector2Int, NavNode>)>.Factory.StartNew(() => FindPath(goal, movementSpeed, damage, firerate, currentPosition));
+                        blocked = true;
+                        currentGuide = null;
+                    }
                 }
             }
             //If it is an enemy checkpoint
-            else if (hit.collider.gameObject.TryGetComponent(out EnemyCheckpoint checkpoint))
+            else if (!pitbullMode && hit.collider.gameObject.TryGetComponent(out EnemyCheckpoint checkpoint))
             {
                 //Check to see if you have a guiding checkpoint, and if so check to see if the checkpoint you just hit is the checkpoint that is currently guiding you
                 if (currentGuide != null && checkpoint.id == currentGuide.id)

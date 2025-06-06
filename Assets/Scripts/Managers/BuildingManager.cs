@@ -376,9 +376,9 @@ public class BuildingManager : Singleton<BuildingManager>
     public void CancelConstruction()
     {
         //Ensure that all construction data is cleared
-        selectedConstructionIndex = -1;
         Destroy(selectedConstruction);
         selectedConstruction = null;
+        GameManager.Instance.Build(-1);
     }
 
     public void CancelUpgrade()

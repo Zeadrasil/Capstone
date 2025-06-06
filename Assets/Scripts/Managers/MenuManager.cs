@@ -194,7 +194,7 @@ public class MenuManager : Singleton<MenuManager>
 
     //Basic
     float enemyDifficulty = 1;
-    float playerPower = 3;
+    float playerPower = 1;
     float playerEconomy = 1;
 
     //Advanced
